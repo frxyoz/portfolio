@@ -16,7 +16,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Dev Portfolio — Trainer Card',
+  title: 'Olric Zeng Portfolio',
   description: 'Full stack developer portfolio with a Pokemon-inspired aesthetic.',
   openGraph: {
     title: 'Dev Portfolio',

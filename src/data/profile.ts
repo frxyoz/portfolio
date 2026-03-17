@@ -5,7 +5,6 @@ export const profile: ProfileData = {
     title: 'Student @ Cornell University',
     entryNumber: '#001',
     tagline: '"Student at Cornell committed to building software for good."',
-    bio: '',
     timeline: [
         {
             period: '2025 — 2029',
@@ -21,19 +20,18 @@ export const profile: ProfileData = {
         },
     ],
     abilities: [
-        'Problem Decomposition',
-        'Clean Code Advocacy',
-        'Cross-team Collaboration',
-        'Rapid Prototyping',
-        'Async Communication',
+        'Full-Stack Development',
+        'API Design',
+        'ML Integration',
+        'Cross-Platform Development',
+        'Containerization & Deploy',
     ],
-    primaryTypes: ['python', 'html'],
     skills: [
-        { name: 'Frontend', value: 95, type: 'html' },
-        { name: 'TypeScript', value: 88, type: 'dart' },
-        { name: 'Backend', value: 80, type: 'flask' },
-        { name: 'DevOps', value: 70, type: 'sql' },
-        { name: 'Testing', value: 75, type: 'python' },
+        { name: 'Python', value: 92, type: 'python' },
+        { name: 'Backend', value: 88, type: 'flask' },
+        { name: 'Mobile Dev', value: 80, type: 'dart' },
+        { name: 'Frontend', value: 75, type: 'html' },
+        { name: 'Databases', value: 72, type: 'sql' },
     ],
     socialLinks: [
         { label: 'GitHub', href: 'https://github.com/frxyoz', icon: 'github' },

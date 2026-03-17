@@ -237,9 +237,8 @@ export default function HeroSection() {
                                     variants={itemVariants}
                                     style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', position: 'relative', zIndex: 3 }}
                                 >
-                                    {profile.primaryTypes.map(t => (
-                                        <TypeBadge key={t} type={t} />
-                                    ))}
+                                    <TypeBadge type="python" />
+                                    <TypeBadge type="flask" />
                                 </motion.div>
 
                                 {/* Divider */}
