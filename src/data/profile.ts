@@ -4,32 +4,20 @@ export const profile: ProfileData = {
     name: 'Olric Zeng',
     title: 'Student @ Cornell University',
     entryNumber: '#001',
-    tagline: '"Building things that matter, one commit at a time."',
+    tagline: '"Student at Cornell committed to building software for good."',
     bio: '',
     timeline: [
-        {
-            period: '2023 — Present',
-            title: 'Senior Full Stack Developer',
-            org: 'Company Name',
-            desc: 'Leading development of cloud-native web applications, mentoring engineers, and driving architectural decisions across the stack.',
-        },
-        {
-            period: '2021 — 2023',
-            title: 'Full Stack Developer',
-            org: 'Company Name',
-            desc: 'Built and maintained React/Next.js frontends with Node.js and PostgreSQL backends, shipping multiple production features.',
-        },
-        {
-            period: '2025 — 2021',
-            title: 'Frontend Developer',
-            org: 'Company Name',
-            desc: 'Developed responsive interfaces and component libraries with a focus on performance and accessibility.',
-        },
         {
             period: '2025 — 2029',
             title: 'B.S. Computer Science',
             org: 'Cornell University',
-            desc: 'Data Structures and OOP, Mathematical Foundations of Computing, Data Structures and Functional Programming, Introduction to Computing Using Python, Introduction to Backend Development, Linear Algebra.',
+            desc: 'Courses: Data Structures and OOP, Mathematical Foundations of Computing, Data Structures and Functional Programming, Introduction to Computing Using Python, Introduction to Backend Development, Linear Algebra.',
+        },
+        {
+            period: '2024',
+            title: 'Software Engineering Intern',
+            org: 'Coding Minds',
+            desc: 'Developed responsive an AI-powered nutrition mobile application using Flutter, Firebase, and Flask.',
         },
     ],
     abilities: [
@@ -50,7 +38,7 @@ export const profile: ProfileData = {
     socialLinks: [
         { label: 'GitHub', href: 'https://github.com/frxyoz', icon: 'github' },
         { label: 'LinkedIn', href: 'https://linkedin.com/in/olriczeng', icon: 'linkedin' },
-        { label: 'Email', href: 'mailto:olriczeng@gmail.com', icon: 'email' },
+        { label: 'Email', href: '#contact', icon: 'email' },
     ],
     resumeUrl: '/resume.pdf',
 };
