@@ -1,0 +1,366 @@
+@import "tailwindcss";
+
+/* ─── Design Tokens ─────────────────────────────────────────────────── */
+@theme {
+  --color-bg:               #0d0d0d;
+  --color-surface:          #1a1a1a;
+  --color-accent:           #cc0000;
+  --color-accent-yellow:    #ffcb05;
+  --color-text:             #e8e8e8;
+  --color-muted:            #888888;
+  --color-screen:           #091510;
+  --color-screen-text:      #4dff88;
+  --color-screen-dim:       #267544;
+
+  --color-psychic:          #ff65a3;
+  --color-electric:         #f8d030;
+  --color-steel:            #b8b8d0;
+  --color-poison:           #a040a0;
+  --color-rock:             #b8a038;
+  --color-water:            #6890f0;
+  --color-dragon:           #7038f8;
+  --color-fighting:         #c03028;
+
+  --font-pixel:             'Press Start 2P', cursive;
+  --font-body:              'Inter', 'Helvetica Neue', sans-serif;
+
+  --animate-blink:          blink 1.2s step-end infinite;
+  --animate-shimmer:        shimmer 2.5s linear infinite;
+  --animate-scan:           scan 3s linear infinite;
+}
+
+/* ─── Keyframes ──────────────────────────────────────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+@keyframes scan {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(400%); }
+}
+@keyframes hp-fill {
+  0%   { width: 0%; }
+  100% { width: var(--hp-target, 100%); }
+}
+@keyframes indicator-pulse {
+  0%, 100% { box-shadow: 0 0 6px currentColor, 0 0 12px currentColor; }
+  50%       { box-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: radial-gradient(ellipse at 40% 30%, #1a0505 0%, #0d0d0d 60%);
+  color: #e8e8e8;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.font-pixel { font-family: 'Press Start 2P', cursive; line-height: 1.8; }
+
+/* ─── Pokedex Device ─────────────────────────────────────────────────── */
+.pokedex-body {
+  background: linear-gradient(150deg, #e81010 0%, #cc0000 45%, #a80000 100%);
+  border-radius: 20px;
+  box-shadow:
+    0 0 0 3px #770000,
+    0 30px 80px rgba(0,0,0,0.85),
+    inset 0 1px 0 rgba(255,160,160,0.25),
+    inset 0 -2px 0 rgba(0,0,0,0.3);
+  position: relative;
+}
+
+/* ─── Screen / LCD ───────────────────────────────────────────────────── */
+.screen-bezel {
+  background: #111;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow:
+    inset 0 2px 10px rgba(0,0,0,0.95),
+    inset 0 0 0 1px #000,
+    0 0 0 1px #440000;
+}
+
+.screen-lcd {
+  background: #091510;
+  border-radius: 5px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scanline effect on screens */
+.screen-lcd::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.15) 3px,
+    rgba(0,0,0,0.15) 4px
+  );
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Glare highlight */
+.screen-lcd::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 35%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%);
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ─── Indicator Lights ───────────────────────────────────────────────── */
+.indicator-eye {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 36%, #aad4ff 0%, #3369ee 40%, #0033bb 100%);
+  border: 3px solid #330000;
+  box-shadow: 0 0 14px rgba(85,150,255,0.7), inset 0 2px 4px rgba(255,255,255,0.35);
+  flex-shrink: 0;
+}
+
+.indicator-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.4);
+  flex-shrink: 0;
+}
+
+/* ─── D-pad ──────────────────────────────────────────────────────────── */
+.dpad {
+  position: relative;
+  width: 68px; height: 68px;
+  flex-shrink: 0;
+}
+.dpad-h, .dpad-v {
+  position: absolute;
+  background: #2a2a2a;
+  border-radius: 4px;
+  box-shadow: 0 2px 0 #111, inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.dpad-h { top: 50%; left: 0; right: 0; height: 22px; transform: translateY(-50%); }
+.dpad-v { left: 50%; top: 0; bottom: 0; width: 22px; transform: translateX(-50%); }
+.dpad-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #3a3a3a;
+}
+
+/* ─── Pokedex Buttons ────────────────────────────────────────────────── */
+.poke-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.45rem;
+  background: #2a2a2a;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 8px 14px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 3px 0 #111;
+  letter-spacing: 0.05em;
+  transition: transform 0.1s, box-shadow 0.1s, color 0.2s;
+  white-space: nowrap;
+}
+.poke-btn:hover {
+  color: #fff;
+  box-shadow: 0 2px 0 #111;
+  transform: translateY(1px);
+}
+.poke-btn-yellow {
+  background: #ffcb05;
+  color: #0d0d0d;
+  border-color: #d4a800;
+  box-shadow: 0 3px 0 #8a6d00;
+}
+.poke-btn-yellow:hover {
+  color: #0d0d0d;
+  box-shadow: 0 2px 0 #8a6d00;
+}
+
+/* ─── Hinge ──────────────────────────────────────────────────────────── */
+.pokedex-hinge {
+  width: 18px;
+  flex-shrink: 0;
+  background: linear-gradient(90deg, #0a0a0a 0%, #1c1c1c 50%, #0a0a0a 100%);
+  box-shadow: inset 2px 0 5px rgba(0,0,0,0.6), inset -2px 0 5px rgba(0,0,0,0.6);
+  position: relative;
+}
+.pokedex-hinge::before,
+.pokedex-hinge::after {
+  content: '';
+  position: absolute;
+  left: 50%; transform: translateX(-50%);
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #333;
+  border: 1px solid #111;
+}
+.pokedex-hinge::before { top: 30%; }
+.pokedex-hinge::after  { top: 65%; }
+
+/* ─── Section Pokedex Panel ──────────────────────────────────────────── */
+.section-panel {
+  background: linear-gradient(150deg, #e81010 0%, #cc0000 45%, #a80000 100%);
+  border-radius: 16px;
+  box-shadow: 0 0 0 2px #770000, 0 16px 48px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,160,160,0.2);
+  overflow: hidden;
+}
+
+.section-screen {
+  background: #111;
+  border-radius: 0 0 12px 12px;
+  padding: 0;
+  box-shadow: inset 0 4px 12px rgba(0,0,0,0.9), inset 0 0 0 1px #000;
+}
+
+.section-screen-inner {
+  background: #0d1510;
+  min-height: 120px;
+}
+
+/* ─── Game inputs ────────────────────────────────────────────────────── */
+.game-input {
+  background: #091510;
+  border: 2px solid #1a3a28;
+  color: #4dff88;
+  padding: 0.6rem 0.875rem;
+  border-radius: 4px;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.game-input::placeholder { color: #267544; }
+.game-input:focus {
+  outline: none;
+  border-color: #4dff88;
+  box-shadow: 0 0 0 2px rgba(77,255,136,0.15);
+}
+
+/* ─── ProjectCard ────────────────────────────────────────────────────── */
+.dex-card {
+  background: #111;
+  border: 1px solid #330000;
+  border-radius: 8px;
+  padding: 0;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.shimmer-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg, transparent 20%, rgba(255,255,255,0.04) 30%,
+    rgba(255,255,255,0.10) 40%, rgba(255,255,255,0.04) 50%, transparent 60%
+  );
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.group:hover .shimmer-overlay {
+  opacity: 1;
+  animation: shimmer 2.5s linear infinite;
+}
+
+/* ─── Glass Panel (frosted over background image) ───────────────────── */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(28px) saturate(180%) brightness(1.06);
+  -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.06);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ─── Timeline Hover ─────────────────────────────────────────────────── */
+.timeline-item {
+  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.timeline-item:hover {
+  transform: translateX(8px);
+}
+.timeline-dot {
+  transition: box-shadow 0.28s ease, transform 0.28s ease, background 0.28s ease;
+}
+.timeline-item:hover .timeline-dot {
+  transform: scale(1.35);
+  box-shadow: 0 0 0 5px rgba(204, 0, 0, 0.12), 0 0 12px rgba(204, 0, 0, 0.35);
+  background: #ff2222;
+}
+.timeline-spine {
+  transition: background 0.28s ease;
+}
+.timeline-item:hover .timeline-spine {
+  background: rgba(204, 0, 0, 0.35);
+}
+.timeline-content {
+  transition: none;
+}
+.timeline-item:hover .timeline-title {
+  color: #000;
+}
+.timeline-item:hover .timeline-period {
+  color: #ee0000;
+}
+
+/* ─── Shiny sweep on RESUME / yellow CTA buttons ─────────────────────── */
+.poke-btn-yellow {
+  position: relative;
+  overflow: hidden;
+}
+.poke-btn-yellow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -110%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.38),
+    transparent
+  );
+  transform: skewX(-18deg);
+  pointer-events: none;
+}
+.poke-btn-yellow:hover::before {
+  animation: shiny-sweep 0.55s ease forwards;
+}
+@keyframes shiny-sweep {
+  0%   { left: -110%; }
+  100% { left: 160%;  }
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0d0d0d; }
+::-webkit-scrollbar-thumb { background: #cc0000; border-radius: 3px; }
