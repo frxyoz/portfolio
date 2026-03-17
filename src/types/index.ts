@@ -3,6 +3,8 @@ export type TechType =
     | 'java'
     | 'ocaml'
     | 'html'
+    | 'react'
+    | 'typescript'
     | 'dart'
     | 'sql'
     | 'flask'
@@ -35,6 +37,7 @@ export interface TimelineEntry {
     period: string;
     title: string;
     org: string;
+    orgUrl?: string;
     desc: string;
     types?: TechType[];
 }

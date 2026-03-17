@@ -5,7 +5,16 @@ export const profile: ProfileData = {
     title: 'Student @ Cornell University',
     entryNumber: '#001',
     tagline: '"Student at Cornell committed to building software for good."',
+    avatarUrl: 'https://avatars.githubusercontent.com/u/59369019?v=4',
     timeline: [
+        {
+            period: '2025 — ',
+            title: 'Software Developer',
+            org: 'Hack4Impact',
+            orgUrl: "https://www.cornellh4i.org/",
+            desc: 'Developed web applications for non-profits. Worked closely with cross-functional teams including developers, designers, and product managers to implement and advocate for best practices in web development, and build scalable web tools.',
+            types: ['typescript', 'html', 'react', 'supabase'],
+        },
         {
             period: '2025 — 2029',
             title: 'B.S. Computer Science',
@@ -17,7 +26,8 @@ export const profile: ProfileData = {
             period: '2024',
             title: 'Software Engineering Intern',
             org: 'Coding Minds',
-            desc: 'Developed responsive an AI-powered nutrition mobile application using Flutter, Firebase, and Flask.',
+            orgUrl: 'https://codingminds.com/',
+            desc: 'Developed responsive an AI-powered nutrition mobile application using Flutter, Firebase, and Flask, classifying over 100K+ food items.',
             types: ['python', 'flask', 'dart'],
         },
     ],

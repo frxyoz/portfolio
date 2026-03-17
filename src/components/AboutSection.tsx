@@ -269,7 +269,13 @@ function TimelineItem({ entry, isLast }: { entry: TimelineEntry; isLast: boolean
             fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
           }}
         >
-          {entry.org}
+          {entry.orgUrl ? (
+            <a href={entry.orgUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
+              {entry.org}
+            </a>
+          ) : (
+            entry.org
+          )}
         </div>
         <div
           style={{

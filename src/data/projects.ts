@@ -6,7 +6,7 @@ export const projects: Project[] = [
         number: '#001',
         name: 'Luminary',
         description:
-            'Study tracker app with a 25+ endpoint Flask/SQLAlchemy REST API, star-based progress tracking, and automatic minute sync. Containerized with Docker, deployed on GCP. Won Best Overall App at AppDev Hack Challenge 2025.',
+            'Study tracker app with a 25+ endpoint Flask/SQLAlchemy REST API, and automatic minute sync. Containerized with Docker, deployed on GCP. Won Best Overall App at AppDev Hack Challenge 2025.',
         types: ['flask', 'sql'],
         githubUrl: 'https://github.com/tnt07-t/luminary-backend',
         liveUrl: undefined,
@@ -27,7 +27,7 @@ export const projects: Project[] = [
         name: 'IMA',
         description:
             'Internal Member Archive for Hack4Impact — a React/Node.js/Supabase database of alumni to maintain connections and facilitate networking across the organization.',
-        types: ['html', 'supabase'],
+        types: ['react', 'supabase'],
         githubUrl: 'https://github.com/cornellh4i/IMA',
         liveUrl: undefined,
     },
