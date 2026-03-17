@@ -6,6 +6,7 @@ import { profile } from '@/data/profile';
 import ScrollReveal from './ScrollReveal';
 import ScrollFloat from './ScrollFloat';
 import type { TimelineEntry } from '@/types';
+import TypeBadge from './TypeBadge';
 
 /* ─── Timeline variants ─────────────────────────────────────────────── */
 const timelineContainer: Variants = {
@@ -183,7 +184,7 @@ export default function AboutSection() {
                       alignItems: 'center',
                       gap: '10px',
                       fontSize: '0.9rem',
-                      color: '#111',
+                      color: '#e0e0e0',
                       fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
                     }}
                   >
@@ -223,7 +224,7 @@ function TimelineItem({ entry, isLast }: { entry: TimelineEntry; isLast: boolean
             style={{
               width: '2px',
               flex: 1,
-              background: 'rgba(180,0,0,0.18)',
+              background: 'rgba(204,0,0,0.4)',
               marginTop: '6px',
               minHeight: '28px',
             }}
@@ -250,7 +251,7 @@ function TimelineItem({ entry, isLast }: { entry: TimelineEntry; isLast: boolean
           style={{
             fontSize: '1rem',
             fontWeight: 600,
-            color: '#0d0d0d',
+            color: '#f0f0f0',
             marginBottom: '2px',
             lineHeight: 1.3,
             fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
@@ -262,7 +263,7 @@ function TimelineItem({ entry, isLast }: { entry: TimelineEntry; isLast: boolean
         <div
           style={{
             fontSize: '0.85rem',
-            color: '#555',
+            color: '#aaa',
             marginBottom: '8px',
             fontStyle: 'italic',
             fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
@@ -273,13 +274,18 @@ function TimelineItem({ entry, isLast }: { entry: TimelineEntry; isLast: boolean
         <div
           style={{
             fontSize: '0.88rem',
-            color: '#2a2a2a',
+            color: '#ccc',
             lineHeight: 1.75,
             fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
           }}
         >
           {entry.desc}
         </div>
+        {entry.types && entry.types.length > 0 && (
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
+            {entry.types.map(t => <TypeBadge key={t} type={t} size="sm" />)}
+          </div>
+        )}
       </div>
     </div>
   );

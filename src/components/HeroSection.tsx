@@ -2,7 +2,6 @@
 
 import { motion, type Variants } from 'framer-motion';
 import { profile } from '@/data/profile';
-import TypeBadge from './TypeBadge';
 import GlitchText from './GlitchText';
 
 const NAV_LINKS = [
@@ -231,15 +230,6 @@ export default function HeroSection() {
                                 >
                                     {profile.title}
                                 </motion.p>
-
-                                {/* Type badges */}
-                                <motion.div
-                                    variants={itemVariants}
-                                    style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', position: 'relative', zIndex: 3 }}
-                                >
-                                    <TypeBadge type="python" />
-                                    <TypeBadge type="flask" />
-                                </motion.div>
 
                                 {/* Divider */}
                                 <motion.div variants={itemVariants} style={{ height: '1px', background: '#1a3a28' }} />

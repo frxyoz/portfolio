@@ -36,6 +36,7 @@ export interface TimelineEntry {
     title: string;
     org: string;
     desc: string;
+    types?: TechType[];
 }
 
 export interface ProfileData {

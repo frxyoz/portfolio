@@ -287,10 +287,10 @@ body {
 
 /* ─── Glass Panel (frosted over background image) ───────────────────── */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.13);
-  backdrop-filter: blur(28px) saturate(180%) brightness(1.06);
-  -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.06);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(8, 6, 6, 0.75);
+  backdrop-filter: blur(28px) saturate(140%) brightness(0.9);
+  -webkit-backdrop-filter: blur(28px) saturate(140%) brightness(0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.45),

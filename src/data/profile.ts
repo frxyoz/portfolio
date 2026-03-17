@@ -11,12 +11,14 @@ export const profile: ProfileData = {
             title: 'B.S. Computer Science',
             org: 'Cornell University',
             desc: 'Courses: Data Structures and OOP, Mathematical Foundations of Computing, Data Structures and Functional Programming, Introduction to Computing Using Python, Introduction to Backend Development, Linear Algebra.',
+            types: ['python', 'ocaml', 'java'],
         },
         {
             period: '2024',
             title: 'Software Engineering Intern',
             org: 'Coding Minds',
             desc: 'Developed responsive an AI-powered nutrition mobile application using Flutter, Firebase, and Flask.',
+            types: ['python', 'flask', 'dart'],
         },
     ],
     abilities: [
