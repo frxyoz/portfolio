@@ -137,7 +137,7 @@ export default function ContactSection() {
         <div style={{ marginTop: 96, paddingTop: 32, borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontFamily: DISPLAY, fontSize: '1.1rem', fontStyle: 'italic', color: ACCENT }}>Olric Zeng</span>
           <span style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.12em', color: '#555', textTransform: 'uppercase' }}>
-            © {new Date().getFullYear()} · yz3437@cornell.edu
+            © {new Date().getFullYear()} · olriczeng@gmail.com
           </span>
         </div>
       </div>

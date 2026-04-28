@@ -34,7 +34,7 @@ export const profile: ProfileData = {
   socialLinks: [
     { label: 'GitHub',   href: 'https://github.com/frxyoz' },
     { label: 'LinkedIn', href: 'https://linkedin.com/in/olriczeng' },
-    { label: 'Email',    href: 'mailto:yz3437@cornell.edu' },
+    { label: 'Email',    href: 'mailto:olriczeng@gmail.com' },
   ],
   resumeUrl: '/resume.pdf',
 };
