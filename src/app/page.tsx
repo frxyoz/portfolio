@@ -1,3 +1,4 @@
+import { OverlayProvider } from '@/contexts/OverlayContext';
 import NavBar from '@/components/NavBar';
 import HeroSection from '@/components/HeroSection';
 import AboutSection from '@/components/AboutSection';
@@ -6,7 +7,7 @@ import ContactSection from '@/components/ContactSection';
 
 export default function Home() {
   return (
-    <>
+    <OverlayProvider>
       <NavBar />
       <main>
         <HeroSection />
@@ -14,6 +15,6 @@ export default function Home() {
         <ProjectsSection />
         <ContactSection />
       </main>
-    </>
+    </OverlayProvider>
   );
 }

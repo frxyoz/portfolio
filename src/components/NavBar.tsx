@@ -1,110 +1,110 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { profile } from '@/data/profile';
+import { useOverlay } from '@/contexts/OverlayContext';
 
-const NAV_LINKS = [
-    { label: 'ABOUT', href: '#about' },
-    { label: 'PROJECTS', href: '#projects' },
-    { label: 'CONTACT', href: '#contact' },
+const ACCENT = '#b8860b';
+const LINKS = [
+  { id: 'about',    label: 'About' },
+  { id: 'projects', label: 'Projects' },
+  { id: 'contact',  label: 'Contact' },
 ];
 
-const linkVariants = {
-    hidden: { opacity: 0, y: -10 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.25 } },
-};
+function useScrolled(threshold = 40) {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > threshold);
+    window.addEventListener('scroll', fn, { passive: true });
+    return () => window.removeEventListener('scroll', fn);
+  }, [threshold]);
+  return scrolled;
+}
+
+function useActiveSection(ids: string[]) {
+  const [active, setActive] = useState(ids[0]);
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) setActive(e.target.id); }),
+      { rootMargin: '-40% 0px -55% 0px' }
+    );
+    ids.forEach(id => { const el = document.getElementById(id); if (el) obs.observe(el); });
+    return () => obs.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return active;
+}
 
 export default function NavBar() {
-    const [scrolled, setScrolled] = useState(false);
+  const scrolled = useScrolled();
+  const active = useActiveSection(['hero', 'about', 'projects', 'contact']);
+  const { overlayOpen, closeOverlay } = useOverlay();
 
-    useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 60);
-        window.addEventListener('scroll', onScroll, { passive: true });
-        return () => window.removeEventListener('scroll', onScroll);
-    }, []);
+  const frosted = scrolled || overlayOpen;
 
-    return (
-        <AnimatePresence>
-            {scrolled && (
-                <motion.nav
-                    key="navbar"
-                    initial={{ y: -64, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -64, opacity: 0 }}
-                    transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-                    style={{
-                        position: 'fixed',
-                        top: 0, left: 0, right: 0,
-                        zIndex: 100,
-                        background: 'linear-gradient(90deg, #cc0000 0%, #aa0000 100%)',
-                        borderBottom: '3px solid #770000',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.7)',
-                    }}
-                >
-                    <div
-                        style={{
-                            maxWidth: '960px',
-                            margin: '0 auto',
-                            padding: '0 1.5rem',
-                            height: '52px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                        }}
-                    >
-                        {/* Left: indicator + brand */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div className="indicator-eye" style={{ width: '24px', height: '24px', border: '2px solid #440000' }} />
-                            <span
-                                style={{
-                                    fontFamily: "'Press Start 2P', cursive",
-                                    fontSize: '0.55rem',
-                                    color: '#ffcb05',
-                                    letterSpacing: '0.1em',
-                                }}
-                            >
-                                OLRIC ZENG
-                            </span>
-                        </div>
+  const scrollTo = (id: string) => {
+    if (overlayOpen) {
+      closeOverlay();
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) window.scrollTo({ top: el.offsetTop - 72, behavior: 'smooth' });
+      }, 650);
+      return;
+    }
+    const el = document.getElementById(id);
+    if (el) window.scrollTo({ top: el.offsetTop - 72, behavior: 'smooth' });
+  };
 
-                        {/* Right: nav links + resume — stagger in */}
-                        <motion.div
-                            style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
-                            initial="hidden"
-                            animate="show"
-                            variants={{
-                                hidden: {},
-                                show: { transition: { staggerChildren: 0.07, delayChildren: 0.2 } },
-                            }}
-                        >
-                            {NAV_LINKS.map(link => (
-                                <motion.a
-                                    key={link.href}
-                                    href={link.href}
-                                    className="poke-btn"
-                                    variants={linkVariants}
-                                    whileHover={{ scale: 1.06, y: -1 }}
-                                    whileTap={{ scale: 0.94 }}
-                                >
-                                    {link.label}
-                                </motion.a>
-                            ))}
-                            <motion.a
-                                href={profile.resumeUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="poke-btn poke-btn-yellow"
-                                variants={linkVariants}
-                                whileHover={{ scale: 1.06, y: -1 }}
-                                whileTap={{ scale: 0.94 }}
-                            >
-                                RESUME ▶
-                            </motion.a>
-                        </motion.div>
-                    </div>
-                </motion.nav>
-            )}
-        </AnimatePresence>
-    );
+  const handleBrand = () => {
+    if (overlayOpen) { closeOverlay(); return; }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <nav style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 300,
+      background: frosted ? 'rgba(255,255,255,0.97)' : 'transparent',
+      backdropFilter: frosted ? 'blur(16px)' : 'none',
+      borderBottom: frosted ? `1px solid ${ACCENT}22` : 'none',
+      transition: 'all 0.4s ease',
+      padding: '0 48px',
+      height: 68,
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    }}>
+      <button
+        onClick={handleBrand}
+        style={{
+          fontFamily: 'var(--font-display, "Cormorant Garamond", Georgia, serif)',
+          fontSize: '1.15rem', fontWeight: 600,
+          color: ACCENT, letterSpacing: '0.04em',
+          background: 'none', border: 'none', cursor: 'pointer',
+        }}
+      >
+        OZ
+      </button>
+
+      <div style={{ display: 'flex', gap: 36, alignItems: 'center' }}>
+        {LINKS.map(l => {
+          const isActive = active === l.id && !overlayOpen;
+          return (
+            <button
+              key={l.id}
+              onClick={() => scrollTo(l.id)}
+              style={{
+                fontFamily: 'var(--font-body, "DM Sans", sans-serif)',
+                fontSize: '0.82rem', fontWeight: 500,
+                letterSpacing: '0.1em', textTransform: 'uppercase',
+                color: isActive ? ACCENT : '#1a1a1a',
+                background: 'none', border: 'none', cursor: 'pointer',
+                paddingBottom: 3,
+                borderBottom: isActive ? `1px solid ${ACCENT}` : '1px solid transparent',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {l.label}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
 }

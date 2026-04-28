@@ -1,56 +1,48 @@
-export type TechType =
-    | 'python'
-    | 'java'
-    | 'ocaml'
-    | 'html'
-    | 'react'
-    | 'typescript'
-    | 'dart'
-    | 'sql'
-    | 'flask'
-    | 'supabase';
+export interface ProjectDetail {
+  heading: string;
+  body: string;
+}
+
+export interface StackItem {
+  name: string;
+  role: string;
+}
 
 export interface Project {
-    id: number;
-    number: string;
-    name: string;
-    description: string;
-    types: TechType[];
-    githubUrl?: string;
-    liveUrl?: string;
-}
-
-export interface SocialLink {
-    label: string;
-    href: string;
-    icon: 'github' | 'linkedin' | 'twitter' | 'email';
-}
-
-export interface Skill {
-    name: string;
-    value: number;
-    max?: number;
-    type: TechType;
+  id: string;
+  name: string;
+  subtitle: string;
+  year: string;
+  desc: string;
+  award: string | null;
+  tags: string[];
+  githubUrl: string;
+  overview: string;
+  details: ProjectDetail[];
+  stack: StackItem[];
+  mockLabel: string;
 }
 
 export interface TimelineEntry {
-    period: string;
-    title: string;
-    org: string;
-    orgUrl?: string;
-    desc: string;
-    types?: TechType[];
+  period: string;
+  title: string;
+  org: string;
+  orgUrl?: string;
+  desc: string;
+  tags: string[];
+}
+
+export interface SocialLink {
+  label: string;
+  href: string;
 }
 
 export interface ProfileData {
-    name: string;
-    title: string;
-    entryNumber: string;
-    tagline: string;
-    abilities: string[];
-    skills: Skill[];
-    timeline: TimelineEntry[];
-    socialLinks: SocialLink[];
-    resumeUrl: string;
-    avatarUrl?: string;
+  name: string;
+  title: string;
+  tagline: string;
+  avatarUrl: string;
+  timeline: TimelineEntry[];
+  socialLinks: SocialLink[];
+  resumeUrl: string;
 }
