@@ -3,12 +3,15 @@
 import { profile } from '@/data/profile';
 import Reveal from './Reveal';
 import type { TimelineEntry } from '@/types';
+import { motion } from 'framer-motion';
+import { useScrollTilt } from '@/hooks/useScrollTilt';
 
 const ACCENT  = '#b8860b';
 const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
 const BODY    = 'var(--font-body, "DM Sans", "Helvetica Neue", sans-serif)';
 
 export default function AboutSection() {
+  const tilt = useScrollTilt();
   return (
     <section id="about" style={{ background: '#fafaf7', padding: '120px 48px' }}>
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
@@ -18,9 +21,9 @@ export default function AboutSection() {
           <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT, marginBottom: 12 }}>
             01
           </p>
-          <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: '#1a1a1a', lineHeight: 1 }}>
+          <motion.h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: '#1a1a1a', lineHeight: 1, rotateX: tilt, transformPerspective: 800 }}>
             Background
-          </h2>
+          </motion.h2>
           <div style={{ width: 40, height: 1, background: ACCENT, marginTop: 16 }} />
         </Reveal>
 

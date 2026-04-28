@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { projects } from '@/data/projects';
 import type { Project } from '@/types';
 import { useOverlay } from '@/contexts/OverlayContext';
 import Reveal from './Reveal';
+import { useScrollTilt } from '@/hooks/useScrollTilt';
 
 const ACCENT  = '#b8860b';
 const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
@@ -75,33 +77,22 @@ function ProjectRow({ project, index, onOpen }: { project: Project; index: numbe
         borderTop: `1px solid ${ACCENT}18`,
       }}
     >
+      {/* Corner ornaments — outside the content div so they sit in the row's padding zone */}
+      {(['tl', 'tr', 'bl', 'br'] as const).map(pos => (
+        <OrnateCorner key={pos} position={pos} visible={hovered} />
+      ))}
+
       <div
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onClick={() => onOpen(project)}
         style={{ position: 'relative' }}
       >
-        {/* Corner ornaments */}
-        {(['tl', 'tr', 'bl', 'br'] as const).map(pos => (
-          <OrnateCorner key={pos} position={pos} visible={hovered} />
-        ))}
-
-        {/* Side accent bar */}
-        <div style={{
-          position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
-          width: hovered ? 3 : 0,
-          height: hovered ? '60%' : 0,
-          background: `linear-gradient(to bottom, transparent, ${ACCENT}, transparent)`,
-          transition: 'all 0.4s cubic-bezier(.22,1,.36,1)',
-        }} />
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 40, alignItems: 'center' }}>
           {/* Left */}
           <div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 20, marginBottom: 10, flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: '1rem', color: `${ACCENT}88`, fontWeight: 300, minWidth: 28 }}>
-                {String(index + 1).padStart(2, '0')}
-              </span>
               <h3 style={{
                 fontFamily: DISPLAY, fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', fontWeight: 400,
                 color: hovered ? ACCENT : '#1a1a1a', lineHeight: 1, letterSpacing: '-0.01em',
@@ -399,6 +390,7 @@ function ProjectDetail({
 
 // ─── Projects section ────────────────────────────────────────────────────────
 export default function ProjectsSection() {
+  const tilt = useScrollTilt();
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const { openOverlay, closeOverlay, overlayOpen } = useOverlay();
 
@@ -433,9 +425,9 @@ export default function ProjectsSection() {
           <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT, marginBottom: 12 }}>
             02
           </p>
-          <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: '#1a1a1a', lineHeight: 1 }}>
+          <motion.h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: '#1a1a1a', lineHeight: 1, rotateX: tilt, transformPerspective: 800 }}>
             Projects
-          </h2>
+          </motion.h2>
           <div style={{ width: 40, height: 1, background: ACCENT, marginTop: 16 }} />
         </Reveal>
 

@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { profile } from '@/data/profile';
 import Reveal from './Reveal';
+import MagneticButton from './MagneticButton';
 
 const ACCENT = '#b8860b';
 const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
@@ -149,36 +150,40 @@ export default function HeroSection() {
 
                     {/* CTA buttons */}
                     <Reveal delay={0.32} style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-                        <button
-                            onClick={() => scrollTo('projects')}
-                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#9a720a'; }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = ACCENT; }}
-                            style={{
-                                fontFamily: BODY, fontSize: '0.78rem', fontWeight: 500,
-                                letterSpacing: '0.14em', textTransform: 'uppercase',
-                                color: '#fff', background: ACCENT,
-                                border: `1px solid ${ACCENT}`,
-                                padding: '14px 36px', cursor: 'pointer', transition: 'all 0.25s ease',
-                            }}
-                        >
-                            View Projects
-                        </button>
-                        <a
-                            href={profile.resumeUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = `${ACCENT}11`; }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
-                            style={{
-                                fontFamily: BODY, fontSize: '0.78rem', fontWeight: 500,
-                                letterSpacing: '0.14em', textTransform: 'uppercase',
-                                color: ACCENT, background: 'transparent',
-                                border: `1px solid ${ACCENT}`,
-                                padding: '14px 36px', display: 'inline-block', transition: 'all 0.25s ease',
-                            }}
-                        >
-                            Résumé
-                        </a>
+                        <MagneticButton>
+                          <button
+                              onClick={() => scrollTo('projects')}
+                              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#9a720a'; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = ACCENT; }}
+                              style={{
+                                  fontFamily: BODY, fontSize: '0.78rem', fontWeight: 500,
+                                  letterSpacing: '0.14em', textTransform: 'uppercase',
+                                  color: '#fff', background: ACCENT,
+                                  border: `1px solid ${ACCENT}`,
+                                  padding: '14px 36px', cursor: 'pointer', transition: 'all 0.25s ease',
+                              }}
+                          >
+                              View Projects
+                          </button>
+                        </MagneticButton>
+                        <MagneticButton>
+                          <a
+                              href={profile.resumeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = `${ACCENT}11`; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
+                              style={{
+                                  fontFamily: BODY, fontSize: '0.78rem', fontWeight: 500,
+                                  letterSpacing: '0.14em', textTransform: 'uppercase',
+                                  color: ACCENT, background: 'transparent',
+                                  border: `1px solid ${ACCENT}`,
+                                  padding: '14px 36px', display: 'inline-block', transition: 'all 0.25s ease',
+                              }}
+                          >
+                              Résumé
+                          </a>
+                        </MagneticButton>
                     </Reveal>
                 </motion.div>
 

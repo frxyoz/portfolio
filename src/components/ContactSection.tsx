@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { profile } from '@/data/profile';
 import Reveal from './Reveal';
+import { useScrollTilt } from '@/hooks/useScrollTilt';
 
 const ACCENT  = '#b8860b';
 const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
@@ -15,6 +17,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function ContactSection() {
+  const tilt = useScrollTilt();
   const [form, setForm]         = useState({ name: '', email: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending]   = useState(false);
@@ -46,9 +49,9 @@ export default function ContactSection() {
           </p>
         </Reveal>
         <Reveal delay={0.04}>
-          <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: '#fafaf7', lineHeight: 1, marginBottom: 16 }}>
+          <motion.h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: '#fafaf7', lineHeight: 1, marginBottom: 16, rotateX: tilt, transformPerspective: 800 }}>
             Get in Touch
-          </h2>
+          </motion.h2>
         </Reveal>
         <Reveal delay={0.08} style={{ width: 40, height: 1, background: ACCENT, margin: '0 auto 20px' }} />
         <Reveal delay={0.12}>
