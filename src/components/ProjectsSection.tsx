@@ -190,7 +190,7 @@ function ProjectDetail({
 
     return (
         <div ref={scrollRef} style={{
-            position: 'fixed', inset: 0, zIndex: 250,
+            position: 'fixed', inset: 0, zIndex: 400,
             background: '#fff', overflowY: 'auto',
             animation: 'slideUp 0.55s cubic-bezier(.22,1,.36,1) forwards',
         }}>
@@ -298,7 +298,7 @@ function ProjectDetail({
 
                         {/* Mock screenshot */}
                         <div style={{
-                            width: 340, height: 220, flexShrink: 0,
+                            width: 340, flexShrink: 0,
                             border: `1px solid ${ACCENT}33`,
                             background: project.mockImage ? 'transparent' : `repeating-linear-gradient(45deg, ${ACCENT}06 0px, ${ACCENT}06 1px, transparent 1px, transparent 12px)`,
                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -306,7 +306,7 @@ function ProjectDetail({
                         }}>
                             <div style={{ position: 'absolute', inset: 0, background: project.mockImage ? 'transparent' : `radial-gradient(ellipse at 60% 40%, ${ACCENT}08, transparent 70%)` }} />
                             {project.mockImage ? (
-                                <img src={project.mockImage} alt={project.mockLabel} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <img src={project.mockImage} alt={project.mockLabel} style={{ width: '100%', height: 'auto', display: 'block' }} />
                             ) : (
                                 <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', letterSpacing: '0.1em', textAlign: 'center', color: '#c0b89a', padding: '0 24px', lineHeight: 1.7, position: 'relative', zIndex: 1 }}>
                                     [ screenshot ]<br />{project.mockLabel}

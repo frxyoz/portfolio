@@ -11,11 +11,11 @@ export const projects: Project[] = [
         tags: ['Flask', 'SQLAlchemy', 'Docker', 'GCP', 'Python'],
         githubUrl: 'https://github.com/tnt07-t/luminary-backend',
         overview:
-            'Luminary is a collaborative study tracker designed to help students organize sessions, track progress, and stay accountable. Built end-to-end in under 24 hours, it won Best Overall App at Cornell\'s AppDev Hack Challenge 2025.',
+            'Luminary is a collaborative study tracker designed to help students organize sessions, track progress, and stay accountable. Built end-to-end in under 2 weeks, it won Best Overall App at Cornell\'s AppDev Hack Challenge 2025.',
         details: [
             {
                 heading: 'REST API',
-                body: 'Architected a Flask/SQLAlchemy REST API with 25+ endpoints covering users, sessions, goals, streaks, and analytics — supporting full CRUD with relational data integrity.',
+                body: 'Architected a Flask/SQLAlchemy REST API with 25+ endpoints covering users, sessions, goals, streaks, and analytics, supporting full CRUD with relational data integrity.',
             },
             {
                 heading: 'Infrastructure',
@@ -29,7 +29,6 @@ export const projects: Project[] = [
         stack: [
             { name: 'Flask', role: 'Web framework & routing' },
             { name: 'SQLAlchemy', role: 'ORM & migrations' },
-            { name: 'PostgreSQL', role: 'Relational database' },
             { name: 'Docker', role: 'Containerization' },
             { name: 'GCP', role: 'Cloud deployment' },
         ],
@@ -54,7 +53,7 @@ export const projects: Project[] = [
             },
             {
                 heading: 'Compatibility Scoring',
-                body: 'Developed a multi-factor scoring algorithm that weighs user preferences against neighborhood data across 8 dimensions — outputting a ranked match list with explanations.',
+                body: 'Developed a multi-factor scoring algorithm that weighs user preferences against neighborhood data across 8 dimensions, and outputting a ranked match list with explanations.',
             },
             {
                 heading: 'Claude Integration',
@@ -69,6 +68,7 @@ export const projects: Project[] = [
             { name: 'Python', role: 'Core language' },
         ],
         mockLabel: 'Borough Match Results — User Dashboard',
+        mockImage: '/boroughs.png',
     },
     {
         id: 'ima',
@@ -102,6 +102,8 @@ export const projects: Project[] = [
             { name: 'Supabase', role: 'DB, auth & real-time' },
         ],
         mockLabel: 'Member Directory — Search & Filter View',
+        mockImage: '/ima.png',
+
     },
     {
         id: 'noteform',

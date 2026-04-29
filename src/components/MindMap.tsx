@@ -133,6 +133,7 @@ const NODES: NodeDef[] = [
 const nodeMap = Object.fromEntries(NODES.map(n => [n.id, n]));
 
 interface EdgeDef { a: string; b: string; level: 0 | 1; }
+
 const EDGES: EdgeDef[] = [
     { a: 'me', b: 'study', level: 0 },
     { a: 'me', b: 'build', level: 0 },
@@ -147,6 +148,11 @@ const EDGES: EdgeDef[] = [
     { a: 'music', b: 'guitar', level: 1 },
     { a: 'music', b: 'beats', level: 1 },
 ];
+
+// Maps each leaf node id → its parent hobby id
+const leafParent: Record<string, string> = Object.fromEntries(
+    EDGES.filter(e => e.level === 1).map(e => [e.b, e.a])
+);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 function makeEdgePath(ax: number, ay: number, ar: number, bx: number, by: number, br: number): string {
@@ -257,10 +263,15 @@ interface DragRef {
     startOffX: number; startOffY: number;
 }
 
-function useDragPhysics(svgRef: React.RefObject<SVGSVGElement | null>) {
+function useDragPhysics(
+    svgRef: React.RefObject<SVGSVGElement | null>,
+    onNodeClick: (id: string) => void,
+) {
     const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({});
     const [draggingId, setDraggingId] = useState<string | null>(null);
     const drag = useRef<DragRef>({ id: null, startSvgX: 0, startSvgY: 0, startOffX: 0, startOffY: 0 });
+    const draggingRef = useRef(false);
+    const hasMoved = useRef(false);
     const rafs = useRef<Record<string, number>>({});
 
     // Convert client coords → SVG coords using the CTM
@@ -306,13 +317,13 @@ function useDragPhysics(svgRef: React.RefObject<SVGSVGElement | null>) {
     }, []);
 
     const onNodePointerDown = useCallback((id: string, e: React.PointerEvent) => {
-        e.preventDefault();
         e.stopPropagation();
-        svgRef.current?.setPointerCapture(e.pointerId);
         cancelAnimationFrame(rafs.current[id]);
         const cur = { ...(offsets[id] ?? { x: 0, y: 0 }) };
         const pt = toSvg(e.clientX, e.clientY);
         drag.current = { id, startSvgX: pt.x, startSvgY: pt.y, startOffX: cur.x, startOffY: cur.y };
+        draggingRef.current = true;
+        hasMoved.current = false;
         setDraggingId(id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [toSvg, offsets]);
@@ -320,6 +331,7 @@ function useDragPhysics(svgRef: React.RefObject<SVGSVGElement | null>) {
     const onSvgPointerMove = useCallback((e: React.PointerEvent) => {
         const { id, startSvgX, startSvgY, startOffX, startOffY } = drag.current;
         if (!id) return;
+        hasMoved.current = true;
         const pt = toSvg(e.clientX, e.clientY);
         setOffsets(prev => ({
             ...prev,
@@ -330,14 +342,18 @@ function useDragPhysics(svgRef: React.RefObject<SVGSVGElement | null>) {
     const onSvgPointerUp = useCallback(() => {
         const { id } = drag.current;
         if (!id) return;
+        const wasClick = !hasMoved.current;
         drag.current.id = null;
+        draggingRef.current = false;
+        hasMoved.current = false;
         setDraggingId(null);
         setOffsets(prev => {
             const cur = prev[id] ?? { x: 0, y: 0 };
             springBack(id, cur.x, cur.y);
             return prev;
         });
-    }, [springBack]);
+        if (wasClick) onNodeClick(id);
+    }, [springBack, onNodeClick]);
 
     useEffect(() => {
         const r = rafs.current;
@@ -349,16 +365,35 @@ function useDragPhysics(svgRef: React.RefObject<SVGSVGElement | null>) {
         return { x: n.x + off.x, y: n.y + off.y, r: n.r };
     }, [offsets]);
 
-    return { offsets, draggingId, epos, onNodePointerDown, onSvgPointerMove, onSvgPointerUp };
+    return { offsets, draggingId, draggingRef, epos, onNodePointerDown, onSvgPointerMove, onSvgPointerUp };
 }
 
 // ─── Tree graph ────────────────────────────────────────────────────────────
 function MindMapGraph({
-    hovered, onHover,
-}: { hovered: string | null; onHover: (id: string | null) => void }) {
+    hovered, onHover, expandedHobbies, onExpand,
+}: {
+    hovered: string | null;
+    onHover: (id: string | null) => void;
+    expandedHobbies: Set<string>;
+    onExpand: (id: string) => void;
+}) {
     const svgRef = useRef<SVGSVGElement>(null);
-    const { offsets, draggingId, epos, onNodePointerDown, onSvgPointerMove, onSvgPointerUp } =
-        useDragPhysics(svgRef);
+
+    const handleNodeClick = useCallback((id: string) => {
+        const n = nodeMap[id];
+        if (n.type === 'hobby') onExpand(id);
+        if (n.note) onHover(hovered === id ? null : id);
+    }, [onExpand, onHover, hovered]);
+
+    const { offsets, draggingId, draggingRef, epos, onNodePointerDown, onSvgPointerMove, onSvgPointerUp } =
+        useDragPhysics(svgRef, handleNodeClick);
+
+    const visibleNodeIds = new Set(
+        NODES
+            .filter(n => n.type !== 'leaf' || expandedHobbies.has(leafParent[n.id]))
+            .map(n => n.id)
+    );
+    const visibleEdges = EDGES.filter(e => visibleNodeIds.has(e.a) && visibleNodeIds.has(e.b));
 
     return (
         <svg
@@ -375,7 +410,7 @@ function MindMapGraph({
 
             {/* Edges — computed from live effective positions, stretch visual on drag */}
             <g filter="url(#mm-rf-edge)">
-                {EDGES.map((e, i) => {
+                {visibleEdges.map((e, i) => {
                     const a = epos(e.a), b = epos(e.b);
                     const len = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
                     const natural = e.level === 0 ? 215 : 180;
@@ -392,7 +427,7 @@ function MindMapGraph({
             </g>
 
             {/* Nodes */}
-            {NODES.map(n => {
+            {NODES.filter(n => visibleNodeIds.has(n.id)).map(n => {
                 const off = offsets[n.id] ?? { x: 0, y: 0 };
                 const ex = n.x + off.x;
                 const ey = n.y + off.y;
@@ -404,18 +439,21 @@ function MindMapGraph({
                 return (
                     <motion.g
                         key={n.id}
-                        // Ambient float via CSS transform (small, unrelated to drag)
-                        animate={{ y: n.floatY }}
-                        transition={{
+                        initial={isLeaf ? { opacity: 0, scale: 0.6 } : false}
+                        animate={isLeaf ? { y: n.floatY, opacity: 1, scale: 1 } : { y: n.floatY }}
+                        transition={isLeaf ? {
+                            opacity: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+                            scale: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+                            y: { duration: n.floatDuration, delay: n.floatDelay, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' },
+                        } : {
                             duration: n.floatDuration, delay: n.floatDelay,
                             repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut',
                         }}
                         // Drag interaction — center node is fixed, all others are draggable
                         onPointerDown={(e) => { if (!isCenter) onNodePointerDown(n.id, e); }}
                         style={{ cursor: isCenter ? 'default' : (isDragging ? 'grabbing' : 'grab') }}
-                        onMouseEnter={() => !isDragging && n.note && onHover(n.id)}
+                        onMouseEnter={() => !draggingRef.current && n.note && onHover(n.id)}
                         onMouseLeave={() => onHover(null)}
-                        onClick={() => !isDragging && n.note && onHover(hovered === n.id ? null : n.id)}
                     >
                         {/* Hover ring */}
                         {isHov && !isCenter && (
@@ -503,7 +541,7 @@ function MindMapGraph({
 
             {/* Sticky notes — rendered above all nodes, follow drag position */}
             <AnimatePresence>
-                {NODES.map(n => {
+                {NODES.filter(n => visibleNodeIds.has(n.id)).map(n => {
                     if (hovered !== n.id || !n.note) return null;
                     const off = offsets[n.id] ?? { x: 0, y: 0 };
                     return (
@@ -520,8 +558,17 @@ function MindMapGraph({
 // zIndex 400 — sits above the NavBar (z 300) so the header is fully visible.
 export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
     const [hovered, setHovered] = useState<string | null>(null);
+    const [expandedHobbies, setExpandedHobbies] = useState<Set<string>>(new Set());
 
-    const handleClose = useCallback(() => { setHovered(null); onClose(); }, [onClose]);
+    const onExpand = useCallback((id: string) => {
+        setExpandedHobbies(prev => new Set(prev).add(id));
+    }, []);
+
+    const handleClose = useCallback(() => {
+        setHovered(null);
+        setExpandedHobbies(new Set());
+        onClose();
+    }, [onClose]);
 
     useEffect(() => {
         const fn = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose(); };
@@ -618,7 +665,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
 
                     {/* Graph canvas */}
                     <div style={{ flex: 1, position: 'relative', overflow: 'hidden', padding: '18px 36px 14px' }}>
-                        <MindMapGraph hovered={hovered} onHover={setHovered} />
+                        <MindMapGraph hovered={hovered} onHover={setHovered} expandedHobbies={expandedHobbies} onExpand={onExpand} />
                     </div>
 
                     {/* Footer */}
