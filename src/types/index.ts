@@ -28,6 +28,7 @@ export interface TimelineEntry {
   title: string;
   org: string;
   orgUrl?: string;
+  logo?: string;
   desc: string;
   tags: string[];
 }

@@ -1,10 +1,11 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { profile } from '@/data/profile';
 import Reveal from './Reveal';
 import MagneticButton from './MagneticButton';
+import { MindMapOverlay } from './MindMap';
 
 const ACCENT = '#b8860b';
 const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
@@ -24,6 +25,7 @@ function scrollTo(id: string) {
 
 export default function HeroSection() {
     const wrapperRef = useRef<HTMLDivElement>(null);
+    const [mindMapOpen, setMindMapOpen] = useState(false);
 
     // Track scroll progress over the full wrapper height (280vh)
     // scrollYProgress goes 0→1 over 180vh of actual scrolling (280 - 100)
@@ -50,7 +52,8 @@ export default function HeroSection() {
     const op4 = useTransform(scrollYProgress, [0.399, 0.401], [0, 1]);
 
     return (
-        // Tall wrapper gives scroll budget; section inside stays sticky
+        <>
+        {/* Tall wrapper gives scroll budget; section inside stays sticky */}
         <div ref={wrapperRef} style={{ height: '280vh' }}>
             <section id="hero" style={{
                 height: '100vh',
@@ -83,21 +86,32 @@ export default function HeroSection() {
                         filter: blurFilter,
                     }}
                 >
-                    {/* Avatar */}
-                    <Reveal delay={0.08} style={{
-                        width: 108, height: 108, margin: '0 auto 36px', borderRadius: '50%',
-                        border: `2px solid ${ACCENT}`,
-                        padding: 4,
-                        boxShadow: `0 0 0 1px ${ACCENT}33, 0 8px 32px ${ACCENT}22`,
-                        flexShrink: 0,
-                    }}>
+                    {/* Avatar — click to open mind map */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, amount: 0.1 }}
+                        transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
+                        onClick={() => setMindMapOpen(true)}
+                        whileHover={{ scale: 1.05, transition: { duration: 0.2, ease: 'easeOut' } }}
+                        whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
+                        title="Source of Me — click to explore"
+                        style={{
+                            width: 108, height: 108, margin: '0 auto 36px', borderRadius: '50%',
+                            border: `2px solid ${ACCENT}`,
+                            padding: 4,
+                            boxShadow: `0 0 0 1px ${ACCENT}33, 0 8px 32px ${ACCENT}22`,
+                            flexShrink: 0,
+                            cursor: 'pointer',
+                        }}
+                    >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={profile.avatarUrl}
                             alt={profile.name}
                             style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', display: 'block' }}
                         />
-                    </Reveal>
+                    </motion.div>
 
                     {/* Name line 1 */}
                     <Reveal delay={0.16}>
@@ -218,5 +232,7 @@ export default function HeroSection() {
                 </div>
             </section>
         </div>
+        <MindMapOverlay open={mindMapOpen} onClose={() => setMindMapOpen(false)} />
+        </>
     );
 }

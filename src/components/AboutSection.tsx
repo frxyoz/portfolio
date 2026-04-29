@@ -71,18 +71,30 @@ function TimelineItem({ item, index, isLast }: { item: TimelineEntry; index: num
       <h3 style={{ fontFamily: DISPLAY, fontSize: '1.65rem', fontWeight: 500, color: '#1a1a1a', marginBottom: 4 }}>
         {item.title}
       </h3>
-      {item.orgUrl ? (
-        <a
-          href={item.orgUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ fontFamily: BODY, fontSize: '0.85rem', fontWeight: 500, color: ACCENT, display: 'inline-block', marginBottom: 12, borderBottom: `1px solid ${ACCENT}44` }}
-        >
-          {item.org}
-        </a>
-      ) : (
-        <p style={{ fontFamily: BODY, fontSize: '0.85rem', fontWeight: 500, color: ACCENT, marginBottom: 12 }}>{item.org}</p>
-      )}
+
+      {/* Org name + logo on the same baseline */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        {item.orgUrl ? (
+          <a
+            href={item.orgUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontFamily: BODY, fontSize: '0.85rem', fontWeight: 500, color: ACCENT, borderBottom: `1px solid ${ACCENT}44` }}
+          >
+            {item.org}
+          </a>
+        ) : (
+          <span style={{ fontFamily: BODY, fontSize: '0.85rem', fontWeight: 500, color: ACCENT }}>{item.org}</span>
+        )}
+        {item.logo && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.logo}
+            alt={item.org}
+            style={{ height: 22, width: 'auto', maxWidth: 72, objectFit: 'contain', display: 'block', opacity: 0.85 }}
+          />
+        )}
+      </div>
       <p style={{ fontFamily: BODY, fontSize: '0.9rem', color: '#4a4540', lineHeight: 1.7, maxWidth: 620, marginBottom: 16 }}>
         {item.desc}
       </p>
