@@ -47,86 +47,64 @@ const NODES: NodeDef[] = [
         floatY: [0, 0], floatDuration: 5.0, floatDelay: 0,
     },
 
-    // Level 1 — Pillars
+    // Level 1 — Pillars (no notes — only leaf nodes carry notes)
     {
-        id: 'study', x: 155, y: 285, r: 42, type: 'hobby',
-        label: 'Study', sub: 'Education', image: null,
-        floatY: [-3, 6], floatDuration: 3.8, floatDelay: 0.3, noteRot: -2,
-        note: ['B.S. Computer Science', 'at Cornell University.', 'Courses: Data Structures,', 'OCaml, Python, Java.'],
+        id: 'soccer', x: 155, y: 285, r: 50, type: 'hobby',
+        label: 'Soccer', sub: 'Sport', image: '/aboutme/soccer.svg',
+        floatY: [-3, 6], floatDuration: 3.8, floatDelay: 0.3,
     },
     {
-        id: 'build', x: 372, y: 285, r: 42, type: 'hobby',
-        label: 'Build', sub: 'Career', image: null,
-        floatY: [0, -7], floatDuration: 4.2, floatDelay: 0.8, noteRot: 1.5,
-        note: ['Building software for good.', 'From AI nutrition apps to', 'nonprofit web tools.', 'Always shipping.'],
+        id: 'gaming', x: 372, y: 285, r: 50, type: 'hobby',
+        label: 'Gaming', sub: 'Games', image: '/aboutme/game.svg',
+        floatY: [0, -7], floatDuration: 4.2, floatDelay: 0.8,
     },
     {
-        id: 'soccer', x: 628, y: 285, r: 42, type: 'hobby',
-        label: 'Soccer', sub: 'Sport', image: null,
-        floatY: [3, -5], floatDuration: 3.6, floatDelay: 1.2, noteRot: -1,
-        note: ['Playing since age 7.', 'Center-mid — reading the game,', 'creating chances.', 'Intramurals at Cornell.'],
+        id: 'music', x: 628, y: 285, r: 42, type: 'hobby',
+        label: 'Music', sub: 'Creative', image: '/aboutme/music.svg',
+        floatY: [3, -5], floatDuration: 3.6, floatDelay: 1.2,
     },
     {
-        id: 'music', x: 845, y: 285, r: 42, type: 'hobby',
-        label: 'Music', sub: 'Creative', image: null,
-        floatY: [0, -9], floatDuration: 4.9, floatDelay: 1.7, noteRot: 2,
-        note: ['Guitar & piano.', 'Lofi hip-hop for late-night', 'coding. Learning jazz theory', 'and making beats.'],
-    },
-
-    // Level 2 — Study leaves
-    {
-        id: 'cornell', x: 80, y: 445, r: 32, type: 'leaf',
-        label: 'Cornell', image: null,
-        floatY: [-2, 5], floatDuration: 4.3, floatDelay: 0.5,
-        note: ["Cornell CIS '28.", 'Focus: systems & web dev.'],
-    },
-    {
-        id: 'h4i', x: 230, y: 445, r: 32, type: 'leaf',
-        label: 'Hack4Impact', image: null,
-        floatY: [2, -4], floatDuration: 3.9, floatDelay: 1.1,
-        note: ['Dev for nonprofits.', 'TypeScript, React, Supabase.'],
-    },
-
-    // Level 2 — Build leaves
-    {
-        id: 'codingmind', x: 315, y: 445, r: 32, type: 'leaf',
-        label: 'Coding Mind', image: null,
-        floatY: [0, -6], floatDuration: 4.5, floatDelay: 0.6, noteRot: -1.5,
-        note: ['SWE Intern 2024.', 'AI nutrition app —', 'Flutter, Firebase, ML.'],
-    },
-    {
-        id: 'projects', x: 465, y: 445, r: 32, type: 'leaf',
-        label: 'Projects', image: null,
-        floatY: [-3, 4], floatDuration: 4.0, floatDelay: 1.3, noteRot: 1,
-        note: ['Side projects that', 'scratch my own itch.', 'See the Projects section!'],
+        id: 'food', x: 845, y: 285, r: 42, type: 'hobby',
+        label: 'Food', sub: 'Taste', image: '/aboutme/food.svg',
+        floatY: [0, -9], floatDuration: 4.9, floatDelay: 1.7,
     },
 
     // Level 2 — Soccer leaves
     {
-        id: 'intramurals', x: 545, y: 445, r: 32, type: 'leaf',
-        label: 'Intramurals', image: null,
-        floatY: [1, -5], floatDuration: 3.7, floatDelay: 0.9,
-        note: ['Weekly matches at Cornell.', 'Coed & competitive leagues.'],
+        id: 'tottenham', x: 80, y: 445, r: 45, type: 'leaf',
+        label: 'Tottenham', image: '/aboutme/spurs.svg',
+        floatY: [-2, 5], floatDuration: 4.3, floatDelay: 0.5, noteRot: -1.5,
+        note: ['Spurs fan since childhood.', 'COYS. The rebuild is real.'],
     },
+
+    // Level 2 — Soccer + Gaming shared leaf
     {
-        id: 'centermid', x: 700, y: 445, r: 32, type: 'leaf',
-        label: 'Center-Mid', image: null,
-        floatY: [-2, 6], floatDuration: 4.4, floatDelay: 1.6,
-        note: ['The chess position.', 'Read, distribute, press.'],
+        id: 'fifafm', x: 265, y: 445, r: 42, type: 'leaf',
+        label: 'FIFA / FM', image: '/aboutme/fm.svg',
+        floatY: [2, -4], floatDuration: 3.9, floatDelay: 1.1, noteRot: 1,
+        note: ['FIFA for the quick fix.', 'Football Manager for the', 'full-season obsession.'],
+    },
+
+    // Level 2 — Gaming leaves
+    {
+        id: 'pokemon', x: 440, y: 445, r: 34, type: 'leaf',
+        label: 'Pokémon', image: '/aboutme/poke.svg',
+        floatY: [0, -6], floatDuration: 4.5, floatDelay: 0.6, noteRot: -1,
+        note: ['Gen 1–5 purist.', 'Competitive Showdown player.', 'Fire Red never dies.'],
     },
 
     // Level 2 — Music leaves
     {
-        id: 'guitar', x: 780, y: 445, r: 32, type: 'leaf',
-        label: 'Guitar', image: null,
-        floatY: [0, -7], floatDuration: 4.1, floatDelay: 0.4, noteRot: -2,
-        note: ['Fingerpicking & chords.', 'Mostly indie & folk.'],
+        id: 'piano', x: 560, y: 445, r: 32, type: 'leaf',
+        label: 'Piano', image: '/aboutme/piano.svg',
+        floatY: [-3, 4], floatDuration: 4.0, floatDelay: 1.3, noteRot: 1.5,
+        note: ['Classical training.', 'Now into jazz voicings', 'and lo-fi chord stacks.'],
     },
     {
-        id: 'beats', x: 930, y: 445, r: 32, type: 'leaf',
-        label: 'Beats', image: null,
-        floatY: [2, -4], floatDuration: 3.8, floatDelay: 1.8, noteRot: 1.5,
-        note: ['Lofi hip-hop production.', 'Jazz theory & sampling.'],
+        id: 'headphones', x: 715, y: 445, r: 32, type: 'leaf',
+        label: 'Headphones', image: null,
+        floatY: [1, -5], floatDuration: 3.7, floatDelay: 0.9, noteRot: -2,
+        note: ['Always on. Jazz, lo-fi,', 'indie. Playlist >', 'algorithm, always.'],
     },
 ];
 
@@ -135,24 +113,23 @@ const nodeMap = Object.fromEntries(NODES.map(n => [n.id, n]));
 interface EdgeDef { a: string; b: string; level: 0 | 1; }
 
 const EDGES: EdgeDef[] = [
-    { a: 'me', b: 'study', level: 0 },
-    { a: 'me', b: 'build', level: 0 },
     { a: 'me', b: 'soccer', level: 0 },
+    { a: 'me', b: 'gaming', level: 0 },
     { a: 'me', b: 'music', level: 0 },
-    { a: 'study', b: 'cornell', level: 1 },
-    { a: 'study', b: 'h4i', level: 1 },
-    { a: 'build', b: 'codingmind', level: 1 },
-    { a: 'build', b: 'projects', level: 1 },
-    { a: 'soccer', b: 'intramurals', level: 1 },
-    { a: 'soccer', b: 'centermid', level: 1 },
-    { a: 'music', b: 'guitar', level: 1 },
-    { a: 'music', b: 'beats', level: 1 },
+    { a: 'me', b: 'food', level: 0 },
+    { a: 'soccer', b: 'tottenham', level: 1 },
+    { a: 'soccer', b: 'fifafm', level: 1 },
+    { a: 'gaming', b: 'fifafm', level: 1 },
+    { a: 'gaming', b: 'pokemon', level: 1 },
+    { a: 'music', b: 'piano', level: 1 },
+    { a: 'music', b: 'headphones', level: 1 },
 ];
 
-// Maps each leaf node id → its parent hobby id
-const leafParent: Record<string, string> = Object.fromEntries(
-    EDGES.filter(e => e.level === 1).map(e => [e.b, e.a])
-);
+// Maps each leaf node id → all parent hobby ids (fifafm has two parents)
+const leafParents: Record<string, string[]> = {};
+EDGES.filter(e => e.level === 1).forEach(e => {
+    (leafParents[e.b] ??= []).push(e.a);
+});
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 function makeEdgePath(ax: number, ay: number, ar: number, bx: number, by: number, br: number): string {
@@ -390,7 +367,7 @@ function MindMapGraph({
 
     const visibleNodeIds = new Set(
         NODES
-            .filter(n => n.type !== 'leaf' || expandedHobbies.has(leafParent[n.id]))
+            .filter(n => n.type !== 'leaf' || (leafParents[n.id] ?? []).every(p => expandedHobbies.has(p)))
             .map(n => n.id)
     );
     const visibleEdges = EDGES.filter(e => visibleNodeIds.has(e.a) && visibleNodeIds.has(e.b));
@@ -455,85 +432,77 @@ function MindMapGraph({
                         onMouseEnter={() => !draggingRef.current && n.note && onHover(n.id)}
                         onMouseLeave={() => onHover(null)}
                     >
-                        {/* Hover ring */}
-                        {isHov && !isCenter && (
-                            <circle cx={ex} cy={ey} r={n.r + 8}
-                                fill="none" stroke={AC} strokeWidth={0.8}
-                                strokeOpacity={0.35} strokeDasharray="3,4" />
-                        )}
-
-                        {/* Node body */}
                         {n.image ? (
-                            <>
-                                <defs>
-                                    <clipPath id={`mm-clip-${n.id}`}>
-                                        <circle cx={ex} cy={ey} r={n.r - 2} />
-                                    </clipPath>
-                                </defs>
-                                <circle cx={ex} cy={ey} r={n.r}
-                                    fill="#fff" stroke={AC} strokeWidth={isLeaf ? 1.2 : 1.8}
-                                    filter={isDragging ? 'url(#mm-rf-drag)' : 'url(#mm-rf-node)'} />
-                                <image href={n.image}
-                                    x={ex - (n.r - 2)} y={ey - (n.r - 2)}
-                                    width={(n.r - 2) * 2} height={(n.r - 2) * 2}
-                                    clipPath={`url(#mm-clip-${n.id})`}
-                                    preserveAspectRatio="xMidYMid slice" />
-                            </>
-                        ) : (
-                            <motion.circle
-                                cx={ex} cy={ey} r={n.r}
-                                fill={isCenter ? AC : '#ffffff'}
-                                stroke={AC}
-                                strokeWidth={isCenter ? 0 : (isLeaf ? 1.2 : 1.8)}
-                                filter={isDragging ? 'url(#mm-rf-drag)' : 'url(#mm-rf-node)'}
-                                animate={{ opacity: isHov ? 0.9 : 1 }}
-                                transition={{ duration: 0.15 }}
-                            />
-                        )}
-
-                        {/* Center inner ring */}
-                        {isCenter && (
-                            <circle cx={ex} cy={ey} r={n.r - 9}
-                                fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth={0.8}
-                                filter="url(#mm-rf-node)" />
-                        )}
-
-                        {/* Labels */}
-                        {isCenter ? (
-                            <>
-                                <text x={ex} y={ey - 5} textAnchor="middle" dominantBaseline="middle"
-                                    fontFamily={DIS} fontSize="20" fontWeight="400" fill="#fff" letterSpacing="0.02em">
-                                    {n.label}
-                                </text>
-                                <text x={ex} y={ey + 14} textAnchor="middle"
-                                    fontFamily={BOD} fontSize="8.5" letterSpacing="0.12em" fill="rgba(255,255,255,0.6)">
-                                    ZENG
-                                </text>
-                            </>
-                        ) : isLeaf ? (
-                            <text x={ex} y={ey} textAnchor="middle" dominantBaseline="middle"
-                                fontFamily={BOD} fontSize="9" fontWeight="500" fill={`${AC}cc`} letterSpacing="0.04em">
-                                {n.label}
-                            </text>
+                            /* Bare graphic — no circle, border, label, or dot */
+                            <image href={n.image}
+                                x={ex - n.r} y={ey - n.r}
+                                width={n.r * 2} height={n.r * 2}
+                                preserveAspectRatio="xMidYMid meet" />
                         ) : (
                             <>
-                                <text x={ex} y={ey - 5} textAnchor="middle" dominantBaseline="middle"
-                                    fontFamily={BOD} fontSize="14" fontWeight="500" fill="#1a1a1a">
-                                    {n.label}
-                                </text>
-                                {n.sub && (
-                                    <text x={ex} y={ey + 12} textAnchor="middle"
-                                        fontFamily={BOD} fontSize="8.5" letterSpacing="0.1em" fill={`${AC}88`}>
-                                        {n.sub.toUpperCase()}
+                                {/* Hover ring */}
+                                {isHov && !isCenter && (
+                                    <circle cx={ex} cy={ey} r={n.r + 8}
+                                        fill="none" stroke={AC} strokeWidth={0.8}
+                                        strokeOpacity={0.35} strokeDasharray="3,4" />
+                                )}
+
+                                {/* Node circle */}
+                                <motion.circle
+                                    cx={ex} cy={ey} r={n.r}
+                                    fill={isCenter ? AC : '#ffffff'}
+                                    stroke={AC}
+                                    strokeWidth={isCenter ? 0 : (isLeaf ? 1.2 : 1.8)}
+                                    filter={isDragging ? 'url(#mm-rf-drag)' : 'url(#mm-rf-node)'}
+                                    animate={{ opacity: isHov ? 0.9 : 1 }}
+                                    transition={{ duration: 0.15 }}
+                                />
+
+                                {/* Center inner ring */}
+                                {isCenter && (
+                                    <circle cx={ex} cy={ey} r={n.r - 9}
+                                        fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth={0.8}
+                                        filter="url(#mm-rf-node)" />
+                                )}
+
+                                {/* Labels */}
+                                {isCenter ? (
+                                    <>
+                                        <text x={ex} y={ey - 5} textAnchor="middle" dominantBaseline="middle"
+                                            fontFamily={DIS} fontSize="20" fontWeight="400" fill="#fff" letterSpacing="0.02em">
+                                            {n.label}
+                                        </text>
+                                        <text x={ex} y={ey + 14} textAnchor="middle"
+                                            fontFamily={BOD} fontSize="8.5" letterSpacing="0.12em" fill="rgba(255,255,255,0.6)">
+                                            ZENG
+                                        </text>
+                                    </>
+                                ) : isLeaf ? (
+                                    <text x={ex} y={ey} textAnchor="middle" dominantBaseline="middle"
+                                        fontFamily={BOD} fontSize="9" fontWeight="500" fill={`${AC}cc`} letterSpacing="0.04em">
+                                        {n.label}
                                     </text>
+                                ) : (
+                                    <>
+                                        <text x={ex} y={ey - 5} textAnchor="middle" dominantBaseline="middle"
+                                            fontFamily={BOD} fontSize="14" fontWeight="500" fill="#1a1a1a">
+                                            {n.label}
+                                        </text>
+                                        {n.sub && (
+                                            <text x={ex} y={ey + 12} textAnchor="middle"
+                                                fontFamily={BOD} fontSize="8.5" letterSpacing="0.1em" fill={`${AC}88`}>
+                                                {n.sub.toUpperCase()}
+                                            </text>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Indicator dot */}
+                                {n.note && !isCenter && !isHov && (
+                                    <circle cx={ex + n.r - 6} cy={ey - n.r + 6}
+                                        r={isLeaf ? 2.5 : 3.5} fill={AC} opacity={0.5} />
                                 )}
                             </>
-                        )}
-
-                        {/* Indicator dot */}
-                        {n.note && !isCenter && !isHov && (
-                            <circle cx={ex + n.r - 6} cy={ey - n.r + 6}
-                                r={isLeaf ? 2.5 : 3.5} fill={AC} opacity={0.5} />
                         )}
                     </motion.g>
                 );

@@ -22,6 +22,7 @@ export interface Project {
     stack: StackItem[];
     mockLabel: string;
     mockImage?: string;
+    demoVideo?: string;
 }
 
 export interface TimelineEntry {

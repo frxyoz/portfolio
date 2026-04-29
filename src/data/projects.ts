@@ -34,6 +34,7 @@ export const projects: Project[] = [
         ],
         mockLabel: 'Dashboard — Study Session View',
         mockImage: '/luminary.png',
+        demoVideo: 'https://www.youtube.com/embed/ZEVsYJFX-Fc',
     },
     {
         id: 'boroughs',
@@ -69,6 +70,7 @@ export const projects: Project[] = [
         ],
         mockLabel: 'Borough Match Results — User Dashboard',
         mockImage: '/boroughs.png',
+        demoVideo: 'https://www.youtube.com/embed/PVqTMSDqXuE',
     },
     {
         id: 'ima',
@@ -131,11 +133,11 @@ export const projects: Project[] = [
             },
         ],
         stack: [
-            { name: 'Swift', role: 'iOS native app' },
+            { name: 'Flutter', role: 'Cross-platform UI' },
             { name: 'Mediapipe', role: 'Hand landmark detection' },
             { name: 'Firebase', role: 'Auth & progress storage' },
-            { name: 'AVFoundation', role: 'Camera feed processing' },
         ],
         mockLabel: 'Live Analysis — Hand Posture Feedback',
+        mockImage: '/noteform.png',
     },
 ];

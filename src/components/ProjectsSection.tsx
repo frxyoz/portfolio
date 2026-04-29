@@ -300,14 +300,24 @@ function ProjectDetail({
                         <div style={{
                             width: 340, flexShrink: 0,
                             border: `1px solid ${ACCENT}33`,
-                            background: project.mockImage ? 'transparent' : `repeating-linear-gradient(45deg, ${ACCENT}06 0px, ${ACCENT}06 1px, transparent 1px, transparent 12px)`,
+                            background: (project.demoVideo || project.mockImage) ? 'transparent' : `repeating-linear-gradient(45deg, ${ACCENT}06 0px, ${ACCENT}06 1px, transparent 1px, transparent 12px)`,
                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                             gap: 10, position: 'relative', overflow: 'hidden',
                         }}>
-                            <div style={{ position: 'absolute', inset: 0, background: project.mockImage ? 'transparent' : `radial-gradient(ellipse at 60% 40%, ${ACCENT}08, transparent 70%)` }} />
-                            {project.mockImage ? (
+                            <div style={{ position: 'absolute', inset: 0, background: (project.demoVideo || project.mockImage) ? 'transparent' : `radial-gradient(ellipse at 60% 40%, ${ACCENT}08, transparent 70%)` }} />
+                            {project.demoVideo && (
+                                <iframe
+                                    src={project.demoVideo}
+                                    title={project.mockLabel}
+                                    style={{ width: '100%', aspectRatio: '16/9', display: 'block', border: 'none' }}
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                />
+                            )}
+                            {project.mockImage && (
                                 <img src={project.mockImage} alt={project.mockLabel} style={{ width: '100%', height: 'auto', display: 'block' }} />
-                            ) : (
+                            )}
+                            {!project.demoVideo && !project.mockImage && (
                                 <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', letterSpacing: '0.1em', textAlign: 'center', color: '#c0b89a', padding: '0 24px', lineHeight: 1.7, position: 'relative', zIndex: 1 }}>
                                     [ screenshot ]<br />{project.mockLabel}
                                 </div>
