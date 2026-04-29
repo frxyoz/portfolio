@@ -34,6 +34,7 @@ export const projects: Project[] = [
             { name: 'GCP', role: 'Cloud deployment' },
         ],
         mockLabel: 'Dashboard — Study Session View',
+        mockImage: '/luminary.png',
     },
     {
         id: 'boroughs',

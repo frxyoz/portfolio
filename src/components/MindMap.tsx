@@ -539,9 +539,9 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
             {open && (
                 <motion.div
                     key="mindmap-overlay"
-                    initial={{ y: '100vh' }}
-                    animate={{ y: 0 }}
-                    exit={{ y: '100vh' }}
+                    initial={{ x: '100vw' }}
+                    animate={{ x: 0 }}
+                    exit={{ x: '100vw' }}
                     transition={{ duration: 0.78, ease: [0.22, 1, 0.36, 1] }}
                     style={{
                         position: 'fixed', inset: 0, zIndex: 400,
