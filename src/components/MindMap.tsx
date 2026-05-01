@@ -67,6 +67,7 @@ const NODES: NodeDef[] = [
         id: 'food', x: 845, y: 285, r: 42, type: 'hobby',
         label: 'Food', sub: 'Taste', image: '/aboutme/food.svg',
         floatY: [0, -9], floatDuration: 4.9, floatDelay: 1.7,
+        note: ["I love food! My favorite foods are noodles. I'm trying to get into cooking and baking as well."],
     },
 
     // Level 2 — Soccer leaves
@@ -74,7 +75,7 @@ const NODES: NodeDef[] = [
         id: 'tottenham', x: 80, y: 445, r: 45, type: 'leaf',
         label: 'Tottenham', image: '/aboutme/spurs.svg',
         floatY: [-2, 5], floatDuration: 4.3, floatDelay: 0.5, noteRot: -1.5,
-        note: ['Spurs fan since childhood.', 'COYS. The rebuild is real.'],
+        note: ["I've been a Tottenham fan since 2019. I try to catch the latest Premier League game, through the highs and lows, even though it's been a lot more lows than highs recently :("],
     },
 
     // Level 2 — Soccer + Gaming shared leaf
@@ -82,7 +83,7 @@ const NODES: NodeDef[] = [
         id: 'fifafm', x: 265, y: 445, r: 42, type: 'leaf',
         label: 'FIFA / FM', image: '/aboutme/fm.svg',
         floatY: [2, -4], floatDuration: 3.9, floatDelay: 1.1, noteRot: 1,
-        note: ['FIFA for the quick fix.', 'Football Manager for the', 'full-season obsession.'],
+        note: ['I love soccer management games like FIFA and Football Manager! I can easily spend all day playing these games. I enjoy the blend of strategy, stats, and creativity involved in building and managing a team.'],
     },
 
     // Level 2 — Gaming leaves
@@ -90,7 +91,7 @@ const NODES: NodeDef[] = [
         id: 'pokemon', x: 440, y: 445, r: 34, type: 'leaf',
         label: 'Pokémon', image: '/aboutme/poke.svg',
         floatY: [0, -6], floatDuration: 4.5, floatDelay: 0.6, noteRot: -1,
-        note: ['Gen 1–5 purist.', 'Competitive Showdown player.', 'Fire Red never dies.'],
+        note: ["I'm a competitive pokemon player! It's a stimulating game with surprisingly deep strategy. I used to run a youtube channel about fun gimmicky strategies, which you can check out here: https://www.youtube.com/@froxyproxy."],
     },
 
     // Level 2 — Music leaves
@@ -98,13 +99,13 @@ const NODES: NodeDef[] = [
         id: 'piano', x: 560, y: 445, r: 32, type: 'leaf',
         label: 'Piano', image: '/aboutme/piano.svg',
         floatY: [-3, 4], floatDuration: 4.0, floatDelay: 1.3, noteRot: 1.5,
-        note: ['Classical training.', 'Now into jazz voicings', 'and lo-fi chord stacks.'],
+        note: ["I've been playing piano for about 12 years! It's a great way to unwind for me."],
     },
     {
         id: 'headphones', x: 715, y: 445, r: 32, type: 'leaf',
-        label: 'Headphones', image: null,
+        label: 'Headphones', image: '/aboutme/headphone.svg',
         floatY: [1, -5], floatDuration: 3.7, floatDelay: 0.9, noteRot: -2,
-        note: ['Always on. Jazz, lo-fi,', 'indie. Playlist >', 'algorithm, always.'],
+        note: ['I listen to a lot of music. Of every genre. You can check out my last.fm here: https://www.last.fm/user/olriczzz'],
     },
 ];
 
@@ -142,21 +143,38 @@ function makeEdgePath(ax: number, ay: number, ar: number, bx: number, by: number
     return `M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${cpx.toFixed(1)} ${cpy.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`;
 }
 
-function notePosition(nx_base: number, ny_base: number, type: NodeDef['type'], noteW: number, noteH: number) {
+// Wrap an array of raw strings into display lines that fit within maxChars.
+// Uses a simple greedy word-wrap so callers can pass arbitrary-length strings.
+function wrapLines(raw: string[], maxChars: number): string[] {
+    const out: string[] = [];
+    for (const para of raw) {
+        const words = para.split(' ');
+        let cur = '';
+        for (const w of words) {
+            if (!cur) { cur = w; continue; }
+            if ((cur + ' ' + w).length <= maxChars) { cur += ' ' + w; }
+            else { out.push(cur); cur = w; }
+        }
+        if (cur) out.push(cur);
+    }
+    return out;
+}
+
+function notePosition(nx_base: number, ny_base: number, type: NodeDef['type'], r: number, noteW: number, noteH: number) {
     let nx: number, ny: number;
 
     if (type === 'leaf') {
-        ny = ny_base + 32 + 14; // r=32, note below
-        if (nx_base < 350) nx = nx_base + 32 + 10;
-        else if (nx_base > 650) nx = nx_base - 32 - 10 - noteW;
-        else nx = nx_base - noteW / 2;
+        // Side-positioned, vertically centred — avoids overlapping the node at the canvas bottom
+        ny = ny_base - noteH / 2;
+        if (nx_base < 500) nx = nx_base + r + 10;
+        else nx = nx_base - r - 10 - noteW;
     } else if (type === 'hobby') {
         ny = ny_base - noteH / 2;
-        if (nx_base < 500) nx = nx_base + 42 + 18;
-        else nx = nx_base - 42 - 18 - noteW;
+        if (nx_base < 500) nx = nx_base + r + 18;
+        else nx = nx_base - r - 18 - noteW;
     } else {
         nx = nx_base - noteW / 2;
-        ny = ny_base + 52 + 14;
+        ny = ny_base + r + 14;
     }
 
     nx = Math.max(8, Math.min(VW - noteW - 8, nx));
@@ -195,38 +213,92 @@ function SVGDefs() {
 }
 
 // ─── Sticky note ──────────────────────────────────────────────────────────
+type Seg = { type: 'text'; text: string } | { type: 'link'; url: string; display: string };
+
+function parseSegments(line: string): Seg[] {
+    const URL_RE = /https?:\/\/\S+/g;
+    const segs: Seg[] = [];
+    let last = 0, m;
+    while ((m = URL_RE.exec(line)) !== null) {
+        if (m.index > last) segs.push({ type: 'text', text: line.slice(last, m.index) });
+        const url = m[0].replace(/[.,;:!?]+$/, '');
+        let display: string;
+        try { display = new URL(url).hostname.replace(/^www\./, '') + ' ↗'; }
+        catch { display = url; }
+        segs.push({ type: 'link', url, display });
+        last = m.index + m[0].length;
+    }
+    if (last < line.length) segs.push({ type: 'text', text: line.slice(last) });
+    return segs;
+}
+
+const NOTE_W = 340;
+const NOTE_FONT = 17;
+const NOTE_PAD_X = 18;
+// Caveat/cursive is narrow — empirical ratio ~0.36 (half of a typical sans-serif)
+const NOTE_MAX_CHARS = Math.floor((NOTE_W - NOTE_PAD_X * 2) / (NOTE_FONT * 0.36));
+
 function StickyNote({ node, ex, ey }: { node: NodeDef; ex: number; ey: number }) {
     if (!node.note?.length) return null;
-    const lines = node.note;
-    const noteW = 200, noteH = 22 + lines.length * 22 + 18;
-    const { nx, ny } = notePosition(ex, ey, node.type, noteW, noteH);
+    const lines = wrapLines(node.note, NOTE_MAX_CHARS);
+    const lineH = 26;
+    const noteW = NOTE_W, noteH = 40 + lines.length * lineH + 28;
+    const foldSz = 30;
+    const { nx, ny } = notePosition(ex, ey, node.type, node.r, noteW, noteH);
     const rot = node.noteRot ?? 0;
     const cx = nx + noteW / 2, cy = ny + noteH / 2;
 
     return (
         <motion.g
-            initial={{ opacity: 0, scale: 0.86 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.86 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            style={{ filter: 'drop-shadow(2px 3px 7px rgba(0,0,0,0.13))' }}
+            initial={{ opacity: 0, scale: 0.82, y: 6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.82, y: 6 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            style={{ filter: 'drop-shadow(3px 5px 12px rgba(0,0,0,0.18))' }}
         >
             <g filter="url(#mm-rf-note)">
-                <rect x={nx} y={ny} width={noteW} height={noteH} rx={2.5}
-                    fill="#fef9e1" stroke={`${AC}66`} strokeWidth={0.9}
+                {/* Main note body */}
+                <rect x={nx} y={ny} width={noteW} height={noteH} rx={3}
+                    fill="#fef8d0" stroke={`${AC}55`} strokeWidth={1.1}
                     transform={`rotate(${rot},${cx},${cy})`} />
-                <path d={`M ${nx + noteW - 18} ${ny} L ${nx + noteW} ${ny + 18} L ${nx + noteW - 18} ${ny + 18} Z`}
-                    fill={`${AC}28`} transform={`rotate(${rot},${cx},${cy})`} />
-            </g>
-            <text fontFamily={HND} fontSize="15.5" fill="#2a2520"
-                transform={`rotate(${rot},${cx},${cy})`}>
-                {lines.map((line, i) => (
-                    <tspan key={i} x={nx + 13} y={ny + 24 + i * 22}>{line}</tspan>
+                {/* Top accent bar — like the sticky pad adhesive strip */}
+                <rect x={nx} y={ny} width={noteW} height={10} rx={3}
+                    fill={`${AC}22`} transform={`rotate(${rot},${cx},${cy})`} />
+                <rect x={nx} y={ny + 7} width={noteW} height={3}
+                    fill={`${AC}18`} transform={`rotate(${rot},${cx},${cy})`} />
+                {/* Fold corner */}
+                <path d={`M ${nx + noteW - foldSz} ${ny} L ${nx + noteW} ${ny + foldSz} L ${nx + noteW - foldSz} ${ny + foldSz} Z`}
+                    fill={`${AC}30`} transform={`rotate(${rot},${cx},${cy})`} />
+                <path d={`M ${nx + noteW - foldSz} ${ny} L ${nx + noteW} ${ny + foldSz}`}
+                    stroke={`${AC}55`} strokeWidth={0.8} fill="none" transform={`rotate(${rot},${cx},${cy})`} />
+                {/* Ruled lines under each text line */}
+                {lines.map((_, i) => (
+                    <line key={`rule-${i}`}
+                        x1={nx + NOTE_PAD_X} y1={ny + 40 + i * lineH + 7}
+                        x2={nx + noteW - NOTE_PAD_X} y2={ny + 40 + i * lineH + 7}
+                        stroke={`${AC}22`} strokeWidth={0.7}
+                        transform={`rotate(${rot},${cx},${cy})`} />
                 ))}
-            </text>
-            <text fontFamily={BOD} fontSize="9" letterSpacing="0.1em" fill={`${AC}88`}
-                textAnchor="middle" transform={`rotate(${rot},${cx},${cy})`}
-                x={nx + noteW - 22} y={ny + noteH - 7}>
+            </g>
+            {lines.map((line, i) => (
+                <text key={i} fontFamily={HND} fontSize={NOTE_FONT} fill="#2a2520"
+                    x={nx + NOTE_PAD_X} y={ny + 40 + i * lineH}
+                    transform={`rotate(${rot},${cx},${cy})`}>
+                    {parseSegments(line).map((seg, j) =>
+                        seg.type === 'link' ? (
+                            <a key={j} href={seg.url} target="_blank" rel="noopener noreferrer"
+                                style={{ cursor: 'pointer' }}>
+                                <tspan fill={AC} textDecoration="underline">{seg.display}</tspan>
+                            </a>
+                        ) : (
+                            <tspan key={j}>{seg.text}</tspan>
+                        )
+                    )}
+                </text>
+            ))}
+            <text fontFamily={BOD} fontSize="9.5" letterSpacing="0.1em" fill={`${AC}77`}
+                textAnchor="end" transform={`rotate(${rot},${cx},${cy})`}
+                x={nx + noteW - NOTE_PAD_X} y={ny + noteH - 10}>
                 {node.type === 'leaf' ? '◦ detail' : '● about'}
             </text>
         </motion.g>
@@ -429,15 +501,20 @@ function MindMapGraph({
                         // Drag interaction — center node is fixed, all others are draggable
                         onPointerDown={(e) => { if (!isCenter) onNodePointerDown(n.id, e); }}
                         style={{ cursor: isCenter ? 'default' : (isDragging ? 'grabbing' : 'grab') }}
-                        onMouseEnter={() => !draggingRef.current && n.note && onHover(n.id)}
-                        onMouseLeave={() => onHover(null)}
+                        // Leaf notes are click-toggled; hover only for non-leaf nodes
+                        onMouseEnter={() => !isLeaf && !draggingRef.current && n.note && onHover(n.id)}
+                        onMouseLeave={() => { if (!isLeaf) onHover(null); }}
                     >
                         {n.image ? (
-                            /* Bare graphic — no circle, border, label, or dot */
-                            <image href={n.image}
-                                x={ex - n.r} y={ey - n.r}
-                                width={n.r * 2} height={n.r * 2}
-                                preserveAspectRatio="xMidYMid meet" />
+                            <>
+                                <image href={n.image}
+                                    x={ex - n.r} y={ey - n.r}
+                                    width={n.r * 2} height={n.r * 2}
+                                    preserveAspectRatio="xMidYMid meet"
+                                    style={{ pointerEvents: 'none' }} />
+                                {/* Transparent circle — precise circular hit target */}
+                                <circle cx={ex} cy={ey} r={n.r} fill="transparent" />
+                            </>
                         ) : (
                             <>
                                 {/* Hover ring */}
