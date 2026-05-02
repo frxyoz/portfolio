@@ -86,12 +86,38 @@ function ProjectRow({ project, index, onOpen }: { project: Project; index: numbe
                 onMouseEnter={() => setHovered(true)}
                 onMouseLeave={() => setHovered(false)}
                 onClick={() => onOpen(project)}
-                style={{ position: 'relative' }}
+                style={{ position: 'relative', overflow: 'hidden' }}
             >
 
+                {/* Thumbnail — absolutely positioned, slides in from the left edge */}
+                {project.mockImage && (
+                    <div style={{
+                        position: 'absolute',
+                        left: 0, top: '50%',
+                        width: 260, height: 163,
+                        borderRadius: 3,
+                        overflow: 'hidden',
+                        border: `1px solid ${ACCENT}33`,
+                        boxShadow: '0 6px 28px rgba(0,0,0,0.15)',
+                        pointerEvents: 'none',
+                        zIndex: 2,
+                        transform: `translateY(-50%) translateX(${hovered ? 0 : -280}px)`,
+                        opacity: hovered ? 1 : 0,
+                        transition: 'transform 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.35s ease',
+                    }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={project.mockImage} alt={project.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block', background: '#f7f4ef' }} />
+                    </div>
+                )}
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 40, alignItems: 'center' }}>
-                    {/* Left */}
-                    <div>
+                    {/* Left — padding-left grows to push text right and reflow it within the narrowed column */}
+                    <div style={{
+                        paddingLeft: hovered && project.mockImage ? 276 : 0,
+                        transition: 'padding-left 0.5s cubic-bezier(0.22,1,0.36,1)',
+                        minWidth: 0,
+                    }}>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 20, marginBottom: 10, flexWrap: 'wrap' }}>
                             <h3 style={{
                                 fontFamily: DISPLAY, fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', fontWeight: 400,
@@ -121,24 +147,9 @@ function ProjectRow({ project, index, onOpen }: { project: Project; index: numbe
                                 {project.desc}
                             </p>
                         </div>
-
-                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingLeft: 48, marginTop: 14 }}>
-                            {project.tags.slice(0, 4).map(t => (
-                                <span key={t} style={{
-                                    fontFamily: 'monospace', fontSize: '0.63rem', letterSpacing: '0.06em',
-                                    color: hovered ? ACCENT : '#8a8078',
-                                    background: hovered ? `${ACCENT}0d` : '#f5f2ed',
-                                    border: `1px solid ${hovered ? ACCENT + '33' : '#e8e2d8'}`,
-                                    padding: '2px 9px', borderRadius: 2,
-                                    transition: 'all 0.25s ease',
-                                }}>
-                                    {t}
-                                </span>
-                            ))}
-                        </div>
                     </div>
 
-                    {/* Right */}
+                    {/* Right — year + explore, stays anchored to the right */}
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12, flexShrink: 0 }}>
                         <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: '1.1rem', color: `${ACCENT}77`, fontWeight: 300 }}>
                             {project.year}
@@ -363,16 +374,6 @@ function ProjectDetail({
                             </div>
                         ))}
 
-                        <div style={{ marginTop: 36 }}>
-                            <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#aaa', marginBottom: 16 }}>Tags</p>
-                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                {project.tags.map(t => (
-                                    <span key={t} style={{ fontFamily: 'monospace', fontSize: '0.68rem', letterSpacing: '0.06em', color: ACCENT, background: `${ACCENT}10`, border: `1px solid ${ACCENT}33`, padding: '4px 12px', borderRadius: 2 }}>
-                                        {t}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
                     </div>
                 </div>
 

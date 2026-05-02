@@ -8,7 +8,6 @@ export const projects: Project[] = [
         year: '2025',
         desc: 'A full-stack study tracking application built for the AppDev Hack Challenge 2025.',
         award: 'Best Overall App — AppDev Hack Challenge 2025',
-        tags: ['Flask', 'SQLAlchemy', 'Docker', 'GCP', 'Python'],
         githubUrl: 'https://github.com/tnt07-t/luminary-backend',
         overview:
             'Luminary is a collaborative study tracker designed to help students organize sessions, track progress, and stay accountable. Built end-to-end in under 2 weeks, it won Best Overall App at Cornell\'s AppDev Hack Challenge 2025.',
@@ -43,7 +42,6 @@ export const projects: Project[] = [
         year: '2025',
         desc: 'A data-driven web app that matches users to NYC neighborhoods based on lifestyle preferences.',
         award: '#1 Live Right Award — Cornell Claude Hackathon (100+ participants)',
-        tags: ['Python', 'scikit-learn', 'Pandas', 'ML', 'Flask'],
         githubUrl: 'https://github.com/aayanhussainw07/Boroughs',
         overview:
             'Boroughs helps people moving to New York City find their ideal neighborhood by scoring compatibility across commute, cost, noise, green space, and nightlife — backed by a machine learning price forecasting model trained on 4,000+ real listings.',
@@ -79,7 +77,6 @@ export const projects: Project[] = [
         year: '2025',
         desc: 'An alumni database and networking platform built for Hack4Impact Cornell.',
         award: null,
-        tags: ['React', 'Node.js', 'Supabase', 'TypeScript'],
         githubUrl: 'https://github.com/cornellh4i/IMA',
         overview:
             'IMA (Internal Member Archive) is a living database of past and current Hack4Impact members, designed to make it easy for alumni to reconnect, for current members to find mentors, and for the organization to preserve institutional knowledge across generations.',
@@ -114,7 +111,6 @@ export const projects: Project[] = [
         year: '2024',
         desc: 'An iOS app using real-time ML to analyze and correct piano hand posture.',
         award: '1st Place — IgniteCS Programming Expo 2024',
-        tags: ['Swift', 'Firebase', 'Mediapipe', 'ML', 'iOS'],
         githubUrl: 'https://github.com/frxyoz/noteform',
         overview:
             'NoteForm is an iOS application that uses the device camera and Google\'s Mediapipe hand landmark model to analyze a pianist\'s hand posture in real-time — providing live feedback on wrist angle, finger curvature, and thumb position, with Firebase-backed progress tracking over time.',

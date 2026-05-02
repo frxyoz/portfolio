@@ -15,7 +15,6 @@ export interface Project {
     year: string;
     desc: string;
     award: string | null;
-    tags: string[];
     githubUrl: string;
     overview: string;
     details: ProjectDetail[];
