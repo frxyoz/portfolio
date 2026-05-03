@@ -73,7 +73,7 @@ export const projects: Project[] = [
     {
         id: 'ima',
         name: 'IMA',
-        subtitle: 'Hack4Impact Internal Member Archive',
+        subtitle: 'Internal Member Archive',
         year: '2025',
         desc: 'An alumni database and networking platform built for Hack4Impact Cornell.',
         award: null,

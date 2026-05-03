@@ -38,20 +38,21 @@ function FixedPhoto({
 }) {
     const [hov, setHov] = useState(false);
 
-    // Scroll fade: photo dims as signature draws in (same curve as hero content)
-    const scrollFade = useTransform(scrollYProgress, [0, 0.32], [1, 0.05]);
     // Boost to 1 when mind map is open so photo is always fully visible over overlay
     const boost = useMotionValue(mindMapOpen ? 1 : 0);
+    useEffect(() => { boost.set(mindMapOpen ? 1 : 0); }, [mindMapOpen, boost]);
 
-    useEffect(() => {
-        boost.set(mindMapOpen ? 1 : 0);
-    }, [mindMapOpen, boost]);
+    // All three transforms match hero content exactly — boost overrides when mind map open
+    const scrollFade  = useTransform(scrollYProgress, [0, 0.32], [1, 0]);
+    const scrollBlur  = useTransform(scrollYProgress, [0, 0.32], [0, 14]);
+    const scrollScale = useTransform(scrollYProgress, [0, 0.32], [1, 0.86]);
 
-    // Combined opacity: max(scrollFade, boost) — boost wins when mind map is open
     const photoOpacity = useTransform(
-        [scrollFade, boost] as const,
-        ([fade, b]: number[]) => Math.max(fade, b)
-    );
+        [scrollFade,  boost] as const, ([f, b]: number[]) => Math.max(f, b));
+    const blurFilter   = useTransform(
+        [scrollBlur,  boost] as const, ([bl, b]: number[]) => `blur(${b > 0.5 ? 0 : bl}px)`);
+    const photoScale   = useTransform(
+        [scrollScale, boost] as const, ([sc, b]: number[]) => b > 0.5 ? 1 : sc);
 
     const visible = heroInView || mindMapOpen;
 
@@ -69,14 +70,21 @@ function FixedPhoto({
             opacity: visible ? 1 : 0,
             transition: 'opacity 0.35s ease',
         }}>
+            {/* Outer: scroll-driven opacity, blur, scale */}
+            <motion.div style={{
+                alignSelf: 'flex-end',
+                display: 'inline-block',
+                opacity: photoOpacity,
+                scale: photoScale,
+                filter: blurFilter,
+            }}>
+            {/* Inner: hover micro-interactions */}
             <motion.div
                 style={{
                     position: 'relative',
-                    alignSelf: 'flex-end',
                     display: 'inline-block',
                     cursor: 'pointer',
                     pointerEvents: visible ? 'all' : 'none',
-                    opacity: photoOpacity,
                     scale: hov ? 1.012 : 1,
                     y: hov ? -4 : 0,
                 }}
@@ -122,7 +130,7 @@ function FixedPhoto({
                     src="/subject.png"
                     alt="Olric Zeng"
                     style={{
-                        height: 'min(54vh, 440px)',
+                        height: 'min(84vh, 720px)',
                         width: 'auto',
                         display: 'block',
                         userSelect: 'none',
@@ -152,6 +160,7 @@ function FixedPhoto({
                         {mindMapOpen ? '← Return Home' : 'Source of Me →'}
                     </p>
                 </div>
+            </motion.div>
             </motion.div>
         </div>
     );
@@ -249,7 +258,7 @@ export default function HeroSection() {
                     <motion.div
                         style={{
                             display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                            padding: 'clamp(40px, 8vh, 80px) clamp(24px, 4vw, 56px) clamp(40px, 8vh, 80px) clamp(40px, 5vw, 72px)',
+                            padding: 'clamp(48px, 9vh, 96px) clamp(32px, 5vw, 72px) clamp(48px, 9vh, 96px) clamp(48px, 6vw, 88px)',
                             position: 'relative', zIndex: 1,
                             opacity: contentOpacity,
                             scale: contentScale,
@@ -266,7 +275,7 @@ export default function HeroSection() {
                                 fontFamily: DISPLAY, fontWeight: 300,
                                 letterSpacing: '-0.015em', lineHeight: 0.88,
                                 color: '#7a7672',
-                                fontSize: 'clamp(3.2rem, 6.5vw, 6rem)',
+                                fontSize: 'clamp(4.5rem, 9vw, 9.5rem)',
                                 margin: 0,
                             }}>
                                 Olric
@@ -275,8 +284,8 @@ export default function HeroSection() {
                                 fontFamily: DISPLAY, fontWeight: 300,
                                 letterSpacing: '-0.015em', lineHeight: 0.88,
                                 fontStyle: 'italic', color: ACCENT,
-                                fontSize: 'clamp(3.2rem, 6.5vw, 6rem)',
-                                marginBottom: 28,
+                                fontSize: 'clamp(4.5rem, 9vw, 9.5rem)',
+                                marginBottom: 36,
                             }}>
                                 Zeng
                             </h1>
@@ -284,17 +293,17 @@ export default function HeroSection() {
 
                         {/* Animated gold rule */}
                         <div style={{
-                            width: entered ? 52 : 0, height: 1,
-                            background: ACCENT, marginBottom: 28,
+                            width: entered ? 64 : 0, height: 1.5,
+                            background: ACCENT, marginBottom: 36,
                             transition: 'width 0.8s cubic-bezier(.22,1,.36,1) 0.2s',
                         }} />
 
                         {/* About Me box */}
                         <div style={{
                             border: `1px solid ${ACCENT}33`,
-                            padding: '22px 26px',
+                            padding: '28px 34px',
                             position: 'relative',
-                            maxWidth: 400,
+                            maxWidth: 500,
                             opacity: entered ? 1 : 0,
                             transform: entered ? 'none' : 'translateY(16px)',
                             transition: 'opacity 0.8s ease 0.28s, transform 0.8s ease 0.28s',
@@ -310,14 +319,14 @@ export default function HeroSection() {
                             ))}
 
                             <p style={{
-                                fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.16em',
-                                textTransform: 'uppercase', color: ACCENT, marginBottom: 12,
+                                fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.16em',
+                                textTransform: 'uppercase', color: ACCENT, marginBottom: 14,
                             }}>
                                 About Me
                             </p>
                             <p style={{
-                                fontFamily: BODY, fontSize: '0.88rem',
-                                color: '#3a3530', lineHeight: 1.75, marginBottom: 0,
+                                fontFamily: BODY, fontSize: '1rem',
+                                color: '#3a3530', lineHeight: 1.8, marginBottom: 0,
                             }}>
                                 {aboutText}
                             </p>
@@ -355,7 +364,7 @@ export default function HeroSection() {
                                     style={{ width: 7, height: 7, borderRadius: '50%', background: ACCENT, flexShrink: 0 }}
                                 />
                                 <span className="trig-label" style={{
-                                    fontFamily: BODY, fontSize: '0.63rem', letterSpacing: '0.18em',
+                                    fontFamily: BODY, fontSize: '0.7rem', letterSpacing: '0.18em',
                                     textTransform: 'uppercase', color: '#9a9088', transition: 'color 0.2s',
                                 }}>
                                     Source of Me
@@ -370,7 +379,7 @@ export default function HeroSection() {
 
                         {/* Social links + CTAs */}
                         <div style={{
-                            display: 'flex', gap: 20, marginTop: 28,
+                            display: 'flex', gap: 24, marginTop: 36,
                             opacity: entered ? 1 : 0,
                             transition: 'opacity 0.8s ease 0.4s',
                             flexWrap: 'wrap', alignItems: 'center',
@@ -378,7 +387,7 @@ export default function HeroSection() {
                             {profile.socialLinks.map(s => (
                                 <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
                                     style={{
-                                        fontFamily: BODY, fontSize: '0.7rem', letterSpacing: '0.1em',
+                                        fontFamily: BODY, fontSize: '0.78rem', letterSpacing: '0.1em',
                                         textTransform: 'uppercase', color: '#8a8078',
                                         borderBottom: `1px solid ${ACCENT}33`, paddingBottom: 2,
                                         transition: 'color 0.2s, border-color 0.2s', textDecoration: 'none',
@@ -402,10 +411,10 @@ export default function HeroSection() {
                                 <button
                                     onClick={() => scrollTo('projects')}
                                     style={{
-                                        fontFamily: BODY, fontSize: '0.7rem', letterSpacing: '0.1em',
+                                        fontFamily: BODY, fontSize: '0.78rem', letterSpacing: '0.1em',
                                         textTransform: 'uppercase', color: ACCENT,
                                         background: 'none', border: `1px solid ${ACCENT}44`,
-                                        padding: '6px 16px', cursor: 'pointer',
+                                        padding: '8px 20px', cursor: 'pointer',
                                         transition: 'all 0.2s ease',
                                     }}
                                     onMouseEnter={e => {
@@ -426,7 +435,7 @@ export default function HeroSection() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{
-                                    fontFamily: BODY, fontSize: '0.7rem', letterSpacing: '0.1em',
+                                    fontFamily: BODY, fontSize: '0.78rem', letterSpacing: '0.1em',
                                     textTransform: 'uppercase', color: '#8a8078',
                                     borderBottom: `1px solid ${ACCENT}33`, paddingBottom: 2,
                                     transition: 'color 0.2s, border-color 0.2s', textDecoration: 'none',
