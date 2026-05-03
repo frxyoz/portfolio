@@ -39,7 +39,23 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'Olric Zeng',
         description: 'Portfolio Website of Olric Zeng: CS @ Cornell, passionate about building software for good.',
+        url: 'https://olriczeng.com',
+        siteName: 'Olric Zeng',
+        images: [
+            {
+                url: 'https://olriczeng.com/og-image.png',
+                width: 1200,
+                height: 630,
+                alt: 'Olric Zeng Portfolio',
+            },
+        ],
         type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Olric Zeng',
+        description: 'Portfolio Website of Olric Zeng: CS @ Cornell, passionate about building software for good.',
+        images: ['https://olriczeng.com/og-image.png'],
     },
 };
 
