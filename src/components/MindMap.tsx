@@ -530,10 +530,76 @@ function MindMapGraph({
 }
 
 // ─── Overlay ──────────────────────────────────────────────────────────────
-// Radial clip-path reveal from right side (where the photo lives, ~75% x, 50% y)
+// Build a wavy-blob SVG path centered at (cx, cy) with a given progress (0→1).
+// 80 radial samples + two superimposed wave frequencies → smooth organic edge.
+// clipPathUnits="userSpaceOnUse" so pixel coords map directly to the viewport.
+function buildSlimePath(cx: number, cy: number, progress: number): string {
+    if (progress <= 0) return `M ${cx} ${cy} Z`;
+    const maxR = Math.sqrt(window.innerWidth ** 2 + window.innerHeight ** 2);
+    const baseR = maxR * progress;
+    // Amplitude scales with radius so waves stay proportional; capped so they
+    // don't dwarf the shape at full size.
+    const amp = Math.min(baseR * 0.10, 32);
+    // Phase advances with progress → waves appear to travel outward.
+    const phase = progress * Math.PI * 6;
+    const N = 80;
+    const pts: string[] = [];
+    for (let i = 0; i < N; i++) {
+        const a = (i / N) * Math.PI * 2;
+        const wave = amp * (
+            Math.sin(5 * a + phase) * 0.65 +
+            Math.sin(9 * a - phase * 0.7) * 0.35
+        );
+        const r = Math.max(0, baseR + wave);
+        pts.push(`${(cx + r * Math.cos(a)).toFixed(1)} ${(cy + r * Math.sin(a)).toFixed(1)}`);
+    }
+    return `M ${pts.join(' L ')} Z`;
+}
+
 export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
+    const clipPathRef = useRef<SVGPathElement>(null);
+    const rafRef = useRef<number | null>(null);
+    const [mounted, setMounted] = useState(false);
     const [hovered, setHovered] = useState<string | null>(null);
     const [expandedHobbies, setExpandedHobbies] = useState<Set<string>>(new Set());
+
+    // Mount when open; unmount is driven by the close animation completing.
+    useEffect(() => {
+        if (open) setMounted(true);
+    }, [open]);
+
+    // RAF animation: runs whenever mounted or open changes direction.
+    useEffect(() => {
+        if (!mounted) return;
+        const pathEl = clipPathRef.current;
+        if (!pathEl) return;
+
+        const cx = window.innerWidth * 0.75;
+        const cy = window.innerHeight * 0.52;
+        const isOpening = open;
+        const duration = isOpening ? 950 : 680;
+        let startTime: number | null = null;
+
+        const tick = (now: number) => {
+            if (startTime === null) startTime = now;
+            const rawT = Math.min((now - startTime) / duration, 1);
+            // easeOutCubic for open (quick burst then settle),
+            // easeInCubic for close (gathers inward speed).
+            const eased = isOpening
+                ? 1 - Math.pow(1 - rawT, 3)
+                : rawT * rawT * rawT;
+            pathEl.setAttribute('d', buildSlimePath(cx, cy, isOpening ? eased : 1 - eased));
+            if (rawT < 1) {
+                rafRef.current = requestAnimationFrame(tick);
+            } else if (!isOpening) {
+                setMounted(false);
+            }
+        };
+
+        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(tick);
+        return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current); };
+    }, [mounted, open]);
 
     const onExpand = useCallback((id: string) => {
         setExpandedHobbies(prev => new Set(prev).add(id));
@@ -556,117 +622,119 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
         return () => { document.body.style.overflow = ''; };
     }, [open]);
 
+    if (!mounted) return null;
+
     return (
-        <AnimatePresence>
-            {open && (
-                <motion.div
-                    key="mindmap-overlay"
-                    initial={{ clipPath: 'circle(0% at 75% 50%)' }}
-                    animate={{ clipPath: 'circle(150% at 75% 50%)' }}
-                    exit={{
-                        clipPath: 'circle(0% at 75% 50%)',
-                        transition: { duration: 0.6, ease: [0.55, 0, 0.22, 1] },
-                    }}
-                    transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
-                    style={{
-                        position: 'fixed', inset: 0, zIndex: 400,
-                        display: 'flex', flexDirection: 'column',
-                        background: '#e8e2d4',
-                    }}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label="Source of Me"
-                >
-                    {/* Header */}
-                    <div style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '0 44px', height: 64, flexShrink: 0,
-                        borderBottom: `1px solid ${AC}1e`,
-                        background: 'rgba(232,226,212,0.97)', backdropFilter: 'blur(12px)',
-                        position: 'relative', zIndex: 5,
-                    }}>
-                        <button
-                            onClick={handleClose}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: 9,
-                                fontFamily: BOD, fontSize: '0.74rem', letterSpacing: '0.12em',
-                                textTransform: 'uppercase', color: '#8a8078',
-                                background: 'none', border: 'none', cursor: 'pointer',
-                                transition: 'color 0.2s',
-                            }}
-                            onMouseEnter={e => (e.currentTarget.style.color = '#1a1a1a')}
-                            onMouseLeave={e => (e.currentTarget.style.color = '#8a8078')}
-                        >
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
-                                stroke="currentColor" strokeWidth="1.4">
-                                <line x1="12" y1="7" x2="2" y2="7" />
-                                <polyline points="6,2 2,7 6,12" />
-                            </svg>
-                            Back
-                        </button>
+        <>
+            {/* SVG clip-path — userSpaceOnUse maps px coords to the fixed overlay */}
+            <svg style={{ width: 0, height: 0, position: 'fixed', top: 0, left: 0, overflow: 'visible', pointerEvents: 'none', zIndex: 400 }} aria-hidden="true">
+                <defs>
+                    <clipPath id="mm-slime-clip" clipPathUnits="userSpaceOnUse">
+                        <path ref={clipPathRef} d={`M ${window.innerWidth * 0.75} ${window.innerHeight * 0.52} Z`} />
+                    </clipPath>
+                </defs>
+            </svg>
 
-                        <div style={{ textAlign: 'center' }}>
-                            <p style={{
-                                fontFamily: DIS, fontSize: '1.4rem', fontWeight: 300,
-                                fontStyle: 'italic', color: '#1a1a1a', lineHeight: 1,
-                            }}>
-                                More About Me!
-                            </p>
-                            <p style={{
-                                fontFamily: BOD, fontSize: '0.6rem', letterSpacing: '0.18em',
-                                textTransform: 'uppercase', color: `${AC}99`, marginTop: 4,
-                            }}>
-                                Drag nodes · click to reveal
-                            </p>
-                        </div>
+            <div
+                style={{
+                    position: 'fixed', inset: 0, zIndex: 400,
+                    display: 'flex', flexDirection: 'column',
+                    background: '#e8e2d4',
+                    clipPath: 'url(#mm-slime-clip)',
+                }}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Source of Me"
+            >
+                {/* Header */}
+                <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0 44px', height: 64, flexShrink: 0,
+                    borderBottom: `1px solid ${AC}1e`,
+                    background: 'rgba(232,226,212,0.97)', backdropFilter: 'blur(12px)',
+                    position: 'relative', zIndex: 5,
+                }}>
+                    <button
+                        onClick={handleClose}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: 9,
+                            fontFamily: BOD, fontSize: '0.74rem', letterSpacing: '0.12em',
+                            textTransform: 'uppercase', color: '#8a8078',
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            transition: 'color 0.2s',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.color = '#1a1a1a')}
+                        onMouseLeave={e => (e.currentTarget.style.color = '#8a8078')}
+                    >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                            stroke="currentColor" strokeWidth="1.4">
+                            <line x1="12" y1="7" x2="2" y2="7" />
+                            <polyline points="6,2 2,7 6,12" />
+                        </svg>
+                        Back
+                    </button>
 
-                        {/* Legend */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-                            {[
-                                { label: 'Hobby', dashed: false },
-                                { label: 'Detail', dashed: true },
-                            ].map(({ label, dashed }) => (
-                                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <svg width="14" height="14" viewBox="0 0 14 14">
-                                        <circle cx="7" cy="7" r="5" fill="none" stroke={AC} strokeWidth="1.3"
-                                            strokeDasharray={dashed ? '3,2.5' : 'none'} />
-                                    </svg>
-                                    <span style={{
-                                        fontFamily: BOD, fontSize: '0.65rem',
-                                        letterSpacing: '0.08em', color: '#8a8078',
-                                    }}>
-                                        {label}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Graph canvas */}
-                    <div style={{ flex: 1, position: 'relative', overflow: 'hidden', padding: '10px 20px 6px' }}>
-                        <MindMapGraph
-                            hovered={hovered}
-                            onHover={setHovered}
-                            expandedHobbies={expandedHobbies}
-                            onExpand={onExpand}
-                        />
-                    </div>
-
-                    {/* Footer */}
-                    <div style={{
-                        height: 36, flexShrink: 0,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        borderTop: `1px solid ${AC}14`,
-                    }}>
+                    <div style={{ textAlign: 'center' }}>
                         <p style={{
-                            fontFamily: BOD, fontSize: '0.58rem', letterSpacing: '0.16em',
-                            textTransform: 'uppercase', color: `${AC}55`,
+                            fontFamily: DIS, fontSize: '1.4rem', fontWeight: 300,
+                            fontStyle: 'italic', color: '#1a1a1a', lineHeight: 1,
                         }}>
-                            Hover nodes to reveal notes · Click hobby nodes to expand
+                            More About Me!
+                        </p>
+                        <p style={{
+                            fontFamily: BOD, fontSize: '0.6rem', letterSpacing: '0.18em',
+                            textTransform: 'uppercase', color: `${AC}99`, marginTop: 4,
+                        }}>
+                            Drag nodes · click to reveal
                         </p>
                     </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+
+                    {/* Legend */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                        {[
+                            { label: 'Hobby', dashed: false },
+                            { label: 'Detail', dashed: true },
+                        ].map(({ label, dashed }) => (
+                            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <svg width="14" height="14" viewBox="0 0 14 14">
+                                    <circle cx="7" cy="7" r="5" fill="none" stroke={AC} strokeWidth="1.3"
+                                        strokeDasharray={dashed ? '3,2.5' : 'none'} />
+                                </svg>
+                                <span style={{
+                                    fontFamily: BOD, fontSize: '0.65rem',
+                                    letterSpacing: '0.08em', color: '#8a8078',
+                                }}>
+                                    {label}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Graph canvas */}
+                <div style={{ flex: 1, position: 'relative', overflow: 'hidden', padding: '10px 20px 6px' }}>
+                    <MindMapGraph
+                        hovered={hovered}
+                        onHover={setHovered}
+                        expandedHobbies={expandedHobbies}
+                        onExpand={onExpand}
+                    />
+                </div>
+
+                {/* Footer */}
+                <div style={{
+                    height: 36, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    borderTop: `1px solid ${AC}14`,
+                }}>
+                    <p style={{
+                        fontFamily: BOD, fontSize: '0.58rem', letterSpacing: '0.16em',
+                        textTransform: 'uppercase', color: `${AC}55`,
+                    }}>
+                        Hover nodes to reveal notes · Click hobby nodes to expand
+                    </p>
+                </div>
+            </div>
+        </>
     );
 }
