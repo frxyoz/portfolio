@@ -139,12 +139,46 @@ function FixedPhoto({
                         draggable={false}
                     />
 
+                    {/* Handwritten click hint */}
+                    {!mindMapOpen && (
+                        <motion.div
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                            style={{
+                                position: 'absolute',
+                                top: -67,
+                                left: 28,
+                                pointerEvents: 'none',
+                                display: 'flex',
+                                alignItems: 'flex-end',
+                                gap: 4,
+                            }}
+                        >
+                            <span style={{
+                                fontFamily: 'var(--font-handwritten, "Caveat", cursive)',
+                                fontSize: '1.25rem',
+                                color: ACCENT,
+                                transform: 'rotate(-5deg)',
+                                display: 'block',
+                                lineHeight: 1,
+                                opacity: 0.9,
+                            }}>
+                                click here!
+                            </span>
+                            <svg width="22" height="38" viewBox="0 0 22 38" fill="none" style={{ marginBottom: 2 }}>
+                                <path d="M 10 2 C 14 10 18 20 10 36" stroke={ACCENT} strokeWidth="1.6" strokeLinecap="round" fill="none" />
+                                <path d="M 10 36 L 3 30" stroke={ACCENT} strokeWidth="1.6" strokeLinecap="round" />
+                                <path d="M 10 36 L 16 29" stroke={ACCENT} strokeWidth="1.6" strokeLinecap="round" />
+                            </svg>
+                        </motion.div>
+                    )}
+
                     {/* Hover hint */}
                     <div style={{
                         position: 'absolute',
                         bottom: 16,
                         left: '50%', transform: 'translateX(-50%)',
-                        opacity: hov ? 1 : 0,
+                        opacity: hov && mindMapOpen ? 1 : 0,
                         transition: 'opacity 0.3s ease',
                         pointerEvents: 'none',
                         whiteSpace: 'nowrap',
@@ -156,7 +190,7 @@ function FixedPhoto({
                             background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(8px)',
                             padding: '5px 14px',
                         }}>
-                            {mindMapOpen ? '← Return Home' : 'Source of Me →'}
+                            ← Return Home
                         </p>
                     </div>
                 </motion.div>
@@ -368,24 +402,25 @@ export default function HeroSection() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     style={{
-
                                         fontFamily: BODY, fontSize: '0.78rem', letterSpacing: '0.1em',
-                                        textTransform: 'uppercase', color: ACCENT,
-                                        background: 'none', border: `1px solid ${ACCENT}44`,
+                                        textTransform: 'uppercase', color: '#1a1a1a',
+                                        background: ACCENT, border: `1px solid ${ACCENT}`,
                                         padding: '8px 20px', cursor: 'pointer',
-                                        transition: 'color 0.2s, border-color 0.2s',
+                                        textDecoration: 'none', display: 'inline-block',
+                                        transition: 'background 0.2s, border-color 0.2s',
                                     }}
                                     onMouseEnter={e => {
-                                        (e.currentTarget as HTMLAnchorElement).style.color = ACCENT;
-                                        (e.currentTarget as HTMLAnchorElement).style.borderBottomColor = ACCENT;
+                                        (e.currentTarget as HTMLAnchorElement).style.background = '#9a720a';
+                                        (e.currentTarget as HTMLAnchorElement).style.borderColor = '#9a720a';
                                     }}
                                     onMouseLeave={e => {
-                                        (e.currentTarget as HTMLAnchorElement).style.color = '#8a8078';
-                                        (e.currentTarget as HTMLAnchorElement).style.borderBottomColor = `${ACCENT}33`;
+                                        (e.currentTarget as HTMLAnchorElement).style.background = ACCENT;
+                                        (e.currentTarget as HTMLAnchorElement).style.borderColor = ACCENT;
                                     }}
                                 >
                                     Resume
-                                </a> </MagneticButton>
+                                </a>
+                            </MagneticButton>
                         </div>
                     </motion.div>
 

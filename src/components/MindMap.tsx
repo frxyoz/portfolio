@@ -146,7 +146,7 @@ function SVGDefs() {
                 <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor={AC} floodOpacity="0.25" />
             </filter>
             <pattern id="mm-dot-grid" x="0" y="0" width="36" height="36" patternUnits="userSpaceOnUse">
-                <circle cx="18" cy="18" r="0.85" fill={AC} opacity="0.14" />
+                <circle cx="18" cy="18" r="1.1" fill={AC} opacity="0.22" />
             </pattern>
             <radialGradient id="mm-glow" cx="80%" cy="50%" r="55%">
                 <stop offset="0%" stopColor={AC} stopOpacity="0.08" />
@@ -662,7 +662,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                             fontFamily: BOD, fontSize: '0.58rem', letterSpacing: '0.16em',
                             textTransform: 'uppercase', color: `${AC}55`,
                         }}>
-                            Hover nodes to reveal notes · Click hobby nodes to expand · Esc to return
+                            Hover nodes to reveal notes · Click hobby nodes to expand
                         </p>
                     </div>
                 </motion.div>
