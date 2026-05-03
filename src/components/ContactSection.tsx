@@ -12,7 +12,7 @@ const BODY = 'var(--font-body, "DM Sans", "Helvetica Neue", sans-serif)';
 
 const inputStyle: React.CSSProperties = {
     fontFamily: BODY, fontSize: '0.9rem', color: '#1a1a1a',
-    background: '#fff', border: `1px solid ${ACCENT}33`, padding: '14px 18px',
+    background: 'rgba(255,255,255,0.72)', border: `1px solid ${ACCENT}28`, padding: '14px 18px',
     width: '100%', outline: 'none', transition: 'border-color 0.2s ease',
 };
 
@@ -39,7 +39,7 @@ export default function ContactSection() {
     };
 
     return (
-        <section id="contact" style={{ background: '#1a1a1a', padding: '120px 48px' }}>
+        <section id="contact" style={{ background: '#f5f0e8', padding: '120px 48px' }}>
             <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
 
                 {/* Section header */}
@@ -49,13 +49,13 @@ export default function ContactSection() {
                     </p>
                 </Reveal>
                 <Reveal delay={0.04}>
-                    <motion.h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: '#fafaf7', lineHeight: 1, marginBottom: 16, rotateX: tilt, transformPerspective: 800 }}>
+                    <motion.h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: '#1a1a1a', lineHeight: 1, marginBottom: 16, rotateX: tilt, transformPerspective: 800 }}>
                         Get in Touch
                     </motion.h2>
                 </Reveal>
                 <Reveal delay={0.08} style={{ width: 40, height: 1, background: ACCENT, margin: '0 auto 20px' }} />
                 <Reveal delay={0.12}>
-                    <p style={{ fontFamily: BODY, fontSize: '0.9rem', color: '#a09890', lineHeight: 1.7, marginBottom: 48 }}>
+                    <p style={{ fontFamily: BODY, fontSize: '0.9rem', color: '#6b6558', lineHeight: 1.7, marginBottom: 48 }}>
                         Always open to collaborations, opportunities, and conversations!
                     </p>
                 </Reveal>
@@ -137,9 +137,9 @@ export default function ContactSection() {
                 </Reveal>
 
                 {/* Footer */}
-                <div style={{ marginTop: 96, paddingTop: 32, borderTop: '1px solid #2e2e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ marginTop: 96, paddingTop: 32, borderTop: `1px solid ${ACCENT}28`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontFamily: DISPLAY, fontSize: '1.1rem', fontStyle: 'italic', color: ACCENT }}>Olric Zeng</span>
-                    <span style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.12em', color: '#555', textTransform: 'uppercase' }}>
+                    <span style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.12em', color: '#8a8078', textTransform: 'uppercase' }}>
                         © {new Date().getFullYear()} · olriczeng@gmail.com
                     </span>
                 </div>

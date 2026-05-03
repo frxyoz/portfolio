@@ -77,7 +77,6 @@ function ProjectRow({ project, index, onOpen }: { project: Project; index: numbe
                 borderTop: `1px solid ${ACCENT}18`,
             }}
         >
-            {/* Corner ornaments — outside the content div so they sit in the row's padding zone */}
             {(['tl', 'tr', 'bl', 'br'] as const).map(pos => (
                 <OrnateCorner key={pos} position={pos} visible={hovered} />
             ))}
@@ -88,20 +87,19 @@ function ProjectRow({ project, index, onOpen }: { project: Project; index: numbe
                 onClick={() => onOpen(project)}
                 style={{ position: 'relative', overflow: 'hidden' }}
             >
-
                 {/* Thumbnail — absolutely positioned, slides in from the left edge */}
                 {project.mockImage && (
                     <div style={{
                         position: 'absolute',
                         left: 0, top: '50%',
-                        width: 260, height: 163,
+                        width: 290, height: 182,
                         borderRadius: 3,
                         overflow: 'hidden',
                         border: `1px solid ${ACCENT}33`,
                         boxShadow: '0 6px 28px rgba(0,0,0,0.15)',
                         pointerEvents: 'none',
                         zIndex: 2,
-                        transform: `translateY(-50%) translateX(${hovered ? 0 : -280}px)`,
+                        transform: `translateY(-50%) translateX(${hovered ? 0 : -310}px)`,
                         opacity: hovered ? 1 : 0,
                         transition: 'transform 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.35s ease',
                     }}>
@@ -112,9 +110,8 @@ function ProjectRow({ project, index, onOpen }: { project: Project; index: numbe
                 )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 40, alignItems: 'center' }}>
-                    {/* Left — padding-left grows to push text right and reflow it within the narrowed column */}
                     <div style={{
-                        paddingLeft: hovered && project.mockImage ? 276 : 0,
+                        paddingLeft: hovered && project.mockImage ? 306 : 0,
                         transition: 'padding-left 0.5s cubic-bezier(0.22,1,0.36,1)',
                         minWidth: 0,
                     }}>

@@ -55,7 +55,7 @@ const NODES: NodeDef[] = [
     // Level 2 — Music leaves
     {
         id: 'piano', x: 160, y: 430, r: 32, type: 'leaf', label: 'Piano', image: '/aboutme/piano.svg', floatY: [-3, 4], floatDuration: 4.0, floatDelay: 1.3, noteRot: 1.5,
-        note: "I've been playing piano for about 12 years! It's a great way to unwind for me."
+        note: "I've been playing piano for about 12 years! It's a great way to unwind for me. My favorite pieces are ragtime pieces!"
     },
     {
         id: 'headphones', x: 280, y: 490, r: 32, type: 'leaf', label: 'Listening', image: '/aboutme/headphone.svg', floatY: [1, -5], floatDuration: 3.7, floatDelay: 0.9, noteRot: -2,
@@ -181,7 +181,7 @@ function parseSegments(line: string): Seg[] {
     return segs;
 }
 
-function StickyNote({ node, ex, ey }: { node: NodeDef; ex: number; ey: number }) {
+function StickyNote({ node, ex, ey, onMouseEnter, onMouseLeave }: { node: NodeDef; ex: number; ey: number; onMouseEnter?: () => void; onMouseLeave?: () => void }) {
     if (!node.note) return null;
     const lines = wrapLines(node.note, NOTE_MAX_CHARS);
     const lineH = 24;
@@ -198,6 +198,8 @@ function StickyNote({ node, ex, ey }: { node: NodeDef; ex: number; ey: number })
             exit={{ opacity: 0, scale: 0.84, y: 6 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             style={{ filter: 'drop-shadow(2px 4px 10px rgba(0,0,0,0.15))' }}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
         >
             <g filter="url(#mm-rf-note)">
                 <rect x={nx} y={ny} width={NOTE_W} height={noteH} rx={3}
@@ -355,6 +357,17 @@ function MindMapGraph({
     onExpand: (id: string) => void;
 }) {
     const svgRef = useRef<SVGSVGElement>(null);
+    const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const scheduleHide = useCallback(() => {
+        hideTimer.current = setTimeout(() => onHover(null), 180);
+    }, [onHover]);
+
+    const cancelHide = useCallback(() => {
+        if (hideTimer.current) clearTimeout(hideTimer.current);
+    }, []);
+
+    useEffect(() => () => { if (hideTimer.current) clearTimeout(hideTimer.current); }, []);
 
     const handleNodeClick = useCallback((id: string) => {
         const n = nodeMap[id];
@@ -385,7 +398,7 @@ function MindMapGraph({
             onPointerLeave={onSvgPointerUp}
         >
             <SVGDefs />
-            <rect width={VW} height={VH} fill="url(#mm-dot-grid)" />
+            <rect x={-VW} y={-VH} width={VW * 3} height={VH * 3} fill="url(#mm-dot-grid)" />
             <rect width={VW} height={VH} fill="url(#mm-glow)" />
 
 
@@ -440,8 +453,8 @@ function MindMapGraph({
                         }}
                         onPointerDown={e => onNodePointerDown(n.id, e)}
                         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-                        onMouseEnter={() => !draggingRef.current && n.note && onHover(n.id)}
-                        onMouseLeave={() => { if (n.note) onHover(null); }}
+                        onMouseEnter={() => { cancelHide(); if (!draggingRef.current && n.note) onHover(n.id); }}
+                        onMouseLeave={() => { if (n.note) scheduleHide(); }}
                     >
                         {n.image ? (
                             <>
@@ -506,7 +519,9 @@ function MindMapGraph({
                     const off = offsets[n.id] ?? { x: 0, y: 0 };
                     return (
                         <StickyNote key={`note-${n.id}`} node={n}
-                            ex={n.x + off.x} ey={n.y + off.y} />
+                            ex={n.x + off.x} ey={n.y + off.y}
+                            onMouseEnter={cancelHide}
+                            onMouseLeave={scheduleHide} />
                     );
                 })}
             </AnimatePresence>
@@ -556,7 +571,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                     style={{
                         position: 'fixed', inset: 0, zIndex: 400,
                         display: 'flex', flexDirection: 'column',
-                        background: '#fafaf7',
+                        background: '#e8e2d4',
                     }}
                     role="dialog"
                     aria-modal="true"
@@ -567,7 +582,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                         padding: '0 44px', height: 64, flexShrink: 0,
                         borderBottom: `1px solid ${AC}1e`,
-                        background: 'rgba(250,250,247,0.97)', backdropFilter: 'blur(12px)',
+                        background: 'rgba(232,226,212,0.97)', backdropFilter: 'blur(12px)',
                         position: 'relative', zIndex: 5,
                     }}>
                         <button
@@ -595,13 +610,13 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                                 fontFamily: DIS, fontSize: '1.4rem', fontWeight: 300,
                                 fontStyle: 'italic', color: '#1a1a1a', lineHeight: 1,
                             }}>
-                                Source of Me
+                                More About Me!
                             </p>
                             <p style={{
                                 fontFamily: BOD, fontSize: '0.6rem', letterSpacing: '0.18em',
                                 textTransform: 'uppercase', color: `${AC}99`, marginTop: 4,
                             }}>
-                                Olric Zeng · Drag nodes · click to reveal
+                                Drag nodes · click to reveal
                             </p>
                         </div>
 
