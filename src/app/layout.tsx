@@ -3,6 +3,7 @@ import { Cormorant_Garamond, DM_Sans, Caveat } from 'next/font/google';
 import './globals.css';
 import Cursor from '@/components/Cursor';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const cormorant = Cormorant_Garamond({
     weight: ['300', '400', '500', '600'],
@@ -66,6 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Cursor />
                 {children}
                 <Analytics />
+                <SpeedInsights />
             </body>
         </html>
     );
