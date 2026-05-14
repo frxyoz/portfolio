@@ -16,11 +16,6 @@ const SIG_2 = 'M' + _sigParts[1] + 'Z';
 const SIG_3 = 'M' + _sigParts[2] + 'Z';
 const SIG_4 = 'M' + _sigParts[3];
 
-function scrollTo(id: string) {
-    const el = document.getElementById(id);
-    if (el) window.scrollTo({ top: el.offsetTop - 72, behavior: 'smooth' });
-}
-
 // ─── Fixed Photo Layer ────────────────────────────────────────────────────
 function FixedPhoto({
     scrollYProgress,
@@ -126,8 +121,9 @@ function FixedPhoto({
 
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                        src="/subject.png"
+                        src="/subject.webp"
                         alt="Olric Zeng"
+                        fetchPriority="high"
                         style={{
                             height: 'min(84vh, 720px)',
                             width: 'auto',

@@ -62,6 +62,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en" className={`${cormorant.variable} ${dmSans.variable} ${caveat.variable}`}>
+            <head>
+                <link rel="preload" as="image" href="/subject.webp" fetchPriority="high" />
+            </head>
             <body>
                 <Cursor />
                 {children}
