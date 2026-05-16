@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useOverlay } from '@/contexts/OverlayContext';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 const ACCENT = '#b8860b';
 const LINKS = [
@@ -38,6 +39,7 @@ export default function NavBar() {
   const scrolled = useScrolled();
   const active = useActiveSection(['hero', 'about', 'projects', 'contact']);
   const { overlayOpen, closeOverlay } = useOverlay();
+  const isMobile = useIsMobile();
 
   const frosted = scrolled || overlayOpen;
 
@@ -66,7 +68,7 @@ export default function NavBar() {
       backdropFilter: frosted ? 'blur(16px)' : 'none',
       borderBottom: frosted ? `1px solid ${ACCENT}22` : 'none',
       transition: 'all 0.4s ease',
-      padding: '0 48px',
+      padding: isMobile ? '0 20px' : '0 48px',
       height: 68,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     }}>
@@ -82,7 +84,7 @@ export default function NavBar() {
         OZ
       </button>
 
-      <div style={{ display: 'flex', gap: 36, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: isMobile ? 20 : 36, alignItems: 'center' }}>
         {LINKS.map(l => {
           const isActive = active === l.id && !overlayOpen;
           return (

@@ -7,6 +7,7 @@ import type { Project } from '@/types';
 import { useOverlay } from '@/contexts/OverlayContext';
 import Reveal from './Reveal';
 import { useScrollTilt } from '@/hooks/useScrollTilt';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 const ACCENT = '#b8860b';
 const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
@@ -61,7 +62,7 @@ function OrnateCorner({ position, visible }: { position: 'tl' | 'tr' | 'bl' | 'b
 }
 
 // ─── Project row ────────────────────────────────────────────────────────────
-function ProjectRow({ project, index, onOpen }: { project: Project; index: number; onOpen: (p: Project) => void }) {
+function ProjectRow({ project, index, onOpen, isMobile }: { project: Project; index: number; onOpen: (p: Project) => void; isMobile: boolean }) {
     const [hovered, setHovered] = useState(false);
     const isEven = index % 2 === 0;
 
@@ -70,7 +71,7 @@ function ProjectRow({ project, index, onOpen }: { project: Project; index: numbe
             delay={(index % 3) * 0.08}
             style={{
                 position: 'relative',
-                padding: '40px 36px',
+                padding: isMobile ? '24px 0' : '40px 36px',
                 cursor: 'pointer',
                 background: hovered ? (isEven ? '#fafaf7' : '#fff') : 'transparent',
                 transition: 'background 0.35s ease',
@@ -109,15 +110,15 @@ function ProjectRow({ project, index, onOpen }: { project: Project; index: numbe
                     </div>
                 )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 40, alignItems: 'center' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr auto', gap: isMobile ? 12 : 40, alignItems: 'center' }}>
                     <div style={{
-                        paddingLeft: hovered && project.mockImage ? 306 : 0,
+                        paddingLeft: !isMobile && hovered && project.mockImage ? 306 : 0,
                         transition: 'padding-left 0.5s cubic-bezier(0.22,1,0.36,1)',
                         minWidth: 0,
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 20, marginBottom: 10, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
                             <h3 style={{
-                                fontFamily: DISPLAY, fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', fontWeight: 400,
+                                fontFamily: DISPLAY, fontSize: isMobile ? 'clamp(1.6rem, 7vw, 2.2rem)' : 'clamp(1.8rem, 3.5vw, 2.8rem)', fontWeight: 400,
                                 color: hovered ? ACCENT : '#1a1a1a', lineHeight: 1, letterSpacing: '-0.01em',
                                 transition: 'color 0.3s ease',
                             }}>
@@ -135,19 +136,19 @@ function ProjectRow({ project, index, onOpen }: { project: Project; index: numbe
                             )}
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 20, paddingLeft: 48 }}>
+                        <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 6 : 20, paddingLeft: isMobile ? 0 : 48 }}>
                             <p style={{ fontFamily: BODY, fontSize: '0.73rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: ACCENT, flexShrink: 0 }}>
                                 {project.subtitle}
                             </p>
-                            <div style={{ width: 1, height: 12, background: `${ACCENT}44`, flexShrink: 0 }} />
+                            {!isMobile && <div style={{ width: 1, height: 12, background: `${ACCENT}44`, flexShrink: 0 }} />}
                             <p style={{ fontFamily: BODY, fontSize: '0.85rem', color: '#6b6558', lineHeight: 1.5, flex: 1 }}>
                                 {project.desc}
                             </p>
                         </div>
                     </div>
 
-                    {/* Right — year + explore, stays anchored to the right */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12, flexShrink: 0 }}>
+                    {/* Right — year + explore */}
+                    <div style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', alignItems: isMobile ? 'center' : 'flex-end', justifyContent: isMobile ? 'space-between' : 'flex-start', gap: 12, flexShrink: 0 }}>
                         <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: '1.1rem', color: `${ACCENT}77`, fontWeight: 300 }}>
                             {project.year}
                         </span>
@@ -167,7 +168,7 @@ function ProjectRow({ project, index, onOpen }: { project: Project; index: numbe
 
 // ─── Project detail overlay ─────────────────────────────────────────────────
 function ProjectDetail({
-    project, onClose, onPrev, onNext, prevProject, nextProject,
+    project, onClose, onPrev, onNext, prevProject, nextProject, isMobile,
 }: {
     project: Project;
     onClose: () => void;
@@ -175,6 +176,7 @@ function ProjectDetail({
     onNext: () => void;
     prevProject: Project | null;
     nextProject: Project | null;
+    isMobile: boolean;
 }) {
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -207,7 +209,7 @@ function ProjectDetail({
                 position: 'sticky', top: 0, zIndex: 10,
                 background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(16px)',
                 borderBottom: `1px solid ${ACCENT}22`,
-                padding: '0 48px', height: 68,
+                padding: isMobile ? '0 16px' : '0 48px', height: 68,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
@@ -261,7 +263,7 @@ function ProjectDetail({
             <div style={{
                 background: 'linear-gradient(160deg, #fafaf7 0%, #fff 60%)',
                 borderBottom: `1px solid ${ACCENT}18`,
-                padding: '72px 48px 60px',
+                padding: isMobile ? '40px 20px 32px' : '72px 48px 60px',
             }}>
                 <div style={{ maxWidth: 960, margin: '0 auto' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap' }}>
@@ -306,19 +308,20 @@ function ProjectDetail({
 
                         {/* Mock screenshot */}
                         <div style={{
-                            width: 340, flexShrink: 0,
+                            width: isMobile ? '100%' : 340, flexShrink: isMobile ? 1 : 0,
                             border: `1px solid ${ACCENT}33`,
                             background: (project.demoVideo || project.mockImage) ? 'transparent' : `repeating-linear-gradient(45deg, ${ACCENT}06 0px, ${ACCENT}06 1px, transparent 1px, transparent 12px)`,
                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                             gap: 10, position: 'relative', overflow: 'hidden',
                         }}>
-                            <div style={{ position: 'absolute', inset: 0, background: (project.demoVideo || project.mockImage) ? 'transparent' : `radial-gradient(ellipse at 60% 40%, ${ACCENT}08, transparent 70%)` }} />
+                            <div style={{ position: 'absolute', inset: 0, background: (project.demoVideo || project.mockImage) ? 'transparent' : `radial-gradient(ellipse at 60% 40%, ${ACCENT}08, transparent 70%)`, pointerEvents: 'none' }} />
                             {project.demoVideo && (
                                 <iframe
                                     src={project.demoVideo}
                                     title={project.mockLabel}
                                     style={{ width: '100%', aspectRatio: '16/9', display: 'block', border: 'none' }}
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerPolicy="strict-origin-when-cross-origin"
                                     allowFullScreen
                                 />
                             )}
@@ -336,8 +339,8 @@ function ProjectDetail({
             </div>
 
             {/* Body */}
-            <div style={{ maxWidth: 960, margin: '0 auto', padding: '72px 48px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'start' }}>
+            <div style={{ maxWidth: 960, margin: '0 auto', padding: isMobile ? '40px 20px' : '72px 48px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 40 : 64, alignItems: 'start' }}>
 
                     {/* Technical breakdown */}
                     <div>
@@ -403,6 +406,7 @@ function ProjectDetail({
 // ─── Projects section ────────────────────────────────────────────────────────
 export default function ProjectsSection() {
     const tilt = useScrollTilt();
+    const isMobile = useIsMobile();
     const [activeProject, setActiveProject] = useState<Project | null>(null);
     const { openOverlay, closeOverlay, overlayOpen } = useOverlay();
 
@@ -429,7 +433,7 @@ export default function ProjectsSection() {
     }, [overlayOpen]);
 
     return (
-        <section id="projects" style={{ background: '#ffffff', padding: '120px 48px' }}>
+        <section id="projects" style={{ background: '#ffffff', padding: isMobile ? '80px 24px' : '120px 48px' }}>
             <div style={{ maxWidth: 960, margin: '0 auto' }}>
 
                 {/* Section header */}
@@ -446,7 +450,7 @@ export default function ProjectsSection() {
                 {/* Editorial list */}
                 <div style={{ borderBottom: `1px solid ${ACCENT}18` }}>
                     {projects.map((p, i) => (
-                        <ProjectRow key={p.id} project={p} index={i} onOpen={handleOpen} />
+                        <ProjectRow key={p.id} project={p} index={i} onOpen={handleOpen} isMobile={isMobile} />
                     ))}
                 </div>
             </div>
@@ -460,6 +464,7 @@ export default function ProjectsSection() {
                     onNext={() => nextProject && setActiveProject(nextProject)}
                     prevProject={prevProject}
                     nextProject={nextProject}
+                    isMobile={isMobile}
                 />
             )}
         </section>

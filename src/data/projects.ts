@@ -33,7 +33,7 @@ export const projects: Project[] = [
         ],
         mockLabel: 'Dashboard — Study Session View',
         mockImage: '/luminary.png',
-        demoVideo: 'https://www.youtube.com/embed/ZEVsYJFX-Fc',
+        demoVideo: 'https://www.youtube-nocookie.com/embed/ZEVsYJFX-Fc',
     },
     {
         id: 'boroughs',
@@ -68,7 +68,7 @@ export const projects: Project[] = [
         ],
         mockLabel: 'Borough Match Results — User Dashboard',
         mockImage: '/boroughs.png',
-        demoVideo: 'https://www.youtube.com/embed/PVqTMSDqXuE',
+        demoVideo: 'https://www.youtube-nocookie.com/embed/PVqTMSDqXuE',
     },
     {
         id: 'ima',

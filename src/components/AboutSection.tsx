@@ -5,6 +5,7 @@ import Reveal from './Reveal';
 import type { TimelineEntry } from '@/types';
 import { motion } from 'framer-motion';
 import { useScrollTilt } from '@/hooks/useScrollTilt';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 const ACCENT  = '#b8860b';
 const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
@@ -12,8 +13,9 @@ const BODY    = 'var(--font-body, "DM Sans", "Helvetica Neue", sans-serif)';
 
 export default function AboutSection() {
   const tilt = useScrollTilt();
+  const isMobile = useIsMobile();
   return (
-    <section id="about" style={{ background: '#fafaf7', padding: '120px 48px' }}>
+    <section id="about" style={{ background: '#fafaf7', padding: isMobile ? '80px 24px' : '120px 48px' }}>
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
 
         {/* Section header */}

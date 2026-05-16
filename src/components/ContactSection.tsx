@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { profile } from '@/data/profile';
 import Reveal from './Reveal';
 import { useScrollTilt } from '@/hooks/useScrollTilt';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 const ACCENT = '#b8860b';
 const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
@@ -18,6 +19,7 @@ const inputStyle: React.CSSProperties = {
 
 export default function ContactSection() {
     const tilt = useScrollTilt();
+    const isMobile = useIsMobile();
     const [form, setForm] = useState({ name: '', email: '', message: '' });
     const [submitted, setSubmitted] = useState(false);
     const [sending, setSending] = useState(false);
@@ -39,7 +41,7 @@ export default function ContactSection() {
     };
 
     return (
-        <section id="contact" style={{ background: '#f5f0e8', padding: '120px 48px' }}>
+        <section id="contact" style={{ background: '#f5f0e8', padding: isMobile ? '80px 24px' : '120px 48px' }}>
             <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
 
                 {/* Section header */}
@@ -61,7 +63,7 @@ export default function ContactSection() {
                 </Reveal>
 
                 {/* Social links */}
-                <Reveal delay={0.16} style={{ display: 'flex', justifyContent: 'center', gap: 32, marginBottom: 56 }}>
+                <Reveal delay={0.16} style={{ display: 'flex', justifyContent: 'center', gap: isMobile ? 16 : 32, flexWrap: 'wrap', marginBottom: 56 }}>
                     {profile.socialLinks.map(s => (
                         <a
                             key={s.label}
@@ -86,7 +88,7 @@ export default function ContactSection() {
                 <Reveal delay={0.2}>
                     {!submitted ? (
                         <form onSubmit={handleSubmit} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
                                 <input
                                     type="text" name="name" placeholder="Name"
                                     value={form.name} onChange={handleChange} required
@@ -137,7 +139,7 @@ export default function ContactSection() {
                 </Reveal>
 
                 {/* Footer */}
-                <div style={{ marginTop: 96, paddingTop: 32, borderTop: `1px solid ${ACCENT}28`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ marginTop: 96, paddingTop: 32, borderTop: `1px solid ${ACCENT}28`, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'center' : 'center', gap: isMobile ? 8 : 0, textAlign: 'center' }}>
                     <span style={{ fontFamily: DISPLAY, fontSize: '1.1rem', fontStyle: 'italic', color: ACCENT }}>Olric Zeng</span>
                     <span style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.12em', color: '#8a8078', textTransform: 'uppercase' }}>
                         © {new Date().getFullYear()} · olriczeng@gmail.com

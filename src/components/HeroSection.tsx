@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform, useMotionValue } from 'framer-motion';
 import { profile } from '@/data/profile';
 import MagneticButton from './MagneticButton';
 import { MindMapOverlay } from './MindMap';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 const ACCENT = '#b8860b';
 const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
@@ -23,12 +24,14 @@ function FixedPhoto({
     heroInView,
     onOpen,
     onClose,
+    isMobile,
 }: {
     scrollYProgress: ReturnType<typeof useScroll>['scrollYProgress'];
     mindMapOpen: boolean;
     heroInView: boolean;
     onOpen: () => void;
     onClose: () => void;
+    isMobile: boolean;
 }) {
     const [hov, setHov] = useState(false);
 
@@ -49,6 +52,8 @@ function FixedPhoto({
         [scrollScale, boost] as const, ([sc, b]: number[]) => b > 0.5 ? 1 : sc);
 
     const visible = heroInView || mindMapOpen;
+
+    if (isMobile) return null;
 
     return (
         <div style={{
@@ -201,6 +206,7 @@ export default function HeroSection() {
     const [mindMapOpen, setMindMapOpen] = useState(false);
     const [heroInView, setHeroInView] = useState(true);
     const [entered, setEntered] = useState(false);
+    const isMobile = useIsMobile();
 
     useEffect(() => {
         const t = setTimeout(() => setEntered(true), 80);
@@ -254,7 +260,7 @@ export default function HeroSection() {
                         height: '100vh',
                         background: '#ffffff',
                         display: 'grid',
-                        gridTemplateColumns: '1fr 1fr',
+                        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
                         position: 'sticky', top: 0,
                         overflow: 'hidden',
                     }}
@@ -287,7 +293,9 @@ export default function HeroSection() {
                     <motion.div
                         style={{
                             display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                            padding: 'clamp(48px, 9vh, 96px) clamp(32px, 5vw, 72px) clamp(48px, 9vh, 96px) clamp(48px, 6vw, 88px)',
+                            padding: isMobile
+                                ? '88px 24px 40px'
+                                : 'clamp(48px, 9vh, 96px) clamp(32px, 5vw, 72px) clamp(48px, 9vh, 96px) clamp(48px, 6vw, 88px)',
                             position: 'relative', zIndex: 1,
                             opacity: contentOpacity,
                             scale: contentScale,
@@ -304,7 +312,7 @@ export default function HeroSection() {
                                 fontFamily: DISPLAY, fontWeight: 300,
                                 letterSpacing: '-0.015em', lineHeight: 0.88,
                                 color: '#7a7672',
-                                fontSize: 'clamp(4.5rem, 9vw, 9.5rem)',
+                                fontSize: isMobile ? 'clamp(3.8rem, 16vw, 5rem)' : 'clamp(4.5rem, 9vw, 9.5rem)',
                                 margin: 0,
                             }}>
                                 Olric
@@ -313,8 +321,8 @@ export default function HeroSection() {
                                 fontFamily: DISPLAY, fontWeight: 300,
                                 letterSpacing: '-0.015em', lineHeight: 0.88,
                                 fontStyle: 'italic', color: ACCENT,
-                                fontSize: 'clamp(4.5rem, 9vw, 9.5rem)',
-                                marginBottom: 36,
+                                fontSize: isMobile ? 'clamp(3.8rem, 16vw, 5rem)' : 'clamp(4.5rem, 9vw, 9.5rem)',
+                                marginBottom: isMobile ? 24 : 36,
                             }}>
                                 Zeng
                             </h1>
@@ -330,9 +338,9 @@ export default function HeroSection() {
                         {/* About Me box */}
                         <div style={{
                             border: `1px solid ${ACCENT}33`,
-                            padding: '28px 34px',
+                            padding: isMobile ? '20px 22px' : '28px 34px',
                             position: 'relative',
-                            maxWidth: 500,
+                            maxWidth: isMobile ? '100%' : 500,
                             opacity: entered ? 1 : 0,
                             transform: entered ? 'none' : 'translateY(16px)',
                             transition: 'opacity 0.8s ease 0.28s, transform 0.8s ease 0.28s',
@@ -421,7 +429,7 @@ export default function HeroSection() {
                     </motion.div>
 
                     {/* RIGHT column — empty, FixedPhoto sits here (position: fixed) */}
-                    <div style={{ position: 'relative', zIndex: 1 }} />
+                    {!isMobile && <div style={{ position: 'relative', zIndex: 1 }} />}
 
                     {/* Signature SVG — traces in as user scrolls */}
                     <div style={{
@@ -463,6 +471,7 @@ export default function HeroSection() {
                 heroInView={heroInView}
                 onOpen={() => setMindMapOpen(true)}
                 onClose={() => setMindMapOpen(false)}
+                isMobile={isMobile}
             />
         </>
     );
