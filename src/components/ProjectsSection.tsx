@@ -13,7 +13,114 @@ const ACCENT = '#b8860b';
 const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
 const BODY = 'var(--font-body, "DM Sans", "Helvetica Neue", sans-serif)';
 
-// ─── Icons ─────────────────────────────────────────────────────────────────
+// Per-project color palettes
+const PALETTES: Record<string, { accent: string; bg: string; c3: string; ink: string }> = {
+    luminary: { accent: '#7c5cbf', bg: '#ede8f7', c3: '#a78fd6', ink: '#2a1f42' },
+    boroughs: { accent: '#3c6e57', bg: '#e7efe6', c3: '#d49a2b', ink: '#20302a' },
+    ima:      { accent: '#4a4f93', bg: '#eaebf3', c3: '#e8674c', ink: '#262a55' },
+    noteform: { accent: '#2a2a2a', bg: '#f0f0f0', c3: '#888888', ink: '#111111' },
+};
+
+// ─── SVG poster artwork (4 abstract motifs) ───────────────────────────────────
+function ProjectArt({ seed, pal }: { seed: number; pal: typeof PALETTES.luminary }) {
+    const { accent, bg, c3 } = pal;
+    const TAU = Math.PI * 2;
+    const svgStyle: React.CSSProperties = { width: '100%', height: '100%', display: 'block', overflow: 'visible' };
+    const orbitStyle: React.CSSProperties = { transformBox: 'fill-box', transformOrigin: 'center', animation: 'orbit 18s linear infinite' };
+    const floatStyle: React.CSSProperties = { transformBox: 'fill-box', transformOrigin: 'center', animation: 'floaty 4.6s ease-in-out infinite' };
+
+    switch (seed % 4) {
+        case 0: // luminary — orbital rings
+            return (
+                <svg viewBox="0 0 200 200" style={svgStyle}>
+                    {[0,1,2].flatMap(j => [0,1].map(i => (
+                        <circle key={`h${i}${j}`} cx={150+i*11} cy={28+j*11} r={Math.max(0.7,2.6-0.45*(i+j))} fill={c3} opacity={0.5} />
+                    )))}
+                    <circle cx={100} cy={104} r={80} fill="none" stroke={c3} strokeWidth={1.6} strokeDasharray="2 10" opacity={0.6} />
+                    <circle cx={100} cy={104} r={58} fill="none" stroke={accent} strokeWidth={5} strokeLinecap="round"
+                        strokeDasharray={`${(TAU*58*0.7).toFixed(1)} ${(TAU*58).toFixed(1)}`} transform="rotate(-90 100 104)" />
+                    <g style={orbitStyle}>
+                        {[0,1,2,3,4,5].map(k => {
+                            const a = k * 60 * Math.PI / 180;
+                            const cx = Math.round((100 + 58 * Math.cos(a)) * 100) / 100;
+                            const cy = Math.round((104 + 58 * Math.sin(a)) * 100) / 100;
+                            return <circle key={`o${k}`} cx={cx} cy={cy} r={k%2?5:3.4} fill={k%2?accent:c3} />;
+                        })}
+                    </g>
+                    <g style={floatStyle}>
+                        <circle cx={100} cy={104} r={24} fill="none" stroke={accent} strokeWidth={1} opacity={0.4} />
+                        <circle cx={100} cy={104} r={15} fill={accent} />
+                        <circle cx={100} cy={104} r={15} fill="none" stroke={bg} strokeWidth={1.6} />
+                        <circle cx={100} cy={104} r={5.1} fill={bg} />
+                    </g>
+                </svg>
+            );
+
+        case 1: // boroughs — geometric squares
+            return (
+                <svg viewBox="0 0 200 200" style={svgStyle}>
+                    {[0,1,2,3,4].flatMap(j => [0,1,2,3,4].map(i => (
+                        <circle key={`g${i}${j}`} cx={48+i*26} cy={52+j*26} r={2.4} fill={c3} opacity={0.42} />
+                    )))}
+                    {([[58,62],[112,86],[78,126]] as [number,number][]).map(([x,y], k) => (
+                        <rect key={`s${k}`} x={x} y={y} width={28} height={28} fill={k%2?accent:c3} opacity={0.88} rx={2}
+                            transform={`rotate(${k*6-6} ${x+14} ${y+14})`} />
+                    ))}
+                    <line x1={72} y1={76} x2={126} y2={100} stroke={accent} strokeWidth={1.4} strokeDasharray="2 6" opacity={0.7} />
+                    <g style={floatStyle}>
+                        <circle cx={142} cy={150} r={22} fill="none" stroke={accent} strokeWidth={1} opacity={0.4} />
+                        <circle cx={142} cy={150} r={13} fill={accent} />
+                        <circle cx={142} cy={150} r={13} fill="none" stroke={bg} strokeWidth={1.6} />
+                        <circle cx={142} cy={150} r={4.42} fill={bg} />
+                    </g>
+                </svg>
+            );
+
+        case 2: // ima — nested wave arcs
+            return (
+                <svg viewBox="0 0 200 200" style={svgStyle}>
+                    {[1,2,3,4].map(i => (
+                        <path key={`w${i}`} d={`M${104-i*20} 58 A ${i*20} ${i*20} 0 0 1 ${104-i*20} 150`}
+                            fill="none" stroke={i%2?accent:c3} strokeWidth={i===4?2:4} strokeLinecap="round" opacity={0.72} />
+                    ))}
+                    <path d="M44 62 V146" stroke={accent} strokeWidth={6} strokeLinecap="round" />
+                    {[0,1,2].flatMap(j => [0,1].map(i => (
+                        <circle key={`h${i}${j}`} cx={150+i*9} cy={150+j*9} r={Math.max(0.7,2.4-0.45*(i+j))} fill={c3} opacity={0.5} />
+                    )))}
+                    <g style={floatStyle}>
+                        <circle cx={108} cy={104} r={23} fill="none" stroke={accent} strokeWidth={1} opacity={0.4} />
+                        <circle cx={108} cy={104} r={14} fill={accent} />
+                        <circle cx={108} cy={104} r={14} fill="none" stroke={bg} strokeWidth={1.6} />
+                        <circle cx={108} cy={104} r={4.76} fill={bg} />
+                    </g>
+                </svg>
+            );
+
+        default: // noteform — piano keyboard
+            return (
+                <svg viewBox="0 0 200 200" style={svgStyle}>
+                    {[0,1,2,3,4,5,6].map(k => (
+                        <rect key={`wk${k}`} x={26+k*22} y={102} width={20} height={82} fill="#f8f8f6" stroke="#1a1a1a" strokeWidth={1.4} rx={2} />
+                    ))}
+                    {[0,1,3,4,5].map((k,j) => (
+                        <rect key={`bk${j}`} x={38+k*22} y={102} width={14} height={52} fill="#111" rx={2} />
+                    ))}
+                    <line x1={24} y1={184} x2={182} y2={184} stroke={accent} strokeWidth={1.6} opacity={0.6} />
+                    <g style={floatStyle}>
+                        <path d="M 100 78 L 100 48" stroke={accent} strokeWidth={2.4} strokeLinecap="round" />
+                        <ellipse cx={100} cy={78} rx={7} ry={7} fill={accent} />
+                        <path d="M 100 48 C 106 46 112 50 110 58" fill="none" stroke={accent} strokeWidth={2.4} strokeLinecap="round" />
+                        <circle cx={110} cy={64} r={5} fill={accent} />
+                    </g>
+                    {[0,1,2].flatMap(j => [0,1].map(i => (
+                        <circle key={`h${i}${j}`} cx={152+i*9} cy={38+j*9} r={Math.max(0.7,2.2-0.38*(i+j))} fill={c3} opacity={0.5} />
+                    )))}
+                </svg>
+            );
+    }
+}
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
 function GitHubIcon({ size = 18 }: { size?: number }) {
     return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -33,140 +140,88 @@ function ArrowIcon({ dir = 'right', size = 16 }: { dir?: 'left' | 'right'; size?
     );
 }
 
-// ─── Art Deco corner ornament ───────────────────────────────────────────────
-function OrnateCorner({ position, visible }: { position: 'tl' | 'tr' | 'bl' | 'br'; visible: boolean }) {
-    const S = 32, sw = 1.2, d = 4;
-    const paths = {
-        tl: `M ${S},4 L 4,4 L 4,${S}`,
-        tr: `M 0,4 L ${S - 4},4 L ${S - 4},${S}`,
-        bl: `M ${S},${S - 4} L 4,${S - 4} L 4,0`,
-        br: `M 0,${S - 4} L ${S - 4},${S - 4} L ${S - 4},0`,
-    };
-    const diamonds: Record<string, [number, number]> = { tl: [4, 4], tr: [S - 4, 4], bl: [4, S - 4], br: [S - 4, S - 4] };
-    const [cx, cy] = diamonds[position];
-    const pos = { tl: { top: 0, left: 0 }, tr: { top: 0, right: 0 }, bl: { bottom: 0, left: 0 }, br: { bottom: 0, right: 0 } }[position];
-
-    return (
-        <svg
-            width={S} height={S} viewBox={`0 0 ${S} ${S}`}
-            style={{ position: 'absolute', ...pos, opacity: visible ? 1 : 0, transition: 'opacity 0.35s ease', pointerEvents: 'none' }}
-        >
-            <path d={paths[position]} fill="none" stroke={ACCENT} strokeWidth={sw} />
-            <polygon points={`${cx},${cy - d} ${cx + d},${cy} ${cx},${cy + d} ${cx - d},${cy}`} fill={ACCENT} />
-            {position === 'tl' && <><line x1={4} y1={13} x2={9} y2={13} stroke={ACCENT} strokeWidth={sw * 0.8} /><line x1={13} y1={4} x2={13} y2={9} stroke={ACCENT} strokeWidth={sw * 0.8} /></>}
-            {position === 'tr' && <><line x1={S - 4} y1={13} x2={S - 9} y2={13} stroke={ACCENT} strokeWidth={sw * 0.8} /><line x1={S - 13} y1={4} x2={S - 13} y2={9} stroke={ACCENT} strokeWidth={sw * 0.8} /></>}
-            {position === 'bl' && <><line x1={4} y1={S - 13} x2={9} y2={S - 13} stroke={ACCENT} strokeWidth={sw * 0.8} /><line x1={13} y1={S - 4} x2={13} y2={S - 9} stroke={ACCENT} strokeWidth={sw * 0.8} /></>}
-            {position === 'br' && <><line x1={S - 4} y1={S - 13} x2={S - 9} y2={S - 13} stroke={ACCENT} strokeWidth={sw * 0.8} /><line x1={S - 13} y1={S - 4} x2={S - 13} y2={S - 9} stroke={ACCENT} strokeWidth={sw * 0.8} /></>}
-        </svg>
-    );
-}
-
-// ─── Project row ────────────────────────────────────────────────────────────
-function ProjectRow({ project, index, onOpen, isMobile }: { project: Project; index: number; onOpen: (p: Project) => void; isMobile: boolean }) {
+// ─── Poster card ──────────────────────────────────────────────────────────────
+function ProjectCard({ project, index, onOpen }: { project: Project; index: number; onOpen: (p: Project) => void }) {
     const [hovered, setHovered] = useState(false);
-    const isEven = index % 2 === 0;
+    const pal = PALETTES[project.id] ?? PALETTES.noteform;
+    const TILTS = [-2, 1.6, -1.3, 2];
+    const tilt = TILTS[index % TILTS.length];
+    const tf = hovered ? 'rotate(0deg) translateY(-12px) scale(1.025)' : `rotate(${tilt}deg)`;
 
     return (
-        <Reveal
-            delay={(index % 3) * 0.08}
-            style={{
-                position: 'relative',
-                padding: isMobile ? '24px 0' : '40px 36px',
-                cursor: 'pointer',
-                background: hovered ? (isEven ? '#fafaf7' : '#fff') : 'transparent',
-                transition: 'background 0.35s ease',
-                borderTop: `1px solid ${ACCENT}18`,
-            }}
-        >
-            {(['tl', 'tr', 'bl', 'br'] as const).map(pos => (
-                <OrnateCorner key={pos} position={pos} visible={hovered} />
-            ))}
-
+        <Reveal delay={(index % 3) * 0.08}>
             <div
                 onMouseEnter={() => setHovered(true)}
                 onMouseLeave={() => setHovered(false)}
                 onClick={() => onOpen(project)}
-                style={{ position: 'relative', overflow: 'hidden' }}
+                style={{
+                    position: 'relative',
+                    display: 'flex', flexDirection: 'column',
+                    borderRadius: 3, overflow: 'hidden',
+                    background: pal.bg, color: pal.ink,
+                    boxShadow: hovered
+                        ? '0 34px 66px rgba(40,30,15,.26), 0 8px 18px rgba(40,30,15,.12)'
+                        : '0 16px 38px rgba(40,30,15,.15), 0 3px 9px rgba(40,30,15,.07)',
+                    transform: tf,
+                    transition: 'transform .55s cubic-bezier(.34,1.26,.5,1), box-shadow .45s ease',
+                    willChange: 'transform',
+                    zIndex: hovered ? 5 : 1,
+                    cursor: 'pointer',
+                }}
             >
-                {/* Thumbnail — absolutely positioned, slides in from the left edge */}
-                {project.mockImage && (
-                    <div style={{
-                        position: 'absolute',
-                        left: 0, top: '50%',
-                        width: 290, height: 182,
-                        borderRadius: 3,
-                        overflow: 'hidden',
-                        border: `1px solid ${ACCENT}33`,
-                        boxShadow: '0 6px 28px rgba(0,0,0,0.15)',
-                        pointerEvents: 'none',
-                        zIndex: 2,
-                        transform: `translateY(-50%) translateX(${hovered ? 0 : -310}px)`,
-                        opacity: hovered ? 1 : 0,
-                        transition: 'transform 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.35s ease',
-                    }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={project.mockImage} alt={project.name}
-                            style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block', background: '#f7f4ef' }} />
-                    </div>
-                )}
+                {/* Decorative tab */}
+                <div style={{
+                    position: 'absolute', left: '50%', top: 0,
+                    width: 2, height: 15, background: '#bcae9655',
+                    transform: 'translateX(-50%)', zIndex: 3,
+                }} />
 
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr auto', gap: isMobile ? 12 : 40, alignItems: 'center' }}>
-                    <div style={{
-                        paddingLeft: !isMobile && hovered && project.mockImage ? 306 : 0,
-                        transition: 'padding-left 0.5s cubic-bezier(0.22,1,0.36,1)',
-                        minWidth: 0,
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
-                            <h3 style={{
-                                fontFamily: DISPLAY, fontSize: isMobile ? 'clamp(1.6rem, 7vw, 2.2rem)' : 'clamp(1.8rem, 3.5vw, 2.8rem)', fontWeight: 400,
-                                color: hovered ? ACCENT : '#1a1a1a', lineHeight: 1, letterSpacing: '-0.01em',
-                                transition: 'color 0.3s ease',
-                            }}>
-                                {project.name}
-                            </h3>
-                            {project.award && (
-                                <span style={{
-                                    fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.08em',
-                                    color: ACCENT, background: `${ACCENT}10`, border: `1px solid ${ACCENT}33`,
-                                    padding: '3px 10px', flexShrink: 0,
-                                    opacity: hovered ? 1 : 0.6, transition: 'opacity 0.2s',
-                                }}>
-                                    {project.award}
-                                </span>
-                            )}
-                        </div>
+                {/* Year badge */}
+                <span style={{
+                    position: 'absolute', right: 15, top: 13, zIndex: 2,
+                    fontFamily: DISPLAY, fontStyle: 'italic', fontSize: '1.05rem',
+                    color: pal.accent, opacity: 0.72,
+                }}>
+                    {project.year}
+                </span>
 
-                        <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 6 : 20, paddingLeft: isMobile ? 0 : 48 }}>
-                            <p style={{ fontFamily: BODY, fontSize: '0.73rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: ACCENT, flexShrink: 0 }}>
-                                {project.subtitle}
-                            </p>
-                            {!isMobile && <div style={{ width: 1, height: 12, background: `${ACCENT}44`, flexShrink: 0 }} />}
-                            <p style={{ fontFamily: BODY, fontSize: '0.85rem', color: '#6b6558', lineHeight: 1.5, flex: 1 }}>
-                                {project.desc}
-                            </p>
-                        </div>
-                    </div>
+                {/* Artwork */}
+                <div style={{ position: 'relative', aspectRatio: '1/1', padding: 32 }}>
+                    <ProjectArt seed={index} pal={pal} />
+                </div>
 
-                    {/* Right — year + explore */}
-                    <div style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', alignItems: isMobile ? 'center' : 'flex-end', justifyContent: isMobile ? 'space-between' : 'flex-start', gap: 12, flexShrink: 0 }}>
-                        <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: '1.1rem', color: `${ACCENT}77`, fontWeight: 300 }}>
-                            {project.year}
+                {/* Metadata */}
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '2px 22px 24px' }}>
+                    <span style={{ fontFamily: BODY, fontSize: '0.55rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: pal.accent, opacity: 0.92, marginBottom: 7 }}>
+                        {project.subtitle}
+                    </span>
+                    <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 500, lineHeight: 0.92, fontSize: '2.05rem', letterSpacing: '-0.01em', color: pal.ink }}>
+                        {project.name}
+                    </span>
+                    {project.award && (
+                        <span style={{ fontFamily: BODY, fontSize: '0.55rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: pal.accent, marginTop: 6, opacity: 0.8, lineHeight: 1.4 }}>
+                            {project.award}
                         </span>
-                        <div style={{
-                            display: 'flex', alignItems: 'center', gap: 8,
-                            fontFamily: BODY, fontSize: '0.72rem', letterSpacing: '0.1em', textTransform: 'uppercase',
-                            color: hovered ? ACCENT : '#bbb', transition: 'color 0.25s',
-                        }}>
-                            Explore <ArrowIcon dir="right" size={12} />
-                        </div>
-                    </div>
+                    )}
+                    <div style={{ height: 1, width: 32, background: pal.accent, marginTop: 15, opacity: 0.5 }} />
+                    <span style={{ fontFamily: BODY, fontSize: '0.8rem', lineHeight: 1.55, marginTop: 13, color: pal.ink, opacity: 0.84 }}>
+                        {project.desc}
+                    </span>
+                    <span style={{
+                        alignSelf: 'flex-start', marginTop: 'auto', paddingTop: 20,
+                        fontFamily: BODY, fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase',
+                        display: 'inline-flex', alignItems: 'center', gap: 7, color: pal.accent,
+                    }}>
+                        View Details{' '}
+                        <span style={{ display: 'inline-block', transition: 'transform .35s ease', transform: hovered ? 'translateX(5px)' : 'none' }}>→</span>
+                    </span>
                 </div>
             </div>
         </Reveal>
     );
 }
 
-// ─── Project detail overlay ─────────────────────────────────────────────────
+// ─── Project detail overlay ───────────────────────────────────────────────────
 function ProjectDetail({
     project, onClose, onPrev, onNext, prevProject, nextProject, isMobile,
 }: {
@@ -306,7 +361,7 @@ function ProjectDetail({
                             </div>
                         </div>
 
-                        {/* Mock screenshot */}
+                        {/* Demo / screenshot */}
                         <div style={{
                             width: isMobile ? '100%' : 340, flexShrink: isMobile ? 1 : 0,
                             border: `1px solid ${ACCENT}33`,
@@ -326,6 +381,7 @@ function ProjectDetail({
                                 />
                             )}
                             {project.mockImage && (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img src={project.mockImage} alt={project.mockLabel} style={{ width: '100%', height: 'auto', display: 'block' }} />
                             )}
                             {!project.demoVideo && !project.mockImage && (
@@ -341,7 +397,6 @@ function ProjectDetail({
             {/* Body */}
             <div style={{ maxWidth: 960, margin: '0 auto', padding: isMobile ? '40px 20px' : '72px 48px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 40 : 64, alignItems: 'start' }}>
-
                     {/* Technical breakdown */}
                     <div>
                         <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT, marginBottom: 32 }}>
@@ -373,7 +428,6 @@ function ProjectDetail({
                                 <span style={{ fontFamily: BODY, fontSize: '0.78rem', color: '#8a8078', textAlign: 'right', maxWidth: 160 }}>{s.role}</span>
                             </div>
                         ))}
-
                     </div>
                 </div>
 
@@ -403,7 +457,7 @@ function ProjectDetail({
     );
 }
 
-// ─── Projects section ────────────────────────────────────────────────────────
+// ─── Projects section ─────────────────────────────────────────────────────────
 export default function ProjectsSection() {
     const tilt = useScrollTilt();
     const isMobile = useIsMobile();
@@ -424,7 +478,6 @@ export default function ProjectsSection() {
         closeOverlay();
     };
 
-    // Allow NavBar to close the overlay externally
     useEffect(() => {
         if (!overlayOpen && activeProject) {
             setActiveProject(null);
@@ -434,10 +487,10 @@ export default function ProjectsSection() {
 
     return (
         <section id="projects" style={{ background: '#ffffff', padding: isMobile ? '80px 24px' : '120px 48px' }}>
-            <div style={{ maxWidth: 960, margin: '0 auto' }}>
+            <div style={{ maxWidth: 1160, margin: '0 auto' }}>
 
                 {/* Section header */}
-                <Reveal style={{ marginBottom: 72 }}>
+                <Reveal style={{ marginBottom: 8 }}>
                     <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT, marginBottom: 12 }}>
                         02
                     </p>
@@ -447,15 +500,15 @@ export default function ProjectsSection() {
                     <div style={{ width: 40, height: 1, background: ACCENT, marginTop: 16 }} />
                 </Reveal>
 
-                {/* Editorial list */}
-                <div style={{ borderBottom: `1px solid ${ACCENT}18` }}>
+                {/* Poster card grid — responsive via .project-grid in globals.css */}
+                <div className="project-grid">
                     {projects.map((p, i) => (
-                        <ProjectRow key={p.id} project={p} index={i} onOpen={handleOpen} isMobile={isMobile} />
+                        <ProjectCard key={p.id} project={p} index={i} onOpen={handleOpen} />
                     ))}
                 </div>
             </div>
 
-            {/* Full-screen overlay */}
+            {/* Full-screen detail overlay */}
             {activeProject && (
                 <ProjectDetail
                     project={activeProject}

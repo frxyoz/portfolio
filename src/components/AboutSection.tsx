@@ -15,7 +15,10 @@ export default function AboutSection() {
   const tilt = useScrollTilt();
   const isMobile = useIsMobile();
   return (
-    <section id="about" style={{ background: '#fafaf7', padding: isMobile ? '80px 24px' : '120px 48px' }}>
+    <section id="about" style={{ background: '#fafaf7', padding: isMobile ? '80px 24px' : '120px 48px', position: 'relative' }}>
+      {/* Section-level corner ornaments — on the outer section (full-width) so left:0 hits the screen edge */}
+      <span style={{ position: 'absolute', top: 96, left: 0, width: 26, height: 26, opacity: 0.4, borderTop: '1px solid #b8860b', borderLeft: '1px solid #b8860b', pointerEvents: 'none' }} />
+      <span style={{ position: 'absolute', bottom: 0, right: 0, width: 26, height: 26, opacity: 0.4, borderBottom: '1px solid #b8860b', borderRight: '1px solid #b8860b', pointerEvents: 'none' }} />
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
 
         {/* Section header */}

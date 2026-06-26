@@ -38,3 +38,35 @@ body.overlay-open { overflow: hidden; }
   from { transform: translateY(40px); opacity: 0; }
   to   { transform: none; opacity: 1; }
 }
+
+@keyframes orbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-5px); }
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+  margin-top: 60px;
+  align-items: start;
+  padding: 18px 0 6px;
+}
+
+@media (max-width: 1080px) {
+  .project-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .project-grid {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+}

@@ -345,14 +345,14 @@ export default function HeroSection() {
                             transform: entered ? 'none' : 'translateY(16px)',
                             transition: 'opacity 0.8s ease 0.28s, transform 0.8s ease 0.28s',
                         }}>
-                            {/* Corner accents */}
+                            {/* Corner accents — offset -4px so they extend outside the box border */}
                             {[
-                                { top: 0, left: 0, borderTop: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` },
-                                { top: 0, right: 0, borderTop: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` },
-                                { bottom: 0, left: 0, borderBottom: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` },
-                                { bottom: 0, right: 0, borderBottom: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` },
+                                { top: -4, left: -4, borderTop: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` },
+                                { top: -4, right: -4, borderTop: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` },
+                                { bottom: -4, left: -4, borderBottom: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` },
+                                { bottom: -4, right: -4, borderBottom: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` },
                             ].map((s, i) => (
-                                <div key={i} style={{ position: 'absolute', width: 14, height: 14, ...(s as React.CSSProperties) }} />
+                                <div key={i} style={{ position: 'absolute', width: 18, height: 18, ...(s as React.CSSProperties) }} />
                             ))}
 
                             <p style={{
