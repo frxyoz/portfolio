@@ -1,740 +1,633 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
-const AC = '#b8860b';
-const DIS = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
-const BOD = 'var(--font-body, "DM Sans", "Helvetica Neue", sans-serif)';
-const HND = 'var(--font-handwritten, "Caveat", cursive)';
+const BODY = 'var(--font-body, "DM Sans", "Helvetica Neue", sans-serif)';
+const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
 
-// SVG canvas — nodes branch left; anchor aligns with the fixed photo on the right
-const VW = 900, VH = 560;
-const ANCHOR_X = 720, ANCHOR_Y = 280;
-
-interface NodeDef {
-    id: string;
-    x: number; y: number; r: number;
-    type: 'hobby' | 'leaf';
-    label: string;
-    sub?: string;
-    image?: string;
-    floatY: [number, number];
-    floatDuration: number;
-    floatDelay: number;
-    noteRot?: number;
-    note?: string;
+// ─── Types ────────────────────────────────────────────────────────────────
+interface Pal { accent: string; bg: string; c2: string; c3: string; ink: string; }
+interface CardData {
+  title: string; cap: string; art: string; pal: Pal;
+  titleColor: string; capColor: string; dark?: boolean;
+  note?: string; badge?: string;
+  link?: string; linkLabel?: string;
+  jump?: number; jumpLabel?: string;
+}
+interface HobbyDef {
+  id: string; idx: string; accent: string;
+  main: CardData; subs: [CardData, CardData];
 }
 
-const NODES: NodeDef[] = [
-    // Level 1 — Hobbies
-    { id: 'soccer', x: 480, y: 90, r: 46, type: 'hobby', label: 'Soccer', sub: 'Sport', image: '/aboutme/soccer.svg', floatY: [-3, 6], floatDuration: 3.8, floatDelay: 0.3 },
-    { id: 'gaming', x: 310, y: 190, r: 46, type: 'hobby', label: 'Gaming', sub: 'Games', image: '/aboutme/game.svg', floatY: [0, -7], floatDuration: 4.2, floatDelay: 0.8 },
-    { id: 'music', x: 310, y: 370, r: 42, type: 'hobby', label: 'Music', sub: 'Creative', image: '/aboutme/music.svg', floatY: [3, -5], floatDuration: 3.6, floatDelay: 1.2 },
-    {
-        id: 'food', x: 480, y: 470, r: 42, type: 'hobby', label: 'Food', sub: 'Taste', image: '/aboutme/food.svg', floatY: [0, -9], floatDuration: 4.9, floatDelay: 1.7,
-        note: "I love food! My favorites are noodles. Trying to get into cooking and baking as well."
-    },
-
-    // Level 2 — Soccer leaves
-    {
-        id: 'tottenham', x: 220, y: 50, r: 40, type: 'leaf', label: 'Tottenham', image: '/aboutme/spurs.svg', floatY: [-2, 5], floatDuration: 4.3, floatDelay: 0.5, noteRot: -1.5,
-        note: "I've been a Tottenham fan since 2019. I try to catch the latest Premier League game, through the highs and lows, even though it's been a lot more lows than highs recently :("
-    },
-    {
-        id: 'fifafm', x: 120, y: 175, r: 38, type: 'leaf', label: 'FIFA / FM', image: '/aboutme/fm.svg', floatY: [2, -4], floatDuration: 3.9, floatDelay: 1.1, noteRot: 1,
-        note: 'I love soccer management games like FIFA and Football Manager! I can easily spend all day playing these games. I enjoy the blend of strategy, stats, and creativity involved in building and managing a team.'
-    },
-
-    // Level 2 — Gaming leaves
-    {
-        id: 'pokemon', x: 120, y: 290, r: 34, type: 'leaf', label: 'Pokémon', image: '/aboutme/poke.svg', floatY: [0, -6], floatDuration: 4.5, floatDelay: 0.6, noteRot: -1,
-        note: "I'm a competitive pokemon player! It's a stimulating game with surprisingly deep strategy. I used to run a youtube channel about fun gimmicky strategies, which you can check out here: https://www.youtube.com/@froxyproxy."
-    },
-
-    // Level 2 — Music leaves
-    {
-        id: 'piano', x: 160, y: 430, r: 32, type: 'leaf', label: 'Piano', image: '/aboutme/piano.svg', floatY: [-3, 4], floatDuration: 4.0, floatDelay: 1.3, noteRot: 1.5,
-        note: "I've been playing piano for about 12 years! It's a great way to unwind for me. My favorite pieces are ragtime pieces!"
-    },
-    {
-        id: 'headphones', x: 280, y: 490, r: 32, type: 'leaf', label: 'Listening', image: '/aboutme/headphone.svg', floatY: [1, -5], floatDuration: 3.7, floatDelay: 0.9, noteRot: -2,
-        note: 'I listen to a lot of music. Of every genre. You can check out my last.fm here: https://www.last.fm/user/olriczzz'
-    },
+// ─── Data ─────────────────────────────────────────────────────────────────
+const HOBBIES: HobbyDef[] = [
+  { id: 'soccer', idx: '01', accent: '#3c6e57',
+    main: { title: 'Soccer', cap: 'The Soccer Collection · 01', art: 'soccer',
+      pal: { accent: '#3c6e57', bg: '#e7efe6', c2: '#f4f0e7', c3: '#d49a2b', ink: '#20302a' },
+      titleColor: '#20302a', capColor: '#3c6e57' },
+    subs: [
+      { title: 'Tottenham', cap: 'Club · Since 2019', art: 'tottenham', dark: true,
+        pal: { accent: '#e9e2d0', bg: '#16224a', c2: '#16224a', c3: '#cf6242', ink: '#16224a' },
+        titleColor: '#f4efe2', capColor: '#cf6242',
+        note: 'A Spurs fan since 2019 — through the highs and the (many) lows.' },
+      { title: 'FIFA / FM', cap: 'Management', art: 'fifafm',
+        pal: { accent: '#3c6e57', bg: '#d0e0d4', c2: '#d0e0d4', c3: '#d49a2b', ink: '#20302a' },
+        titleColor: '#20302a', capColor: '#3c6e57', badge: '↔ Also in Gaming',
+        note: 'Management games I lose whole days to — strategy, stats, squad-building.',
+        jump: 1, jumpLabel: 'See it in Gaming →' },
+    ] },
+  { id: 'gaming', idx: '02', accent: '#4a4f93',
+    main: { title: 'Gaming', cap: 'The Gaming Collection · 02', art: 'gaming',
+      pal: { accent: '#4a4f93', bg: '#eaebf3', c2: '#eaebf3', c3: '#e8674c', ink: '#262a55' },
+      titleColor: '#262a55', capColor: '#4a4f93' },
+    subs: [
+      { title: 'FIFA / FM', cap: 'Management', art: 'fifafm', dark: true,
+        pal: { accent: '#cdc4f0', bg: '#2b2f5e', c2: '#2b2f5e', c3: '#e8674c', ink: '#2b2f5e' },
+        titleColor: '#eceaf8', capColor: '#cdc4f0', badge: '↔ Also in Soccer',
+        note: 'Out-thinking the table and building squads, match after match.',
+        jump: 0, jumpLabel: 'See it in Soccer →' },
+      { title: 'Pokémon', cap: 'Competitive', art: 'pokemon',
+        pal: { accent: '#e8674c', bg: '#fbe4da', c2: '#fbf4ef', c3: '#e8674c', ink: '#3a2630' },
+        titleColor: '#3a2630', capColor: '#c2462f',
+        note: 'Competitive player — once ran a YouTube channel on gimmicky teams.',
+        link: 'https://www.youtube.com/@froxyproxy', linkLabel: '@froxyproxy ↗' },
+    ] },
+  { id: 'music', idx: '03', accent: '#b8860b',
+    main: { title: 'Music', cap: 'The Music Collection · 03', art: 'music',
+      pal: { accent: '#b8860b', bg: '#f6efd8', c2: '#f6efd8', c3: '#8a3f6f', ink: '#3a2b16' },
+      titleColor: '#3a2b16', capColor: '#9a7009' },
+    subs: [
+      { title: 'Piano', cap: 'Practice · 12 Years', art: 'piano',
+        pal: { accent: '#b8860b', bg: '#efe3c2', c2: '#fbf6e7', c3: '#8a3f6f', ink: '#3a2b16' },
+        titleColor: '#3a2b16', capColor: '#9a7009',
+        note: 'Twelve years in — my favorite way to unwind. Soft spot for ragtime.' },
+      { title: 'Listening', cap: 'Every Genre', art: 'listening', dark: true,
+        pal: { accent: '#cd9a3e', bg: '#2a2418', c2: '#f6efd8', c3: '#b06a96', ink: '#2a2418' },
+        titleColor: '#f6efd8', capColor: '#cd9a3e',
+        note: 'A lot of music, across every genre.',
+        link: 'https://www.last.fm/user/olriczzz', linkLabel: 'last.fm/olriczzz ↗' },
+    ] },
+  { id: 'food', idx: '04', accent: '#cf6242',
+    main: { title: 'Food', cap: 'The Food Collection · 04', art: 'food', dark: true,
+      pal: { accent: '#cf6242', bg: '#2a2521', c2: '#f2e6cf', c3: '#9aa05a', ink: '#f2e6cf' },
+      titleColor: '#f4ead4', capColor: '#e0935f' },
+    subs: [
+      { title: 'Noodles', cap: 'The Favorite', art: 'noodles',
+        pal: { accent: '#cf6242', bg: '#f2e6cf', c2: '#fbf3e2', c3: '#9aa05a', ink: '#3a221a' },
+        titleColor: '#3a221a', capColor: '#bb4f31',
+        note: 'Noodles above all — my one true favorite.' },
+      { title: 'Cooking', cap: 'Learning', art: 'cooking', dark: true,
+        pal: { accent: '#e2a13a', bg: '#3a2a22', c2: '#f2e6cf', c3: '#cf6242', ink: '#3a2a22' },
+        titleColor: '#f4ead4', capColor: '#e2a13a',
+        note: 'Slowly getting into cooking and baking, too.' },
+    ] },
 ];
 
-const nodeMap = Object.fromEntries(NODES.map(n => [n.id, n]));
+// ─── Art helpers ──────────────────────────────────────────────────────────
+function ht(x: number, y: number, cols: number, rows: number, gap: number, r0: number, dr: number, f: string) {
+  const els: React.ReactElement[] = [];
+  for (let j = 0; j < rows; j++)
+    for (let i = 0; i < cols; i++)
+      els.push(<circle key={`${i}-${j}`} cx={x + i * gap} cy={y + j * gap} r={Math.max(0.6, r0 - (i + j) * dr)} fill={f} opacity={0.5} />);
+  return els;
+}
+function pent(cx: number, cy: number, r: number, rot: number): string {
+  let s = '';
+  for (let k = 0; k < 5; k++) {
+    const a = (rot - 90 + k * 72) * Math.PI / 180;
+    s += `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)} `;
+  }
+  return s.trim();
+}
 
-// Which parent hobbies must ALL be expanded before a leaf becomes visible
-const leafRequires: Record<string, string[]> = {
-    tottenham: ['soccer'],
-    fifafm: ['soccer', 'gaming'],
-    pokemon: ['gaming'],
-    piano: ['music'],
-    headphones: ['music'],
-};
+// ─── Art SVG ─────────────────────────────────────────────────────────────
+function Art({ name, pal }: { name: string; pal: Pal }) {
+  const { accent, bg, c2, c3, ink } = pal;
+  const sv = { viewBox: '0 0 200 200', width: '100%', height: '100%', preserveAspectRatio: 'xMidYMid meet' as const };
+  switch (name) {
+    case 'soccer': return (
+      <svg {...sv}>
+        <circle cx={100} cy={100} r={90} fill="none" stroke={c3} strokeWidth={2.6} strokeDasharray="2 12" opacity={0.7} />
+        <path d="M150 38 A88 88 0 0 1 172 122" fill="none" stroke={c3} strokeWidth={4} strokeLinecap="round" opacity={0.85} />
+        <circle cx={100} cy={100} r={66} fill={accent} />
+        {ht(56, 116, 4, 4, 11, 3.2, 0.55, bg)}
+        <polygon points={pent(100, 100, 24, 0)} fill={bg} />
+        {[0,1,2,3,4].map(k => {
+          const a = (-90 + k * 72) * Math.PI / 180;
+          const px = 100 + 58 * Math.cos(a), py = 100 + 58 * Math.sin(a);
+          return (
+            <g key={k}>
+              <line x1={100 + 24 * Math.cos(a)} y1={100 + 24 * Math.sin(a)} x2={px} y2={py} stroke={bg} strokeWidth={3.2} strokeLinecap="round" />
+              <polygon points={pent(px, py, 12, k * 72 + 36)} fill={bg} />
+            </g>
+          );
+        })}
+        <circle cx={100} cy={100} r={66} fill="none" stroke={ink} strokeWidth={1} opacity={0.12} />
+      </svg>
+    );
+    case 'tottenham': return (
+      <svg viewBox="0 0 187 395" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
+        <path fillRule="evenodd" fill={accent} d="M33.0 6.5L26.0 8.5L18.0 13.5L10.5 21.0L6.5 27.0L7.0 30.5L19.0 31.5L26.0 35.5L30.5 41.0L33.5 50.0L33.5 54.0L32.5 55.0L32.5 67.0L30.5 73.0L30.5 78.0L26.5 91.0L26.5 96.0L24.5 99.0L24.5 103.0L22.5 108.0L22.5 112.0L21.5 113.0L20.5 122.0L18.5 128.0L18.5 150.0L20.5 154.0L20.5 158.0L22.5 161.0L22.5 163.0L30.5 175.0L36.5 182.0L52.5 197.0L64.5 213.0L64.5 215.0L68.5 223.0L68.5 226.0L70.5 229.0L70.5 233.0L72.5 238.0L73.5 254.0L74.5 255.0L74.5 269.0L71.0 270.5L63.0 271.5L60.0 273.5L57.0 273.5L55.0 275.5L53.0 275.5L51.0 277.5L46.0 279.5L41.0 283.5L30.5 295.0L24.5 306.0L24.5 309.0L22.5 312.0L22.5 316.0L20.5 320.0L20.5 338.0L22.5 342.0L22.5 346.0L24.5 352.0L28.5 358.0L28.5 360.0L34.5 368.0L46.0 378.5L55.0 383.5L57.0 383.5L59.0 385.5L62.0 385.5L66.0 387.5L70.0 387.5L71.0 388.5L89.0 388.5L90.0 387.5L98.0 386.5L111.0 380.5L118.0 375.5L126.5 367.0L136.5 350.0L136.5 347.0L138.5 343.0L138.5 338.0L139.5 337.0L139.5 321.0L138.5 320.0L138.5 315.0L136.5 311.0L136.5 308.0L134.5 306.0L134.5 304.0L131.5 298.0L124.5 289.0L114.0 279.5L109.0 277.5L107.0 275.5L105.0 275.5L97.0 271.5L84.5 269.0L86.5 234.0L88.5 227.0L90.5 209.0L92.5 204.0L92.5 199.0L94.5 195.0L96.5 184.0L98.5 181.0L98.5 177.0L100.5 174.0L102.5 165.0L104.5 162.0L110.5 145.0L112.5 143.0L112.5 141.0L118.5 131.0L118.5 129.0L126.5 117.0L128.5 112.0L140.5 96.0L154.0 81.5L165.0 72.5L174.0 66.5L179.0 64.5L181.5 62.0L181.5 54.0L177.0 53.5L175.0 55.5L170.0 57.5L155.0 67.5L148.0 73.5L128.5 95.0L112.5 119.0L112.5 121.0L110.5 123.0L110.5 125.0L108.5 127.0L104.5 135.0L104.5 137.0L102.5 139.0L102.5 141.0L100.5 144.0L100.5 146.0L98.5 148.0L98.5 150.0L96.5 153.0L96.5 156.0L92.5 164.0L92.5 167.0L89.5 173.0L88.5 180.0L86.5 183.0L86.5 187.0L82.5 199.0L82.5 204.0L80.5 209.0L79.5 220.0L78.0 220.5L76.5 219.0L76.5 216.0L74.5 214.0L74.5 212.0L70.5 204.0L66.5 198.0L60.5 191.0L42.5 174.0L33.5 162.0L29.5 153.0L29.5 150.0L28.5 149.0L28.5 128.0L30.5 122.0L30.5 116.0L32.5 112.0L32.5 108.0L34.5 104.0L34.5 100.0L36.5 96.0L36.5 92.0L40.5 78.0L40.5 73.0L42.5 66.0L42.5 44.0L36.5 32.0L35.0 31.5L32.0 27.5L24.0 23.5L23.5 22.0L30.0 17.5L40.0 15.5L51.0 19.5L58.5 27.0L62.5 36.0L64.5 76.0L65.5 77.0L66.5 89.0L70.5 101.0L70.5 104.0L79.5 124.0L89.0 135.5L91.5 134.0L94.5 127.0L88.5 120.0L82.5 108.0L76.5 88.0L76.5 83.0L74.5 77.0L74.5 68.0L73.5 67.0L72.5 34.0L70.5 31.0L70.5 28.0L66.5 23.0L66.5 21.0L59.0 13.5L53.0 9.5L44.0 6.5ZM179.0 79.5L166.0 89.5L152.5 103.0L144.5 113.0L140.5 120.0L136.5 124.0L134.5 129.0L129.5 136.0L131.0 138.5L139.0 138.5L142.5 135.0L149.5 123.0L160.5 109.0L180.5 90.0L180.5 81.0ZM178.0 109.5L160.5 130.0L159.5 133.0L156.5 136.0L158.0 138.5L166.0 138.5L168.0 137.5L179.5 123.0L180.5 120.0L179.5 119.0L180.5 118.0L180.5 110.0ZM83.5 280.0L89.0 279.5L93.0 281.5L96.0 281.5L108.0 287.5L118.5 297.0L124.5 306.0L126.5 312.0L115.0 313.5L110.5 304.0L104.5 296.0L93.0 285.5L88.0 283.5ZM55.5 286.0L68.0 285.5L69.0 286.5L76.0 287.5L84.0 291.5L98.5 304.0L104.5 314.0L104.5 317.0L98.0 319.5L91.0 324.5L89.0 324.5L82.5 314.0L72.0 303.5L58.0 295.5L47.5 293.0L47.5 291.0L49.0 289.5ZM38.5 302.0L44.0 301.5L45.0 302.5L48.0 302.5L49.5 305.0L43.5 311.0L42.5 314.0L38.5 319.0L34.5 330.0L33.5 341.0L32.0 341.5L30.5 340.0L30.5 320.0L34.5 308.0ZM58.5 309.0L62.0 308.5L71.5 317.0L64.5 327.0L64.5 329.0L62.5 331.0L62.5 333.0L60.5 336.0L60.5 339.0L58.5 342.0L57.5 364.0L59.5 371.0L59.0 374.5L47.5 367.0L44.5 361.0L44.5 357.0L42.5 352.0L42.5 339.0L43.5 338.0L45.5 328.0L51.5 317.0ZM118.5 323.0L129.5 323.0L129.5 338.0L125.0 340.5L111.0 343.5L109.0 345.5L103.0 347.5L97.0 352.5L95.0 352.5L94.5 350.0L95.5 349.0L94.5 348.0L93.5 335.0L99.0 330.5L108.0 325.5ZM76.5 327.0L79.5 327.0L84.5 340.0L85.5 356.0L84.5 357.0L84.5 362.0L82.5 366.0L82.5 369.0L78.5 377.0L77.0 378.5L73.0 378.5L70.5 376.0L70.5 373.0L68.5 370.0L67.5 358.0L66.5 356.0L67.5 355.0L68.5 343.0L70.5 340.0L72.5 333.0ZM121.5 351.0L124.0 350.5L124.5 353.0L112.0 367.5L99.0 375.5L97.0 375.5L94.0 377.5L88.5 377.0L94.5 368.0L103.0 359.5L113.0 353.5Z" />
+      </svg>
+    );
+    case 'fifafm': return (
+      <svg {...sv}>
+        <rect x={38} y={46} width={124} height={108} fill="none" stroke={accent} strokeWidth={3} rx={3} />
+        <line x1={38} y1={100} x2={162} y2={100} stroke={accent} strokeWidth={2.4} />
+        <circle cx={100} cy={100} r={22} fill="none" stroke={accent} strokeWidth={2.4} />
+        <rect x={74} y={46} width={52} height={15} fill="none" stroke={accent} strokeWidth={2} />
+        <rect x={74} y={139} width={52} height={15} fill="none" stroke={accent} strokeWidth={2} />
+        <line x1={100} y1={70} x2={128} y2={86} stroke={c3} strokeWidth={1.6} strokeDasharray="2 4" />
+        <line x1={100} y1={70} x2={74} y2={88} stroke={c3} strokeWidth={1.6} strokeDasharray="2 4" />
+        <circle cx={100} cy={70} r={5.5} fill={c3} />
+        <circle cx={74} cy={88} r={5.5} fill={accent} />
+        <circle cx={128} cy={86} r={5.5} fill={accent} />
+        <circle cx={60} cy={120} r={5.5} fill={accent} />
+        <circle cx={100} cy={124} r={5.5} fill={accent} />
+        <circle cx={140} cy={120} r={5.5} fill={accent} />
+      </svg>
+    );
+    case 'gaming': return (
+      <svg {...sv}>
+        {[0,1,2].flatMap(j => [0,1,2].map(i => (
+          <rect key={`${i}-${j}`} x={26 + i * 13} y={150 + j * 13} width={10} height={10} fill={(i + j) % 2 ? c3 : accent} opacity={0.45} />
+        )))}
+        <rect x={28} y={69} width={144} height={70} rx={35} fill={accent} />
+        <rect x={48} y={99.5} width={30} height={9} rx={3} fill={bg} />
+        <rect x={58.5} y={89} width={9} height={30} rx={3} fill={bg} />
+        <circle cx={137} cy={90} r={6.5} fill={c3} />
+        <circle cx={150} cy={104} r={6.5} fill={bg} />
+        <circle cx={124} cy={104} r={6.5} fill={bg} />
+        <circle cx={137} cy={118} r={6.5} fill={c3} />
+      </svg>
+    );
+    case 'pokemon': return (
+      <svg {...sv}>
+        <circle cx={100} cy={100} r={84} fill="none" stroke={c3} strokeWidth={2} strokeDasharray="2 11" opacity={0.55} />
+        <circle cx={100} cy={100} r={62} fill={c2} />
+        <path d="M38 100 A62 62 0 0 1 162 100 Z" fill={accent} />
+        <rect x={38} y={94} width={124} height={12} fill={ink} />
+        <circle cx={100} cy={100} r={17} fill={bg} />
+        <circle cx={100} cy={100} r={17} fill="none" stroke={ink} strokeWidth={4} />
+        <circle cx={100} cy={100} r={7} fill={c2} />
+        <circle cx={100} cy={100} r={7} fill="none" stroke={ink} strokeWidth={2} />
+        {ht(150, 150, 3, 2, 9, 2.4, 0.45, accent)}
+      </svg>
+    );
+    case 'music': return (
+      <svg {...sv}>
+        <circle cx={82} cy={92} r={62} fill={accent} />
+        {[50,40,30,20].map(rr => <circle key={rr} cx={82} cy={92} r={rr} fill="none" stroke={bg} strokeWidth={1.3} opacity={0.5} />)}
+        <circle cx={82} cy={92} r={12} fill={c3} />
+        <circle cx={82} cy={92} r={4} fill={bg} />
+        {[0,1,2,3,4].map(i => <rect key={i} x={120 + i * 14} y={32} width={12} height={42} fill={c2} stroke={ink} strokeWidth={1} />)}
+        {[0,1,3].map(i => <rect key={i} x={129 + i * 14} y={32} width={7} height={26} fill={ink} />)}
+        {[150,160,170].map(y => <line key={y} x1={108} y1={y} x2={184} y2={y} stroke={ink} strokeWidth={1} opacity={0.35} />)}
+        <circle cx={124} cy={170} r={7} fill={c3} />
+        <line x1={131} y1={170} x2={131} y2={146} stroke={c3} strokeWidth={2.4} />
+        <circle cx={154} cy={160} r={7} fill={c3} />
+        <line x1={161} y1={160} x2={161} y2={136} stroke={c3} strokeWidth={2.4} />
+      </svg>
+    );
+    case 'piano': return (
+      <svg {...sv}>
+        <rect x={34} y={68} width={132} height={62} fill={c2} stroke={ink} strokeWidth={2} rx={2} />
+        {[1,2,3,4,5,6].map(i => <line key={i} x1={34 + i * 18.85} y1={68} x2={34 + i * 18.85} y2={130} stroke={ink} strokeWidth={1.4} />)}
+        {[0,1,3,4,5].map(i => <rect key={i} x={47 + i * 18.85} y={68} width={11} height={38} fill={ink} />)}
+        <circle cx={150} cy={44} r={9} fill={accent} />
+        <line x1={159} y1={44} x2={159} y2={16} stroke={accent} strokeWidth={3} strokeLinecap="round" />
+        {ht(40, 148, 3, 2, 11, 2.6, 0.5, accent)}
+      </svg>
+    );
+    case 'listening': return (
+      <svg {...sv}>
+        {[1,2,3].map(i => <path key={i} d={`M150 ${96 - i * 15} A ${i * 15} ${i * 15} 0 0 1 150 ${96 + i * 15}`} fill="none" stroke={c3} strokeWidth={3} strokeLinecap="round" opacity={0.65} />)}
+        <path d="M52 112 V92 A48 48 0 0 1 148 92 V112" fill="none" stroke={accent} strokeWidth={7} strokeLinecap="round" />
+        <rect x={40} y={106} width={22} height={42} rx={9} fill={accent} />
+        <rect x={138} y={106} width={22} height={42} rx={9} fill={accent} />
+        {ht(44, 150, 3, 2, 10, 2.4, 0.45, accent)}
+      </svg>
+    );
+    case 'food': return (
+      <svg {...sv}>
+        <circle cx={100} cy={108} r={72} fill="none" stroke={c3} strokeWidth={2} opacity={0.5} />
+        {[80,104].map(x => <path key={x} d={`M${x} 70 C ${x - 9} 56 ${x + 9} 48 ${x} 34 C ${x - 7} 24 ${x + 7} 18 ${x} 8`} fill="none" stroke={c2} strokeWidth={3} strokeLinecap="round" opacity={0.55} />)}
+        <path d="M40 96 H160 A60 56 0 0 1 40 96 Z" fill={accent} />
+        <rect x={36} y={90} width={128} height={8} rx={4} fill={accent} />
+        {[0,1,2,3].map(i => <path key={i} d={`M${58 + i * 16} 92 C ${50 + i * 16} 116 ${86 + i * 16} 124 ${76 + i * 16} 144`} fill="none" stroke={c2} strokeWidth={4} strokeLinecap="round" opacity={0.85} />)}
+        <circle cx={120} cy={116} r={12} fill={c2} />
+        <circle cx={120} cy={116} r={5} fill={c3} />
+        <line x1={152} y1={30} x2={98} y2={84} stroke={c3} strokeWidth={5} strokeLinecap="round" />
+        <line x1={168} y1={40} x2={110} y2={88} stroke={c3} strokeWidth={5} strokeLinecap="round" />
+        {ht(150, 152, 3, 2, 9, 2.2, 0.4, c2)}
+      </svg>
+    );
+    case 'noodles': return (
+      <svg {...sv}>
+        <circle cx={100} cy={104} r={70} fill="none" stroke={c3} strokeWidth={2} opacity={0.45} />
+        <path d="M44 92 H156 A56 52 0 0 1 44 92 Z" fill={accent} />
+        <rect x={40} y={86} width={120} height={8} rx={4} fill={accent} />
+        {[0,1,2,3].map(i => <path key={i} d={`M${58 + i * 15} 92 C ${48 + i * 15} 116 ${86 + i * 15} 126 ${74 + i * 15} 146`} fill="none" stroke={c2} strokeWidth={5} strokeLinecap="round" opacity={0.9} />)}
+        <line x1={150} y1={28} x2={98} y2={82} stroke={c3} strokeWidth={5} strokeLinecap="round" />
+        <line x1={166} y1={38} x2={110} y2={86} stroke={c3} strokeWidth={5} strokeLinecap="round" />
+        <circle cx={118} cy={120} r={11} fill={c2} />
+        <circle cx={118} cy={120} r={4} fill={c3} />
+      </svg>
+    );
+    case 'cooking': return (
+      <svg {...sv}>
+        {[80,104,128].map(x => <path key={x} d={`M${x} 150 C ${x - 8} 138 ${x + 8} 130 ${x} 116`} fill="none" stroke={c3} strokeWidth={4} strokeLinecap="round" opacity={0.7} />)}
+        <circle cx={100} cy={98} r={52} fill={accent} />
+        <circle cx={100} cy={98} r={52} fill="none" stroke={ink} strokeWidth={2} opacity={0.18} />
+        <rect x={150} y={92} width={46} height={12} rx={6} fill={accent} />
+        <circle cx={90} cy={96} r={16} fill={c2} />
+        <circle cx={90} cy={96} r={7} fill={c3} />
+        <circle cx={118} cy={104} r={9} fill={c2} />
+        {ht(94, 58, 3, 1, 12, 3, 0.4, c2)}
+      </svg>
+    );
+    default: return <svg {...sv}><circle cx={100} cy={100} r={40} fill={accent} /></svg>;
+  }
+}
 
-interface EdgeDef { a: string; b: string; level: 0 | 1; }
+// ─── Slime reveal ─────────────────────────────────────────────────────────
+function buildSlimePath(cx: number, cy: number, progress: number): string {
+  if (progress <= 0) return `M ${cx} ${cy} Z`;
+  const maxR = Math.sqrt(window.innerWidth ** 2 + window.innerHeight ** 2);
+  const baseR = maxR * progress;
+  const amp = Math.min(baseR * 0.10, 32);
+  const phase = progress * Math.PI * 6;
+  const N = 80;
+  const pts: string[] = [];
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2;
+    const wave = amp * (Math.sin(5 * a + phase) * 0.65 + Math.sin(9 * a - phase * 0.7) * 0.35);
+    const r = Math.max(0, baseR + wave);
+    pts.push(`${(cx + r * Math.cos(a)).toFixed(1)} ${(cy + r * Math.sin(a)).toFixed(1)}`);
+  }
+  return `M ${pts.join(' L ')} Z`;
+}
 
-const EDGES: EdgeDef[] = [
-    { a: 'anchor', b: 'soccer', level: 0 },
-    { a: 'anchor', b: 'gaming', level: 0 },
-    { a: 'anchor', b: 'music', level: 0 },
-    { a: 'anchor', b: 'food', level: 0 },
-    { a: 'soccer', b: 'tottenham', level: 1 },
-    { a: 'soccer', b: 'fifafm', level: 1 },
-    { a: 'gaming', b: 'fifafm', level: 1 },
-    { a: 'gaming', b: 'pokemon', level: 1 },
-    { a: 'music', b: 'piano', level: 1 },
-    { a: 'music', b: 'headphones', level: 1 },
+// ─── Card layout ──────────────────────────────────────────────────────────
+const CARD_LAYOUT = [
+  { x: 74,  y: 96,  w: 452, h: 626, rot: -2.2, ts: '6.4rem',  big: true  },
+  { x: 556, y: 74,  w: 300, h: 372, rot:  2.8, ts: '2.05rem', big: false },
+  { x: 592, y: 454, w: 300, h: 336, rot: -3.0, ts: '2.05rem', big: false },
 ];
 
-// ─── Helpers ─────────────────────────────────────────────────────────────
-function makeEdgePath(ax: number, ay: number, ar: number, bx: number, by: number, br: number): string {
-    const dx = bx - ax, dy = by - ay;
-    const len = Math.sqrt(dx * dx + dy * dy) || 1;
-    // ar = 0 for anchor, so edge starts exactly at anchor point
-    const x1 = ax + (dx / len) * ar;
-    const y1 = ay + (dy / len) * ar;
-    const x2 = bx - (dx / len) * (br + 5);
-    const y2 = by - (dy / len) * (br + 5);
-    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-    const cpx = mx + (-dy) * 0.12, cpy = my + dx * 0.12;
-    return `M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${cpx.toFixed(1)} ${cpy.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`;
-}
-
-function wrapLines(text: string, maxChars: number): string[] {
-    const words = text.split(' ');
-    const lines: string[] = [];
-    let cur = '';
-    for (const w of words) {
-        if (!cur) { cur = w; continue; }
-        if ((cur + ' ' + w).length <= maxChars) { cur += ' ' + w; }
-        else { lines.push(cur); cur = w; }
-    }
-    if (cur) lines.push(cur);
-    return lines;
-}
-
-function notePosition(ex: number, ey: number, r: number, noteW: number, noteH: number) {
-    const leftX = ex - r - noteW - 20;
-    const rightX = ex + r + 20;
-    let nx = leftX >= 4 ? leftX : rightX;
-    let ny = ey - noteH / 2;
-    nx = Math.max(4, Math.min(VW - noteW - 4, nx));
-    ny = Math.max(4, Math.min(VH - noteH - 4, ny));
-    return { nx, ny };
-}
-
-// ─── SVG defs ────────────────────────────────────────────────────────────
-function SVGDefs() {
-    return (
-        <defs>
-            <filter id="mm-rf-node" x="-15%" y="-15%" width="130%" height="130%">
-                <feTurbulence type="turbulence" baseFrequency="0.045" numOctaves="3" seed="4" result="noise" />
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.8" xChannelSelector="R" yChannelSelector="G" />
-            </filter>
-            <filter id="mm-rf-edge" x="-5%" y="-5%" width="110%" height="110%">
-                <feTurbulence type="turbulence" baseFrequency="0.055" numOctaves="2" seed="7" result="noise" />
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.6" xChannelSelector="R" yChannelSelector="G" />
-            </filter>
-            <filter id="mm-rf-note" x="-8%" y="-8%" width="116%" height="116%">
-                <feTurbulence type="turbulence" baseFrequency="0.06" numOctaves="2" seed="11" result="noise" />
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.2" xChannelSelector="R" yChannelSelector="G" />
-            </filter>
-            <filter id="mm-rf-drag" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor={AC} floodOpacity="0.25" />
-            </filter>
-            <pattern id="mm-dot-grid" x="0" y="0" width="36" height="36" patternUnits="userSpaceOnUse">
-                <circle cx="18" cy="18" r="1.1" fill={AC} opacity="0.22" />
-            </pattern>
-            <radialGradient id="mm-glow" cx="80%" cy="50%" r="55%">
-                <stop offset="0%" stopColor={AC} stopOpacity="0.08" />
-                <stop offset="100%" stopColor={AC} stopOpacity="0" />
-            </radialGradient>
-        </defs>
-    );
-}
-
-// ─── Sticky note ─────────────────────────────────────────────────────────
-const NOTE_W = 260;
-const NOTE_FONT = 15;
-const NOTE_PAD_X = 14;
-const NOTE_MAX_CHARS = 38;
-
-type Seg = { type: 'text'; text: string } | { type: 'link'; url: string; display: string };
-
-function parseSegments(line: string): Seg[] {
-    const URL_RE = /https?:\/\/\S+/g;
-    const segs: Seg[] = [];
-    let last = 0, m;
-    while ((m = URL_RE.exec(line)) !== null) {
-        if (m.index > last) segs.push({ type: 'text', text: line.slice(last, m.index) });
-        const url = m[0].replace(/[.,;:!?]+$/, '');
-        let display: string;
-        try { display = new URL(url).hostname.replace(/^www\./, '') + ' ↗'; }
-        catch { display = url; }
-        segs.push({ type: 'link', url, display });
-        last = m.index + m[0].length;
-    }
-    if (last < line.length) segs.push({ type: 'text', text: line.slice(last) });
-    return segs;
-}
-
-function StickyNote({ node, ex, ey, onMouseEnter, onMouseLeave }: { node: NodeDef; ex: number; ey: number; onMouseEnter?: () => void; onMouseLeave?: () => void }) {
-    if (!node.note) return null;
-    const lines = wrapLines(node.note, NOTE_MAX_CHARS);
-    const lineH = 24;
-    const noteH = 36 + lines.length * lineH + 20;
-    const foldSz = 22;
-    const { nx, ny } = notePosition(ex, ey, node.r, NOTE_W, noteH);
-    const rot = node.noteRot ?? 0;
-    const cx = nx + NOTE_W / 2, cy = ny + noteH / 2;
-
-    return (
-        <motion.g
-            initial={{ opacity: 0, scale: 0.84, y: 6 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.84, y: 6 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            style={{ filter: 'drop-shadow(2px 4px 10px rgba(0,0,0,0.15))' }}
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-        >
-            <g filter="url(#mm-rf-note)">
-                <rect x={nx} y={ny} width={NOTE_W} height={noteH} rx={3}
-                    fill="#fef8d0" stroke={`${AC}55`} strokeWidth={1}
-                    transform={`rotate(${rot},${cx},${cy})`} />
-                <rect x={nx} y={ny} width={NOTE_W} height={9} rx={3}
-                    fill={`${AC}20`} transform={`rotate(${rot},${cx},${cy})`} />
-                <path d={`M ${nx + NOTE_W - foldSz} ${ny} L ${nx + NOTE_W} ${ny + foldSz} L ${nx + NOTE_W - foldSz} ${ny + foldSz} Z`}
-                    fill={`${AC}28`} transform={`rotate(${rot},${cx},${cy})`} />
-                {lines.map((_, i) => (
-                    <line key={`rule-${i}`}
-                        x1={nx + NOTE_PAD_X} y1={ny + 32 + i * lineH + 5}
-                        x2={nx + NOTE_W - NOTE_PAD_X} y2={ny + 32 + i * lineH + 5}
-                        stroke={`${AC}22`} strokeWidth={0.7}
-                        transform={`rotate(${rot},${cx},${cy})`} />
-                ))}
-            </g>
-            {lines.map((line, i) => (
-                <text key={i} fontFamily={HND} fontSize={NOTE_FONT} fill="#2a2520"
-                    x={nx + NOTE_PAD_X} y={ny + 32 + i * lineH}
-                    transform={`rotate(${rot},${cx},${cy})`}>
-                    {parseSegments(line).map((seg, j) =>
-                        seg.type === 'link' ? (
-                            <a key={j} href={seg.url} target="_blank" rel="noopener noreferrer"
-                                style={{ cursor: 'pointer' }}>
-                                <tspan fill={AC} textDecoration="underline">{seg.display}</tspan>
-                            </a>
-                        ) : (
-                            <tspan key={j}>{seg.text}</tspan>
-                        )
-                    )}
-                </text>
-            ))}
-            <text fontFamily={BOD} fontSize="9" letterSpacing="0.1em" fill={`${AC}77`}
-                textAnchor="end" transform={`rotate(${rot},${cx},${cy})`}
-                x={nx + NOTE_W - NOTE_PAD_X} y={ny + noteH - 8}>
-                {node.type === 'leaf' ? '◦ detail' : '● about'}
-            </text>
-        </motion.g>
-    );
-}
-
-// ─── Drag physics ─────────────────────────────────────────────────────────
-interface DragRef {
-    id: string | null;
-    startSvgX: number; startSvgY: number;
-    startOffX: number; startOffY: number;
-}
-
-function useDragPhysics(
-    svgRef: React.RefObject<SVGSVGElement | null>,
-    onNodeClick: (id: string) => void,
-) {
-    const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({});
-    const [draggingId, setDraggingId] = useState<string | null>(null);
-    const drag = useRef<DragRef>({ id: null, startSvgX: 0, startSvgY: 0, startOffX: 0, startOffY: 0 });
-    const draggingRef = useRef(false);
-    const hasMoved = useRef(false);
-    const rafs = useRef<Record<string, number>>({});
-
-    const toSvg = useCallback((clientX: number, clientY: number) => {
-        const svg = svgRef.current;
-        if (!svg) return { x: 0, y: 0 };
-        const ctm = svg.getScreenCTM();
-        if (!ctm) {
-            const r = svg.getBoundingClientRect();
-            return { x: (clientX - r.left) * VW / r.width, y: (clientY - r.top) * VH / r.height };
-        }
-        const pt = svg.createSVGPoint();
-        pt.x = clientX; pt.y = clientY;
-        const sp = pt.matrixTransform(ctm.inverse());
-        return { x: sp.x, y: sp.y };
-    }, [svgRef]);
-
-    const springBack = useCallback((id: string, ox: number, oy: number) => {
-        cancelAnimationFrame(rafs.current[id]);
-        let x = ox, y = oy, vx = 0, vy = 0;
-        const k = 42, dBase = 11, dAmp = 9, dt = 1 / 60;
-        let t = 0;
-        const phase = (nodeMap[id]?.x ?? 0) * 0.037 + (nodeMap[id]?.y ?? 0) * 0.021;
-        const tick = () => {
-            t += dt;
-            const d = dBase + dAmp * (0.5 + 0.5 * Math.sin(t * 4.7 + phase));
-            vx += (-k * x - d * vx) * dt;
-            vy += (-k * y - d * vy) * dt;
-            x += vx * dt; y += vy * dt;
-            const done = Math.abs(x) < 0.08 && Math.abs(y) < 0.08 &&
-                Math.abs(vx) < 0.12 && Math.abs(vy) < 0.12;
-            setOffsets(prev => ({ ...prev, [id]: done ? { x: 0, y: 0 } : { x, y } }));
-            if (!done) rafs.current[id] = requestAnimationFrame(tick);
-        };
-        rafs.current[id] = requestAnimationFrame(tick);
-    }, []);
-
-    const onNodePointerDown = useCallback((id: string, e: React.PointerEvent) => {
-        e.stopPropagation();
-        cancelAnimationFrame(rafs.current[id]);
-        const cur = { ...(offsets[id] ?? { x: 0, y: 0 }) };
-        const pt = toSvg(e.clientX, e.clientY);
-        drag.current = { id, startSvgX: pt.x, startSvgY: pt.y, startOffX: cur.x, startOffY: cur.y };
-        draggingRef.current = true;
-        hasMoved.current = false;
-        setDraggingId(id);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [toSvg, offsets]);
-
-    const onSvgPointerMove = useCallback((e: React.PointerEvent) => {
-        const { id, startSvgX, startSvgY, startOffX, startOffY } = drag.current;
-        if (!id) return;
-        hasMoved.current = true;
-        const pt = toSvg(e.clientX, e.clientY);
-        setOffsets(prev => ({
-            ...prev,
-            [id]: { x: startOffX + pt.x - startSvgX, y: startOffY + pt.y - startSvgY },
-        }));
-    }, [toSvg]);
-
-    const onSvgPointerUp = useCallback(() => {
-        const { id } = drag.current;
-        if (!id) return;
-        const wasClick = !hasMoved.current;
-        drag.current.id = null;
-        draggingRef.current = false;
-        hasMoved.current = false;
-        setDraggingId(null);
-        setOffsets(prev => {
-            const cur = prev[id] ?? { x: 0, y: 0 };
-            springBack(id, cur.x, cur.y);
-            return prev;
-        });
-        if (wasClick) onNodeClick(id);
-    }, [springBack, onNodeClick]);
-
-    useEffect(() => {
-        const r = rafs.current;
-        return () => Object.values(r).forEach(cancelAnimationFrame);
-    }, []);
-
-    const epos = useCallback((id: string) => {
-        if (id === 'anchor') return { x: ANCHOR_X, y: ANCHOR_Y, r: 0 };
-        const n = nodeMap[id], off = offsets[id] ?? { x: 0, y: 0 };
-        return { x: n.x + off.x, y: n.y + off.y, r: n.r };
-    }, [offsets]);
-
-    return { offsets, draggingId, draggingRef, epos, onNodePointerDown, onSvgPointerMove, onSvgPointerUp };
-}
-
-// ─── Graph ────────────────────────────────────────────────────────────────
-function MindMapGraph({
-    hovered, onHover, expandedHobbies, onExpand,
-}: {
-    hovered: string | null;
-    onHover: (id: string | null) => void;
-    expandedHobbies: Set<string>;
-    onExpand: (id: string) => void;
-}) {
-    const svgRef = useRef<SVGSVGElement>(null);
-    const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    const scheduleHide = useCallback(() => {
-        hideTimer.current = setTimeout(() => onHover(null), 180);
-    }, [onHover]);
-
-    const cancelHide = useCallback(() => {
-        if (hideTimer.current) clearTimeout(hideTimer.current);
-    }, []);
-
-    useEffect(() => () => { if (hideTimer.current) clearTimeout(hideTimer.current); }, []);
-
-    const handleNodeClick = useCallback((id: string) => {
-        const n = nodeMap[id];
-        if (!n) return;
-        if (n.type === 'hobby') onExpand(id);
-        if (n.note) onHover(hovered === id ? null : id);
-    }, [onExpand, onHover, hovered]);
-
-    const { offsets, draggingId, draggingRef, epos, onNodePointerDown, onSvgPointerMove, onSvgPointerUp } =
-        useDragPhysics(svgRef, handleNodeClick);
-
-    const visibleNodeIds = new Set(
-        NODES
-            .filter(n => n.type === 'hobby' || (leafRequires[n.id] ?? []).every(r => expandedHobbies.has(r)))
-            .map(n => n.id)
-    );
-    const visibleEdges = EDGES.filter(e =>
-        (e.a === 'anchor' || visibleNodeIds.has(e.a)) && visibleNodeIds.has(e.b)
-    );
-
-    return (
-        <svg
-            ref={svgRef}
-            viewBox={`0 0 ${VW} ${VH}`} width="100%" height="100%"
-            style={{ display: 'block', overflow: 'visible', touchAction: 'none', userSelect: 'none' }}
-            onPointerMove={onSvgPointerMove}
-            onPointerUp={onSvgPointerUp}
-            onPointerLeave={onSvgPointerUp}
-        >
-            <SVGDefs />
-            <rect x={-VW} y={-VH} width={VW * 3} height={VH * 3} fill="url(#mm-dot-grid)" />
-            <rect width={VW} height={VH} fill="url(#mm-glow)" />
-
-
-
-
-            {/* Edges */}
-            <g filter="url(#mm-rf-edge)">
-                {visibleEdges.map((e, i) => {
-                    const a = epos(e.a), b = epos(e.b);
-                    const len = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
-                    const natural = e.level === 0 ? 310 : 210;
-                    const stretch = Math.max(1, len / natural);
-                    const isHov = hovered === e.b || hovered === e.a;
-                    return (
-                        <path key={i}
-                            d={makeEdgePath(a.x, a.y, a.r, b.x, b.y, b.r)}
-                            fill="none" stroke={AC}
-                            strokeWidth={(e.level === 0 ? 1.8 : 1.2) / Math.pow(stretch, 0.35)}
-                            strokeOpacity={isHov
-                                ? 0.8
-                                : (e.level === 0 ? 0.55 : 0.38) / Math.pow(stretch, 0.5)}
-                            strokeDasharray={e.level === 1 ? '5,4' : 'none'}
-                            strokeLinecap="round"
-                            style={{ transition: 'stroke-opacity 0.2s' }}
-                        />
-                    );
-                })}
-            </g>
-
-            {/* Nodes */}
-            {NODES.filter(n => visibleNodeIds.has(n.id)).map(n => {
-                const off = offsets[n.id] ?? { x: 0, y: 0 };
-                const ex = n.x + off.x, ey = n.y + off.y;
-                const isHov = hovered === n.id;
-                const isLeaf = n.type === 'leaf';
-                const isDragging = draggingId === n.id;
-
-                return (
-                    <motion.g
-                        key={n.id}
-                        initial={isLeaf ? { opacity: 0, scale: 0.6 } : false}
-                        animate={isLeaf
-                            ? { y: n.floatY, opacity: 1, scale: 1 }
-                            : { y: n.floatY }}
-                        transition={isLeaf ? {
-                            opacity: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
-                            scale: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
-                            y: { duration: n.floatDuration, delay: n.floatDelay, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' },
-                        } : {
-                            duration: n.floatDuration, delay: n.floatDelay,
-                            repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut',
-                        }}
-                        onPointerDown={e => onNodePointerDown(n.id, e)}
-                        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-                        onMouseEnter={() => { cancelHide(); if (!draggingRef.current && n.note) onHover(n.id); }}
-                        onMouseLeave={() => { if (n.note) scheduleHide(); }}
-                    >
-                        {n.image ? (
-                            <>
-                                <image href={n.image}
-                                    x={ex - n.r} y={ey - n.r}
-                                    width={n.r * 2} height={n.r * 2}
-                                    preserveAspectRatio="xMidYMid meet"
-                                    style={{ pointerEvents: 'none' }} />
-                                {/* Transparent circular hit target */}
-                                <circle cx={ex} cy={ey} r={n.r} fill="transparent" />
-                            </>
-                        ) : (
-                            <>
-                                {isHov && (
-                                    <circle cx={ex} cy={ey} r={n.r + 9}
-                                        fill="none" stroke={AC} strokeWidth={0.8}
-                                        strokeOpacity={0.35} strokeDasharray="3,4" />
-                                )}
-                                <motion.circle
-                                    cx={ex} cy={ey} r={n.r}
-                                    fill="#ffffff" stroke={AC}
-                                    strokeWidth={isLeaf ? 1.1 : 1.8}
-                                    strokeDasharray={isLeaf ? '4,3' : 'none'}
-                                    filter={isDragging ? 'url(#mm-rf-drag)' : 'url(#mm-rf-node)'}
-                                    animate={{ opacity: isHov ? 0.9 : 1 }}
-                                    transition={{ duration: 0.15 }}
-                                />
-                                <text x={ex} y={ey - (n.sub ? 4 : 0)} textAnchor="middle" dominantBaseline="middle"
-                                    fontFamily={BOD} fontSize={isLeaf ? 10.5 : 13.5} fontWeight="500"
-                                    fill="#1a1a1a" style={{ pointerEvents: 'none' }}>
-                                    {n.label}
-                                </text>
-                                {n.sub && (
-                                    <text x={ex} y={ey + 11} textAnchor="middle"
-                                        fontFamily={BOD} fontSize="8.5" letterSpacing="0.1em"
-                                        fill={`${AC}88`} style={{ pointerEvents: 'none' }}>
-                                        {n.sub.toUpperCase()}
-                                    </text>
-                                )}
-                                {n.note && !isHov && (
-                                    <circle cx={ex + n.r - 6} cy={ey - n.r + 6}
-                                        r={isLeaf ? 2.5 : 3.5} fill={AC} opacity={0.5} />
-                                )}
-                                {/* Expand hint for unexpanded hobbies */}
-                                {n.type === 'hobby' && !expandedHobbies.has(n.id) && leafRequires && Object.values(leafRequires).some(req => req.includes(n.id)) && (
-                                    <text x={ex + n.r + 5} y={ey + 5}
-                                        fontFamily={HND} fontSize="14" fill={`${AC}88`}
-                                        style={{ pointerEvents: 'none' }}>
-                                        +
-                                    </text>
-                                )}
-                            </>
-                        )}
-                    </motion.g>
-                );
-            })}
-
-            {/* Sticky notes — topmost layer */}
-            <AnimatePresence>
-                {NODES.filter(n => visibleNodeIds.has(n.id)).map(n => {
-                    if (hovered !== n.id || !n.note) return null;
-                    const off = offsets[n.id] ?? { x: 0, y: 0 };
-                    return (
-                        <StickyNote key={`note-${n.id}`} node={n}
-                            ex={n.x + off.x} ey={n.y + off.y}
-                            onMouseEnter={cancelHide}
-                            onMouseLeave={scheduleHide} />
-                    );
-                })}
-            </AnimatePresence>
-        </svg>
-    );
+function Poster({ d, layout, onJump }: { d: CardData; layout: typeof CARD_LAYOUT[0]; onJump?: () => void }) {
+  const { pal, titleColor, capColor } = d;
+  return (
+    <div style={{
+      position: 'absolute', left: layout.x, top: layout.y, width: layout.w, height: layout.h,
+      transform: `rotate(${layout.rot.toFixed(2)}deg)`,
+      background: pal.bg, borderRadius: 3, overflow: 'hidden',
+      boxShadow: '0 22px 50px rgba(40,30,15,.2),0 4px 12px rgba(40,30,15,.1)',
+      display: 'flex', flexDirection: 'column',
+    }}>
+      {/* Pin tab */}
+      <div style={{ position: 'absolute', left: '50%', top: -15, width: 2, height: 15, background: '#bcae96', transform: 'translateX(-50%)' }}>
+        <div style={{ position: 'absolute', left: '50%', top: -9, width: 30, height: 11, borderRadius: 6, background: '#cfc1a6', transform: 'translateX(-50%)', boxShadow: '0 2px 4px rgba(40,30,15,.18)' }} />
+      </div>
+      {/* Art */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, padding: '30px 30px 10px' }}>
+        <Art name={d.art} pal={pal} />
+      </div>
+      {/* Meta */}
+      <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', padding: '0 28px 26px' }}>
+        <span style={{ fontFamily: BODY, fontSize: '.54rem', letterSpacing: '.24em', textTransform: 'uppercase', color: capColor, opacity: 0.85, marginBottom: 7 }}>
+          {d.cap}
+        </span>
+        <span style={{
+          fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 500,
+          lineHeight: 0.92, letterSpacing: '-.01em', color: titleColor,
+          fontSize: layout.ts,
+          ...(layout.big ? { marginTop: '-26px' } : {}),
+        }}>
+          {d.title}
+        </span>
+        {d.badge && (
+          <span style={{ alignSelf: 'flex-start', marginTop: 12, fontFamily: BODY, fontSize: '.5rem', letterSpacing: '.2em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 20, border: `1px solid ${capColor}`, color: capColor, opacity: 0.9 }}>
+            {d.badge}
+          </span>
+        )}
+        {d.note && (
+          <>
+            <div style={{ height: 1, width: 34, marginTop: 14, background: capColor, opacity: 0.55 }} />
+            <span style={{ fontFamily: BODY, fontSize: '.82rem', lineHeight: 1.56, marginTop: 13, color: titleColor, opacity: 0.92 }}>
+              {d.note}
+            </span>
+          </>
+        )}
+        {d.link && (
+          <a href={d.link} target="_blank" rel="noopener noreferrer"
+            onPointerDown={e => e.stopPropagation()}
+            style={{ alignSelf: 'flex-start', marginTop: 13, fontFamily: BODY, fontSize: '.6rem', letterSpacing: '.16em', textTransform: 'uppercase', borderBottom: `1px solid ${capColor}`, paddingBottom: 2, color: capColor, cursor: 'pointer', textDecoration: 'none' }}>
+            {d.linkLabel}
+          </a>
+        )}
+        {d.jump != null && onJump && (
+          <button onClick={e => { e.stopPropagation(); onJump(); }}
+            onPointerDown={e => e.stopPropagation()}
+            style={{ alignSelf: 'flex-start', marginTop: 11, fontFamily: BODY, fontSize: '.6rem', letterSpacing: '.14em', textTransform: 'uppercase', background: 'none', border: 'none', borderBottom: `1px solid ${capColor}`, padding: '0 0 2px', cursor: 'pointer', color: capColor }}>
+            {d.jumpLabel}
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // ─── Overlay ──────────────────────────────────────────────────────────────
-// Build a wavy-blob SVG path centered at (cx, cy) with a given progress (0→1).
-// 80 radial samples + two superimposed wave frequencies → smooth organic edge.
-// clipPathUnits="userSpaceOnUse" so pixel coords map directly to the viewport.
-function buildSlimePath(cx: number, cy: number, progress: number): string {
-    if (progress <= 0) return `M ${cx} ${cy} Z`;
-    const maxR = Math.sqrt(window.innerWidth ** 2 + window.innerHeight ** 2);
-    const baseR = maxR * progress;
-    // Amplitude scales with radius so waves stay proportional; capped so they
-    // don't dwarf the shape at full size.
-    const amp = Math.min(baseR * 0.10, 32);
-    // Phase advances with progress → waves appear to travel outward.
-    const phase = progress * Math.PI * 6;
-    const N = 80;
-    const pts: string[] = [];
-    for (let i = 0; i < N; i++) {
-        const a = (i / N) * Math.PI * 2;
-        const wave = amp * (
-            Math.sin(5 * a + phase) * 0.65 +
-            Math.sin(9 * a - phase * 0.7) * 0.35
-        );
-        const r = Math.max(0, baseR + wave);
-        pts.push(`${(cx + r * Math.cos(a)).toFixed(1)} ${(cy + r * Math.sin(a)).toFixed(1)}`);
-    }
-    return `M ${pts.join(' L ')} Z`;
-}
-
 export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
-    const clipPathRef = useRef<SVGPathElement>(null);
-    const rafRef = useRef<number | null>(null);
-    const [mounted, setMounted] = useState(false);
-    const [hovered, setHovered] = useState<string | null>(null);
-    const [expandedHobbies, setExpandedHobbies] = useState<Set<string>>(new Set());
+  const clipPathRef = useRef<SVGPathElement>(null);
+  const revealRaf = useRef<number | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-    // Mount when open; unmount is driven by the close animation completing.
-    useEffect(() => {
-        if (open) setMounted(true);
-    }, [open]);
+  const [ai, setAi] = useState(0);
+  const [scale, setScale] = useState(1);
+  const [dx, setDx] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [phase, setPhase] = useState<'idle' | 'fling' | 'below' | 'pop'>('idle');
 
-    // RAF animation: runs whenever mounted or open changes direction.
-    useEffect(() => {
-        if (!mounted) return;
-        const pathEl = clipPathRef.current;
-        if (!pathEl) return;
+  const swipingRef = useRef(false);
+  const aiRef = useRef(0);
+  const dxRef = useRef(0);
+  const isDragRef = useRef(false);
+  const sxRef = useRef(0);
+  const t1 = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const t3 = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const popRaf = useRef<number | null>(null);
 
-        const cx = window.innerWidth * 0.75;
-        const cy = window.innerHeight * 0.52;
-        const isOpening = open;
-        const duration = isOpening ? 950 : 680;
-        let startTime: number | null = null;
+  useEffect(() => { aiRef.current = ai; }, [ai]);
 
-        const tick = (now: number) => {
-            if (startTime === null) startTime = now;
-            const rawT = Math.min((now - startTime) / duration, 1);
-            // easeOutCubic for open (quick burst then settle),
-            // easeInCubic for close (gathers inward speed).
-            const eased = isOpening
-                ? 1 - Math.pow(1 - rawT, 3)
-                : rawT * rawT * rawT;
-            pathEl.setAttribute('d', buildSlimePath(cx, cy, isOpening ? eased : 1 - eased));
-            if (rawT < 1) {
-                rafRef.current = requestAnimationFrame(tick);
-            } else if (!isOpening) {
-                setMounted(false);
-            }
-        };
+  // Open/close
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      setAi(0); aiRef.current = 0;
+      setPhase('idle'); setDx(0); dxRef.current = 0;
+      swipingRef.current = false;
+    }
+  }, [open]);
 
-        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-        rafRef.current = requestAnimationFrame(tick);
-        return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current); };
-    }, [mounted, open]);
+  // Resize
+  useEffect(() => {
+    if (!mounted) return;
+    const fn = () => setScale(Math.min(window.innerWidth / 1440, (window.innerHeight - 70) / 840) * 0.98);
+    fn();
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, [mounted]);
 
-    const onExpand = useCallback((id: string) => {
-        setExpandedHobbies(prev => new Set(prev).add(id));
-    }, []);
+  // Slime reveal
+  useEffect(() => {
+    if (!mounted) return;
+    const pathEl = clipPathRef.current;
+    if (!pathEl) return;
+    const cx = window.innerWidth * 0.75;
+    const cy = window.innerHeight * 0.52;
+    const isOpening = open;
+    const dur = isOpening ? 950 : 680;
+    let t0: number | null = null;
+    const tick = (now: number) => {
+      if (t0 === null) t0 = now;
+      const raw = Math.min((now - t0) / dur, 1);
+      const eased = isOpening ? 1 - Math.pow(1 - raw, 3) : raw * raw * raw;
+      pathEl.setAttribute('d', buildSlimePath(cx, cy, isOpening ? eased : 1 - eased));
+      if (raw < 1) { revealRaf.current = requestAnimationFrame(tick); }
+      else if (!isOpening) { setMounted(false); }
+    };
+    if (revealRaf.current !== null) cancelAnimationFrame(revealRaf.current);
+    revealRaf.current = requestAnimationFrame(tick);
+    return () => { if (revealRaf.current !== null) cancelAnimationFrame(revealRaf.current); };
+  }, [mounted, open]);
 
-    const handleClose = useCallback(() => {
-        setHovered(null);
-        setExpandedHobbies(new Set());
-        onClose();
-    }, [onClose]);
+  // Swap hobbies
+  const swap = useCallback((target: number, dir: number) => {
+    if (swipingRef.current) return;
+    clearTimeout(t1.current ?? undefined);
+    clearTimeout(t3.current ?? undefined);
+    if (popRaf.current) cancelAnimationFrame(popRaf.current);
+    const sign = dir > 0 ? 1 : -1;
+    swipingRef.current = true;
+    setPhase('fling');
+    setDx(sign * 1150); dxRef.current = sign * 1150;
+    setDragging(false);
+    t1.current = setTimeout(() => {
+      setAi(target); aiRef.current = target;
+      setPhase('below'); setDx(0); dxRef.current = 0;
+      popRaf.current = requestAnimationFrame(() => requestAnimationFrame(() => setPhase('pop')));
+    }, 280);
+    t3.current = setTimeout(() => { setPhase('idle'); swipingRef.current = false; }, 940);
+  }, []);
 
-    useEffect(() => {
-        const fn = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose(); };
-        if (open) window.addEventListener('keydown', fn);
-        return () => window.removeEventListener('keydown', fn);
-    }, [open, handleClose]);
+  // Stable refs for commit/goTo (avoids stale closures in event handlers)
+  const commitRef = useRef<(dir: number) => void>(() => {});
+  commitRef.current = (dir: number) => {
+    const n = HOBBIES.length;
+    swap((aiRef.current + dir + n) % n, dir);
+  };
+  const goToRef = useRef<(i: number) => void>(() => {});
+  goToRef.current = (i: number) => {
+    if (i === aiRef.current || swipingRef.current) return;
+    swap(i, i > aiRef.current ? 1 : -1);
+  };
 
-    useEffect(() => {
-        if (open) document.body.style.overflow = 'hidden';
-        return () => { document.body.style.overflow = ''; };
-    }, [open]);
+  // Keyboard
+  useEffect(() => {
+    const fn = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') commitRef.current(1);
+      if (e.key === 'ArrowLeft') commitRef.current(-1);
+    };
+    if (open) window.addEventListener('keydown', fn);
+    return () => window.removeEventListener('keydown', fn);
+  }, [open, onClose]);
 
-    if (!mounted) return null;
+  // Scroll lock
+  useEffect(() => {
+    if (open) document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
 
-    return (
-        <>
-            {/* SVG clip-path — userSpaceOnUse maps px coords to the fixed overlay */}
-            <svg style={{ width: 0, height: 0, position: 'fixed', top: 0, left: 0, overflow: 'visible', pointerEvents: 'none', zIndex: 400 }} aria-hidden="true">
-                <defs>
-                    <clipPath id="mm-slime-clip" clipPathUnits="userSpaceOnUse">
-                        <path ref={clipPathRef} d={`M ${window.innerWidth * 0.75} ${window.innerHeight * 0.52} Z`} />
-                    </clipPath>
-                </defs>
+  // Pointer drag
+  const onDown = useCallback((e: React.PointerEvent) => {
+    if (swipingRef.current) return;
+    sxRef.current = e.clientX;
+    isDragRef.current = true;
+    setDragging(true);
+    const handleMove = (ev: PointerEvent) => {
+      if (!isDragRef.current) return;
+      const d = ev.clientX - sxRef.current;
+      dxRef.current = d; setDx(d);
+    };
+    const handleUp = () => {
+      if (!isDragRef.current) return;
+      isDragRef.current = false;
+      document.removeEventListener('pointermove', handleMove);
+      document.removeEventListener('pointerup', handleUp);
+      const final = dxRef.current;
+      dxRef.current = 0; setDx(0); setDragging(false);
+      if (final <= -120) commitRef.current(1);
+      else if (final >= 120) commitRef.current(-1);
+    };
+    document.addEventListener('pointermove', handleMove);
+    document.addEventListener('pointerup', handleUp);
+  }, []);
+
+  // Cleanup
+  useEffect(() => () => {
+    clearTimeout(t1.current ?? undefined);
+    clearTimeout(t3.current ?? undefined);
+    if (popRaf.current) cancelAnimationFrame(popRaf.current);
+    if (revealRaf.current) cancelAnimationFrame(revealRaf.current);
+  }, []);
+
+  if (!mounted) return null;
+
+  const H = HOBBIES[ai];
+  const accent = H.accent;
+
+  let deckTransform = `translateX(${dx}px) rotate(${(dx * 0.015).toFixed(2)}deg)`;
+  let deckTransition = dragging ? 'none' : 'transform .46s cubic-bezier(.22,1,.36,1)';
+  if (phase === 'fling') {
+    deckTransform = `translateX(${dx}px) rotate(${(dx * 0.02).toFixed(2)}deg)`;
+    deckTransition = 'transform .28s cubic-bezier(.5,0,.78,.2)';
+  } else if (phase === 'below') {
+    deckTransform = 'translateY(820px) scale(.82) rotate(2deg)';
+    deckTransition = 'none';
+  } else if (phase === 'pop') {
+    deckTransform = 'translateY(0px) scale(1) rotate(0deg)';
+    deckTransition = 'transform .64s cubic-bezier(.34,1.46,.5,1)';
+  }
+
+  return (
+    <>
+      {/* Clip-path SVG */}
+      <svg style={{ width: 0, height: 0, position: 'fixed', top: 0, left: 0, overflow: 'visible', pointerEvents: 'none', zIndex: 400 }} aria-hidden>
+        <defs>
+          <clipPath id="mm-slime-clip" clipPathUnits="userSpaceOnUse">
+            <path ref={clipPathRef} d={`M ${window.innerWidth * 0.75} ${window.innerHeight * 0.52} Z`} />
+          </clipPath>
+        </defs>
+      </svg>
+
+      {/* Overlay */}
+      <div role="dialog" aria-modal aria-label="More About Me"
+        style={{
+          position: 'fixed', inset: 0, zIndex: 400,
+          display: 'flex', flexDirection: 'column',
+          fontFamily: BODY, color: '#1f1c19',
+          background: '#f4f0e7',
+          clipPath: 'url(#mm-slime-clip)',
+          WebkitFontSmoothing: 'antialiased',
+        }}>
+
+        {/* Bar */}
+        <div style={{ flexShrink: 0, height: 70, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 46px', position: 'relative', zIndex: 9 }}>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'baseline', gap: 1, padding: 0 }}>
+            <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: '1.6rem', letterSpacing: '.01em', color: '#1f1c19' }}>Olric</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: '1.6rem', color: accent, transition: 'color .5s' }}>.</span>
+          </button>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 500, fontSize: '1.45rem', lineHeight: 1, color: '#1f1c19' }}>More About Me</div>
+            <div style={{ fontFamily: BODY, fontSize: '.52rem', letterSpacing: '.26em', textTransform: 'uppercase', color: accent, opacity: 0.85, marginTop: 5, transition: 'color .5s' }}>A Collection of Interests</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 11, fontFamily: BODY, fontSize: '.56rem', letterSpacing: '.24em', textTransform: 'uppercase', color: '#9a9183' }}>
+            <svg width={26} height={10} viewBox="0 0 26 10" fill="none" stroke={accent} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'stroke .5s' }}>
+              <path d="M6 2 L2 5 L6 8" /><path d="M20 2 L24 5 L20 8" />
+            </svg>
+            Swipe to explore&nbsp;
+            <b style={{ color: accent, fontWeight: 600, transition: 'color .5s' }}>{H.idx} · 04</b>
+          </div>
+        </div>
+
+        {/* Stage wrap */}
+        <div onPointerDown={onDown}
+          style={{ flex: 1, position: 'relative', overflow: 'hidden', touchAction: 'none', cursor: 'grab' }}>
+
+          {/* Kicker */}
+          <span style={{ position: 'absolute', top: 22, left: 46, fontFamily: BODY, fontSize: '.55rem', letterSpacing: '.28em', textTransform: 'uppercase', color: accent, opacity: 0.6, zIndex: 6, transition: 'color .5s', pointerEvents: 'none' }}>
+            Interests / 02
+          </span>
+
+          {/* Corner ornaments */}
+          {[
+            { top: 84, left: 24, borderTop: `1px solid ${accent}`, borderLeft: `1px solid ${accent}` },
+            { top: 84, right: 24, borderTop: `1px solid ${accent}`, borderRight: `1px solid ${accent}` },
+            { bottom: 22, left: 24, borderBottom: `1px solid ${accent}`, borderLeft: `1px solid ${accent}` },
+            { bottom: 22, right: 24, borderBottom: `1px solid ${accent}`, borderRight: `1px solid ${accent}` },
+          ].map((s, i) => (
+            <span key={i} style={{ position: 'absolute', width: 22, height: 22, opacity: 0.4, pointerEvents: 'none', zIndex: 6, transition: 'border-color .5s', ...s }} />
+          ))}
+
+          {/* Pager dots */}
+          <div style={{ position: 'absolute', left: 26, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 16, zIndex: 8 }}>
+            {HOBBIES.map((h, i) => (
+              <button key={h.id}
+                onClick={e => { e.stopPropagation(); goToRef.current(i); }}
+                onPointerDown={e => e.stopPropagation()}
+                style={{
+                  width: 11, height: 11, borderRadius: '50%', border: 'none', padding: 0, cursor: 'pointer',
+                  background: h.accent, opacity: i === ai ? 1 : 0.4,
+                  transform: i === ai ? 'scale(1.5)' : 'scale(1)',
+                  transition: 'transform .35s, opacity .35s',
+                  boxShadow: '0 2px 5px rgba(40,30,15,.22)',
+                }} />
+            ))}
+          </div>
+
+          {/* Index label */}
+          <span style={{ position: 'absolute', left: 18, top: 'calc(50% + 96px)', fontFamily: DISPLAY, fontStyle: 'italic', fontSize: '1.3rem', color: accent, opacity: 0.7, zIndex: 8, transition: 'color .5s', pointerEvents: 'none' }}>
+            {H.idx} / 04
+          </span>
+
+          {/* Scaled 1440×840 stage */}
+          <div style={{
+            position: 'absolute', left: '50%', top: '50%',
+            width: 1440, height: 840,
+            transform: `translate(-50%,-50%) scale(${scale})`,
+            transformOrigin: 'center center',
+          }}>
+            {/* Connection line */}
+            <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible', pointerEvents: 'none', zIndex: 1 }} viewBox="0 0 1440 840" preserveAspectRatio="none">
+              <path d="M 1018 392 Q 760 340 524 392" fill="none" stroke={accent} strokeWidth={1.2} strokeDasharray="1.5 7" strokeLinecap="round" opacity={0.5} style={{ transition: 'stroke .5s' }} />
             </svg>
 
-            <div
-                style={{
-                    position: 'fixed', inset: 0, zIndex: 400,
-                    display: 'flex', flexDirection: 'column',
-                    background: '#e8e2d4',
-                    clipPath: 'url(#mm-slime-clip)',
-                }}
-                role="dialog"
-                aria-modal="true"
-                aria-label="Source of Me"
-            >
-                {/* Header */}
-                <div style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '0 44px', height: 64, flexShrink: 0,
-                    borderBottom: `1px solid ${AC}1e`,
-                    background: 'rgba(232,226,212,0.97)', backdropFilter: 'blur(12px)',
-                    position: 'relative', zIndex: 5,
-                }}>
-                    <button
-                        onClick={handleClose}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: 9,
-                            fontFamily: BOD, fontSize: '0.74rem', letterSpacing: '0.12em',
-                            textTransform: 'uppercase', color: '#8a8078',
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            transition: 'color 0.2s',
-                        }}
-                        onMouseEnter={e => (e.currentTarget.style.color = '#1a1a1a')}
-                        onMouseLeave={e => (e.currentTarget.style.color = '#8a8078')}
-                    >
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
-                            stroke="currentColor" strokeWidth="1.4">
-                            <line x1="12" y1="7" x2="2" y2="7" />
-                            <polyline points="6,2 2,7 6,12" />
-                        </svg>
-                        Back
-                    </button>
+            {/* Node dot at connection end */}
+            <span style={{ position: 'absolute', left: 1018, top: 392, width: 13, height: 13, transform: 'translate(-50%,-50%)', zIndex: 3 }}>
+              <span style={{ position: 'absolute', left: '50%', top: '50%', width: 32, height: 32, border: `1px solid ${accent}`, borderRadius: '50%', transform: 'translate(-50%,-50%)', opacity: 0.4, transition: 'border-color .5s' }} />
+              <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: accent, transition: 'background .5s' }} />
+            </span>
 
-                    <div style={{ textAlign: 'center' }}>
-                        <p style={{
-                            fontFamily: DIS, fontSize: '1.4rem', fontWeight: 300,
-                            fontStyle: 'italic', color: '#1a1a1a', lineHeight: 1,
-                        }}>
-                            More About Me!
-                        </p>
-                        <p style={{
-                            fontFamily: BOD, fontSize: '0.6rem', letterSpacing: '0.18em',
-                            textTransform: 'uppercase', color: `${AC}99`, marginTop: 4,
-                        }}>
-                            Drag nodes · click to reveal
-                        </p>
-                    </div>
-
-                    {/* Legend */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-                        {[
-                            { label: 'Hobby', dashed: false },
-                            { label: 'Detail', dashed: true },
-                        ].map(({ label, dashed }) => (
-                            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <svg width="14" height="14" viewBox="0 0 14 14">
-                                    <circle cx="7" cy="7" r="5" fill="none" stroke={AC} strokeWidth="1.3"
-                                        strokeDasharray={dashed ? '3,2.5' : 'none'} />
-                                </svg>
-                                <span style={{
-                                    fontFamily: BOD, fontSize: '0.65rem',
-                                    letterSpacing: '0.08em', color: '#8a8078',
-                                }}>
-                                    {label}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Graph canvas */}
-                <div style={{ flex: 1, position: 'relative', overflow: 'hidden', padding: '10px 20px 6px' }}>
-                    <MindMapGraph
-                        hovered={hovered}
-                        onHover={setHovered}
-                        expandedHobbies={expandedHobbies}
-                        onExpand={onExpand}
-                    />
-                </div>
-
-                {/* Footer */}
-                <div style={{
-                    height: 36, flexShrink: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    borderTop: `1px solid ${AC}14`,
-                }}>
-                    <p style={{
-                        fontFamily: BOD, fontSize: '0.58rem', letterSpacing: '0.16em',
-                        textTransform: 'uppercase', color: `${AC}55`,
-                    }}>
-                        Hover nodes to reveal notes · Click hobby nodes to expand
-                    </p>
-                </div>
+            {/* Portrait */}
+            <div style={{ position: 'absolute', right: 34, bottom: 0, height: 768, zIndex: 2 }}>
+              <div style={{ position: 'absolute', top: 42, left: -14, right: 18, bottom: 0, borderTop: `1.5px solid ${accent}`, borderLeft: `1.5px solid ${accent}`, borderRight: `1.5px solid ${accent}`, opacity: 0.3, pointerEvents: 'none', transition: 'border-color .5s' }} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/subject.webp" alt="Olric Zeng" draggable={false}
+                onClick={() => commitRef.current(1)}
+                onPointerDown={e => e.stopPropagation()}
+                style={{ height: 768, width: 'auto', display: 'block', userSelect: 'none', cursor: 'pointer', position: 'relative', zIndex: 1 }} />
+              <span style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%) rotate(180deg)', writingMode: 'vertical-rl', fontFamily: BODY, fontSize: '.56rem', letterSpacing: '.36em', textTransform: 'uppercase', color: accent, opacity: 0.62, zIndex: 2, transition: 'color .5s' }}>
+                Olric Zeng — CS @ Cornell
+              </span>
             </div>
-        </>
-    );
+
+            {/* Card deck */}
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 4,
+              transform: deckTransform,
+              transition: deckTransition,
+            }}>
+              {([H.main, H.subs[0], H.subs[1]] as CardData[]).map((d, i) => (
+                <Poster key={`${H.id}-${i}`} d={d} layout={CARD_LAYOUT[i]}
+                  onJump={d.jump != null ? () => goToRef.current(d.jump!) : undefined} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
