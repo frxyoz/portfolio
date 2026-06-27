@@ -40,10 +40,7 @@ export interface SocialLink {
 }
 
 export interface ProfileData {
-    name: string;
-    title: string;
     tagline: string;
-    avatarUrl: string;
     timeline: TimelineEntry[];
     socialLinks: SocialLink[];
     resumeUrl: string;

@@ -79,6 +79,8 @@ export default function NavBar() {
           fontSize: '1.15rem', fontWeight: 600,
           color: ACCENT, letterSpacing: '0.04em',
           background: 'none', border: 'none', cursor: 'pointer',
+          minHeight: isMobile ? 44 : undefined,
+          padding: isMobile ? '0 4px' : 0,
         }}
       >
         OZ
@@ -97,8 +99,14 @@ export default function NavBar() {
                 letterSpacing: '0.1em', textTransform: 'uppercase',
                 color: isActive ? ACCENT : '#1a1a1a',
                 background: 'none', border: 'none', cursor: 'pointer',
-                paddingBottom: 3,
-                borderBottom: isActive ? `1px solid ${ACCENT}` : '1px solid transparent',
+                // Mobile: expand tap target to 44px; drop underline in favour of colour alone
+                minHeight: isMobile ? 44 : undefined,
+                display: isMobile ? 'flex' : undefined,
+                alignItems: isMobile ? 'center' : undefined,
+                paddingLeft: isMobile ? 8 : 0,
+                paddingRight: isMobile ? 8 : 0,
+                paddingBottom: isMobile ? 0 : 3,
+                borderBottom: isMobile ? 'none' : (isActive ? `1px solid ${ACCENT}` : '1px solid transparent'),
                 transition: 'all 0.2s ease',
               }}
             >

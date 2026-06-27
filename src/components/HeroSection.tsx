@@ -252,7 +252,7 @@ export default function HeroSection() {
     return (
         <>
             {/* 280vh wrapper gives scroll budget for the signature animation */}
-            <div ref={wrapperRef} style={{ height: '280vh' }}>
+            <div ref={wrapperRef} style={{ height: isMobile ? '180vh' : '280vh' }}>
                 <section
                     ref={heroRef}
                     id="hero"
@@ -345,14 +345,14 @@ export default function HeroSection() {
                             transform: entered ? 'none' : 'translateY(16px)',
                             transition: 'opacity 0.8s ease 0.28s, transform 0.8s ease 0.28s',
                         }}>
-                            {/* Corner accents */}
+                            {/* Corner accents — offset -4px so they extend outside the box border */}
                             {[
-                                { top: 0, left: 0, borderTop: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` },
-                                { top: 0, right: 0, borderTop: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` },
-                                { bottom: 0, left: 0, borderBottom: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` },
-                                { bottom: 0, right: 0, borderBottom: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` },
+                                { top: -4, left: -4, borderTop: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` },
+                                { top: -4, right: -4, borderTop: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` },
+                                { bottom: -4, left: -4, borderBottom: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` },
+                                { bottom: -4, right: -4, borderBottom: `1.5px solid ${ACCENT}`, borderRight: `1.5px solid ${ACCENT}` },
                             ].map((s, i) => (
-                                <div key={i} style={{ position: 'absolute', width: 14, height: 14, ...(s as React.CSSProperties) }} />
+                                <div key={i} style={{ position: 'absolute', width: 18, height: 18, ...(s as React.CSSProperties) }} />
                             ))}
 
                             <p style={{
@@ -426,6 +426,37 @@ export default function HeroSection() {
                                 </a>
                             </MagneticButton>
                         </div>
+
+                        {/* Mobile-only Mind Map CTA — replaces the desktop photo interaction */}
+                        {isMobile && (
+                            <button
+                                onClick={() => setMindMapOpen(true)}
+                                style={{
+                                    fontFamily: BODY,
+                                    fontSize: '0.75rem',
+                                    letterSpacing: '0.12em',
+                                    textTransform: 'uppercase',
+                                    color: ACCENT,
+                                    background: 'none',
+                                    border: `1px solid ${ACCENT}`,
+                                    padding: '0 20px',
+                                    cursor: 'pointer',
+                                    marginTop: 20,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 10,
+                                    minHeight: 44,
+                                    opacity: entered ? 1 : 0,
+                                    transition: 'background 0.2s, color 0.2s, opacity 0.8s ease 0.5s',
+                                }}
+                            >
+                                More About Me
+                                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                    <line x1="2" y1="8" x2="14" y2="8" />
+                                    <polyline points="9,3 14,8 9,13" />
+                                </svg>
+                            </button>
+                        )}
                     </motion.div>
 
                     {/* RIGHT column — empty, FixedPhoto sits here (position: fixed) */}

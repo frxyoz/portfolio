@@ -31,12 +31,6 @@ const caveat = Caveat({
 export const metadata: Metadata = {
     title: 'Olric Zeng',
     description: 'Portfolio Website of Olric Zeng: CS @ Cornell, passionate about building software for good.',
-    icons: {
-        icon: [
-            { url: '/icon.svg', type: 'image/svg+xml' },
-            { url: '/favicon.ico', type: 'image/x-icon' },
-        ],
-    },
     openGraph: {
         title: 'Olric Zeng',
         description: 'Portfolio Website of Olric Zeng: CS @ Cornell, passionate about building software for good.',

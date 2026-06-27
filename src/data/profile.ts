@@ -1,10 +1,7 @@
 import type { ProfileData } from '@/types';
 
 export const profile: ProfileData = {
-    name: 'Olric Zeng',
-    title: 'Student @ Cornell University',
     tagline: 'Hi! I\'m Olric, a software developer passionate about building impactful applications and learning new technologies. I\'m currently a student at Cornell University studying Computer Science, and I love working on projects that combine creativity with technical problem-solving. My skillset includes both frontend and backend development, and I enjoy collaborating with others to bring ideas to life.',
-    avatarUrl: 'https://avatars.githubusercontent.com/u/59369019?v=4',
     timeline: [
         {
             period: '2025 — present',
