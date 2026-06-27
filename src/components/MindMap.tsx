@@ -601,19 +601,6 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
               <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: accent, transition: 'background .5s' }} />
             </span>
 
-            {/* Portrait */}
-            <div style={{ position: 'absolute', right: 34, bottom: 0, height: 768, zIndex: 2 }}>
-              <div style={{ position: 'absolute', top: 42, left: -14, right: 18, bottom: 0, borderTop: `1.5px solid ${accent}`, borderLeft: `1.5px solid ${accent}`, borderRight: `1.5px solid ${accent}`, opacity: 0.3, pointerEvents: 'none', transition: 'border-color .5s' }} />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/subject.webp" alt="Olric Zeng" draggable={false}
-                onClick={() => commitRef.current(1)}
-                onPointerDown={e => e.stopPropagation()}
-                style={{ height: 768, width: 'auto', display: 'block', userSelect: 'none', cursor: 'pointer', position: 'relative', zIndex: 1 }} />
-              <span style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%) rotate(180deg)', writingMode: 'vertical-rl', fontFamily: BODY, fontSize: '.56rem', letterSpacing: '.36em', textTransform: 'uppercase', color: accent, opacity: 0.62, zIndex: 2, transition: 'color .5s' }}>
-                Olric Zeng — CS @ Cornell
-              </span>
-            </div>
-
             {/* Card deck */}
             <div style={{
               position: 'absolute', inset: 0, zIndex: 4,
