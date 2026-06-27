@@ -207,11 +207,21 @@ export default function HeroSection() {
     const [heroInView, setHeroInView] = useState(true);
     const [entered, setEntered] = useState(false);
     const isMobile = useIsMobile();
+    const [aboutExpanded, setAboutExpanded] = useState(false);
+    const aboutTextRef = useRef<HTMLParagraphElement>(null);
+    const [aboutNaturalHeight, setAboutNaturalHeight] = useState(0);
 
     useEffect(() => {
         const t = setTimeout(() => setEntered(true), 80);
         return () => clearTimeout(t);
     }, []);
+
+    useEffect(() => {
+        if (isMobile && aboutTextRef.current) {
+            setAboutNaturalHeight(aboutTextRef.current.scrollHeight);
+        }
+        if (!isMobile) setAboutExpanded(false);
+    }, [isMobile]);
 
     // Fade photo out when hero scrolls out of view (past the 280vh wrapper)
     useEffect(() => {
@@ -247,7 +257,14 @@ export default function HeroSection() {
     const op3 = useTransform(scrollYProgress, [0.06, 0.07], [0, 1]);
     const op4 = useTransform(scrollYProgress, [0.399, 0.401], [0, 1]);
 
-    const aboutText = profile.tagline.replace(/^["'"“”]+|["'"“”]+$/g, '');
+    const aboutText = profile.tagline.replace(/^[“'”””]+|[“'”””]+$/g, '');
+    // Collapsed: fits alongside social links + button. Expanded: those are hidden, freeing 215px.
+    const collapsedHeight = isMobile
+        ? Math.max(100, Math.min(document.documentElement.clientHeight - 548, 280))
+        : 120;
+    const expandedTextHeight = isMobile
+        ? Math.min(aboutNaturalHeight || 400, document.documentElement.clientHeight - 329)
+        : 0;
 
     return (
         <>
@@ -336,15 +353,19 @@ export default function HeroSection() {
                         }} />
 
                         {/* About Me box */}
-                        <div style={{
-                            border: `1px solid ${ACCENT}33`,
-                            padding: isMobile ? '20px 22px' : '28px 34px',
-                            position: 'relative',
-                            maxWidth: isMobile ? '100%' : 500,
-                            opacity: entered ? 1 : 0,
-                            transform: entered ? 'none' : 'translateY(16px)',
-                            transition: 'opacity 0.8s ease 0.28s, transform 0.8s ease 0.28s',
-                        }}>
+                        <div
+                            style={{
+                                border: `1px solid ${ACCENT}33`,
+                                padding: isMobile ? '20px 22px' : '28px 34px',
+                                position: 'relative',
+                                maxWidth: isMobile ? '100%' : 500,
+                                opacity: entered ? 1 : 0,
+                                transform: entered ? 'none' : 'translateY(16px)',
+                                transition: 'opacity 0.8s ease 0.28s, transform 0.8s ease 0.28s',
+                                cursor: isMobile && !aboutExpanded ? 'pointer' : 'default',
+                            }}
+                            onClick={isMobile && !aboutExpanded ? () => setAboutExpanded(true) : undefined}
+                        >
                             {/* Corner accents — offset -4px so they extend outside the box border */}
                             {[
                                 { top: -4, left: -4, borderTop: `1.5px solid ${ACCENT}`, borderLeft: `1.5px solid ${ACCENT}` },
@@ -355,24 +376,70 @@ export default function HeroSection() {
                                 <div key={i} style={{ position: 'absolute', width: 18, height: 18, ...(s as React.CSSProperties) }} />
                             ))}
 
-                            <p style={{
-                                fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.16em',
-                                textTransform: 'uppercase', color: ACCENT, marginBottom: 14,
-                            }}>
-                                About Me
-                            </p>
-                            <p style={{
-                                fontFamily: BODY, fontSize: '1rem',
-                                color: '#3a3530', lineHeight: 1.8, marginBottom: 0,
-                            }}>
-                                {aboutText}
-                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                                <span style={{ fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: ACCENT }}>
+                                    About Me
+                                </span>
+                                {isMobile && aboutExpanded && (
+                                    <motion.button
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 0.3, delay: 0.25 }}
+                                        onClick={(e) => { e.stopPropagation(); setAboutExpanded(false); }}
+                                        style={{
+                                            background: 'none', border: 'none', cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', gap: 5, padding: 0,
+                                            fontFamily: BODY, fontSize: '0.65rem', letterSpacing: '0.12em',
+                                            textTransform: 'uppercase', color: ACCENT,
+                                        }}
+                                    >
+                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                            <line x1="5" y1="9" x2="5" y2="1" /><polyline points="1,5 5,1 9,5" />
+                                        </svg>
+                                        Show less
+                                    </motion.button>
+                                )}
+                            </div>
+                            {!isMobile ? (
+                                <p style={{
+                                    fontFamily: BODY, fontSize: '1rem',
+                                    color: '#3a3530', lineHeight: 1.8, marginBottom: 0,
+                                }}>
+                                    {aboutText}
+                                </p>
+                            ) : (
+                                <motion.div
+                                    style={{ position: 'relative', overflow: 'hidden' }}
+                                    initial={{ height: collapsedHeight }}
+                                    animate={{ height: aboutExpanded ? expandedTextHeight : collapsedHeight }}
+                                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                                >
+                                    <p ref={aboutTextRef} style={{
+                                        fontFamily: BODY, fontSize: '1rem',
+                                        color: '#3a3530', lineHeight: 1.8, marginBottom: 0,
+                                    }}>
+                                        {aboutText}
+                                    </p>
+                                    <motion.div
+                                        animate={{ opacity: aboutExpanded ? 0 : 1 }}
+                                        transition={{ duration: 0.25 }}
+                                        style={{
+                                            position: 'absolute',
+                                            bottom: 0, left: 0, right: 0,
+                                            height: 52,
+                                            background: 'linear-gradient(to bottom, rgba(255,255,255,0), #ffffff)',
+                                            pointerEvents: 'none',
+                                        }}
+                                    />
+                                </motion.div>
+                            )}
 
                         </div>
 
                         {/* Social links + CTAs */}
                         <div style={{
-                            display: 'flex', gap: 24, marginTop: 36,
+                            display: isMobile && aboutExpanded ? 'none' : 'flex',
+                            gap: 24, marginTop: 36,
                             opacity: entered ? 1 : 0,
                             transition: 'opacity 0.8s ease 0.4s',
                             flexWrap: 'wrap', alignItems: 'center',
@@ -428,7 +495,7 @@ export default function HeroSection() {
                         </div>
 
                         {/* Mobile-only Mind Map CTA — replaces the desktop photo interaction */}
-                        {isMobile && (
+                        {isMobile && !aboutExpanded && (
                             <button
                                 onClick={() => setMindMapOpen(true)}
                                 style={{

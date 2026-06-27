@@ -8,7 +8,7 @@ body {
   font-family: var(--font-body, 'DM Sans', 'Helvetica Neue', sans-serif);
   background: #ffffff;
   color: #1a1a1a;
-  overflow-x: hidden;
+  overflow-x: clip; /* clip (not hidden) avoids creating a scroll container, keeping IntersectionObserver working on mobile Safari */
   -webkit-font-smoothing: antialiased;
 }
 
