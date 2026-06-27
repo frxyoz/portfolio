@@ -141,27 +141,30 @@ function ArrowIcon({ dir = 'right', size = 16 }: { dir?: 'left' | 'right'; size?
 }
 
 // ─── Poster card ──────────────────────────────────────────────────────────────
-function ProjectCard({ project, index, onOpen }: { project: Project; index: number; onOpen: (p: Project) => void }) {
+function ProjectCard({ project, index, onOpen, isMobile }: { project: Project; index: number; onOpen: (p: Project) => void; isMobile: boolean }) {
     const [hovered, setHovered] = useState(false);
     const pal = PALETTES[project.id] ?? PALETTES.noteform;
     const TILTS = [-2, 1.6, -1.3, 2];
     const tilt = TILTS[index % TILTS.length];
-    const tf = hovered ? 'rotate(0deg) translateY(-12px) scale(1.025)' : `rotate(${tilt}deg)`;
+    // Mobile: cards stay flat — tilt and lift only on desktop hover
+    const tf = isMobile ? 'none' : (hovered ? 'rotate(0deg) translateY(-12px) scale(1.025)' : `rotate(${tilt}deg)`);
 
     return (
         <Reveal delay={(index % 3) * 0.08}>
             <div
-                onMouseEnter={() => setHovered(true)}
-                onMouseLeave={() => setHovered(false)}
+                onMouseEnter={isMobile ? undefined : () => setHovered(true)}
+                onMouseLeave={isMobile ? undefined : () => setHovered(false)}
                 onClick={() => onOpen(project)}
                 style={{
                     position: 'relative',
                     display: 'flex', flexDirection: 'column',
                     borderRadius: 3, overflow: 'hidden',
                     background: pal.bg, color: pal.ink,
-                    boxShadow: hovered
-                        ? '0 34px 66px rgba(40,30,15,.26), 0 8px 18px rgba(40,30,15,.12)'
-                        : '0 16px 38px rgba(40,30,15,.15), 0 3px 9px rgba(40,30,15,.07)',
+                    boxShadow: isMobile
+                        ? '0 8px 20px rgba(40,30,15,.1), 0 2px 6px rgba(40,30,15,.06)'
+                        : hovered
+                            ? '0 34px 66px rgba(40,30,15,.26), 0 8px 18px rgba(40,30,15,.12)'
+                            : '0 16px 38px rgba(40,30,15,.15), 0 3px 9px rgba(40,30,15,.07)',
                     transform: tf,
                     transition: 'transform .55s cubic-bezier(.34,1.26,.5,1), box-shadow .45s ease',
                     willChange: 'transform',
@@ -503,7 +506,7 @@ export default function ProjectsSection() {
                 {/* Poster card grid — responsive via .project-grid in globals.css */}
                 <div className="project-grid">
                     {projects.map((p, i) => (
-                        <ProjectCard key={p.id} project={p} index={i} onOpen={handleOpen} />
+                        <ProjectCard key={p.id} project={p} index={i} onOpen={handleOpen} isMobile={isMobile} />
                     ))}
                 </div>
             </div>

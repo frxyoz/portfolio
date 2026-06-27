@@ -31,7 +31,7 @@ export default function ContactSection() {
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
         setSending(true);
-        await fetch(process.env.FORMSPREE_KEY as string, {
+        await fetch(process.env.NEXT_PUBLIC_FORMSPREE_KEY as string, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
             body: JSON.stringify(form),
