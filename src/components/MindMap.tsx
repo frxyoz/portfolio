@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import * as THREE from 'three';
 
 const BODY = 'var(--font-body, "DM Sans", "Helvetica Neue", sans-serif)';
 const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
@@ -143,6 +144,14 @@ function pent(cx: number, cy: number, r: number, rot: number): string {
     }
     return s.trim();
 }
+function hexPts(cx: number, cy: number, r: number, rot = 0): string {
+    let s = '';
+    for (let k = 0; k < 6; k++) {
+        const a = (rot + k * 60) * Math.PI / 180;
+        s += `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)} `;
+    }
+    return s.trim();
+}
 
 // ─── Art SVG ─────────────────────────────────────────────────────────────
 function Art({ name, pal }: { name: string; pal: Pal }) {
@@ -154,17 +163,18 @@ function Art({ name, pal }: { name: string; pal: Pal }) {
                 <circle cx={100} cy={100} r={90} fill="none" stroke={c3} strokeWidth={2.6} strokeDasharray="2 12" opacity={0.7} />
                 <path d="M150 38 A88 88 0 0 1 172 122" fill="none" stroke={c3} strokeWidth={4} strokeLinecap="round" opacity={0.85} />
                 <circle cx={100} cy={100} r={66} fill={accent} />
-                {ht(56, 116, 4, 4, 11, 3.2, 0.55, bg)}
-                <polygon points={pent(100, 100, 24, 0)} fill={bg} />
-                {[0, 1, 2, 3, 4].map(k => {
-                    const a = (-90 + k * 72) * Math.PI / 180;
-                    const px = 100 + 58 * Math.cos(a), py = 100 + 58 * Math.sin(a);
-                    return (
-                        <g key={k}>
-                            <line x1={100 + 24 * Math.cos(a)} y1={100 + 24 * Math.sin(a)} x2={px} y2={py} stroke={bg} strokeWidth={3.2} strokeLinecap="round" />
-                            <polygon points={pent(px, py, 12, k * 72 + 36)} fill={bg} />
-                        </g>
-                    );
+                {/* centre hexagon — flat-top */}
+                <polygon points={hexPts(100, 100, 22)} fill={bg} />
+                {/* 6 dark pentagons — at hex EDGE directions (+30°) */}
+                {[0, 1, 2, 3, 4, 5].map(k => {
+                    const aDeg = k * 60 + 30;
+                    const a = aDeg * Math.PI / 180;
+                    return <polygon key={k} points={pent(100 + 30 * Math.cos(a), 100 + 30 * Math.sin(a), 11, aDeg + 234)} fill={ink} opacity={0.82} />;
+                })}
+                {/* 6 outer hexagons — at hex VERTEX directions (0°, 60°, …) */}
+                {[0, 1, 2, 3, 4, 5].map(k => {
+                    const a = k * 60 * Math.PI / 180;
+                    return <polygon key={k} points={hexPts(100 + 50 * Math.cos(a), 100 + 50 * Math.sin(a), 13)} fill={bg} opacity={0.88} />;
                 })}
                 <circle cx={100} cy={100} r={66} fill="none" stroke={ink} strokeWidth={1} opacity={0.12} />
             </svg>
@@ -294,6 +304,204 @@ function Art({ name, pal }: { name: string; pal: Pal }) {
     }
 }
 
+// ─── Poster 3D overlay ────────────────────────────────────────────────────
+type GeoRef = {
+    scene: THREE.Scene; group: THREE.Group;
+    renderer: THREE.WebGLRenderer; cam: THREE.PerspectiveCamera;
+    stopped: boolean; raf: number; t0: number;
+    exiting: Array<{ mesh: THREE.Mesh; vz: number; vx: number; vy: number; rx: number; rz: number; born: number }>;
+    entering: Array<{ mesh: THREE.Mesh; restZ: number; delay: number; born: number }>;
+};
+
+function PosterGeo({ hobby, accent, bg, c2, c3, ink }: { hobby: string; accent: string; bg: string; c2: string; c3: string; ink: string }) {
+    const elRef = useRef<HTMLDivElement>(null);
+    const geoRef = useRef<GeoRef | null>(null);
+
+    // Setup renderer + loop once per mount
+    useEffect(() => {
+        const el = elRef.current;
+        if (!el) return;
+        let renderer: THREE.WebGLRenderer;
+        try { renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true }); }
+        catch { return; }
+        renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+        renderer.domElement.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block';
+        el.appendChild(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        const cam = new THREE.PerspectiveCamera(35, 1, 1, 2000);
+        cam.position.set(0, 0, 360);
+        const group = new THREE.Group();
+        scene.add(group);
+
+        // Fade out the SVG fallback now that WebGL is live
+        const svg = el.parentElement?.querySelector('svg') as (SVGElement & { style: CSSStyleDeclaration }) | null;
+        if (svg) { svg.style.transition = 'opacity .7s ease'; svg.style.opacity = '0'; }
+
+        const ptr = { x: 0, y: 0 }, rot = { x: 0, y: 0 };
+        const onPtr = (e: PointerEvent) => {
+            const r = el.getBoundingClientRect();
+            ptr.x = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (window.innerWidth / 2)));
+            ptr.y = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (window.innerHeight / 2)));
+        };
+        window.addEventListener('pointermove', onPtr, { passive: true });
+
+        const resize = () => {
+            const w = el.clientWidth || 1, h = el.clientHeight || 1;
+            renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix();
+        };
+        const ro = new ResizeObserver(resize);
+        ro.observe(el); resize();
+
+        const t0 = performance.now();
+        const state: GeoRef = { scene, group, renderer, cam, stopped: false, raf: 0, t0, exiting: [], entering: [] };
+        geoRef.current = state;
+
+        const loop = () => {
+            if (state.stopped) return;
+            state.raf = requestAnimationFrame(loop);
+            const t = (performance.now() - t0) / 1000;
+            const tx = ptr.y * 0.26 + Math.sin(t * 0.6) * 0.05;
+            const ty = ptr.x * 0.42 + Math.sin(t * 0.45) * 0.06;
+            rot.x += (tx - rot.x) * 0.07;
+            rot.y += (-ty - rot.y) * 0.07;
+            group.rotation.x = rot.x; group.rotation.y = rot.y;
+            group.position.y = Math.sin(t * 0.7) * 2.0;
+
+            // Scatter exit — old shapes tumble toward camera and vanish
+            for (let i = state.exiting.length - 1; i >= 0; i--) {
+                const e = state.exiting[i];
+                e.mesh.position.z = Math.min(e.mesh.position.z + e.vz, 340);
+                e.mesh.position.x += e.vx;
+                e.mesh.position.y += e.vy;
+                e.mesh.rotation.x += e.rx;
+                e.mesh.rotation.z += e.rz;
+                const s = Math.max(0, 1 - (t - e.born) / 0.52);
+                e.mesh.scale.setScalar(s);
+                if (s <= 0) {
+                    group.remove(e.mesh);
+                    (e.mesh.geometry as THREE.BufferGeometry).dispose();
+                    (Array.isArray(e.mesh.material) ? e.mesh.material : [e.mesh.material])
+                        .forEach(m => (m as THREE.Material).dispose());
+                    state.exiting.splice(i, 1);
+                }
+            }
+            // Spring entrance — shapes condense from deep z, staggered to settle after card pop
+            for (let i = state.entering.length - 1; i >= 0; i--) {
+                const en = state.entering[i];
+                const elapsed = t - en.born - en.delay;
+                if (elapsed < 0) continue;
+                const p = Math.min(elapsed / 0.50, 1);
+                const spring = 1 - Math.pow(1 - p, 3) + Math.sin(p * Math.PI) * 0.12;
+                en.mesh.position.z = en.restZ - 280 * (1 - Math.min(spring, 1));
+                en.mesh.scale.setScalar(Math.min(0.3 + 0.7 * (1 - Math.pow(1 - p, 3)), 1.06));
+                if (p >= 1) {
+                    en.mesh.position.z = en.restZ;
+                    en.mesh.scale.setScalar(1);
+                    state.entering.splice(i, 1);
+                }
+            }
+
+            renderer.render(scene, cam);
+        };
+        loop();
+
+        return () => {
+            state.stopped = true;
+            cancelAnimationFrame(state.raf);
+            window.removeEventListener('pointermove', onPtr);
+            ro.disconnect();
+            renderer.dispose();
+            renderer.domElement.parentNode?.removeChild(renderer.domElement);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Rebuild geometry whenever palette or hobby changes
+    useEffect(() => {
+        const state = geoRef.current;
+        if (!state) return;
+        const { group, scene } = state;
+
+        // Push existing meshes into scatter-exit; they remove themselves when done
+        const nowT = (performance.now() - state.t0) / 1000;
+        for (const child of [...group.children]) {
+            if (child instanceof THREE.Mesh && !child.userData.exiting) {
+                child.userData.exiting = true;
+                state.exiting.push({ mesh: child, vz: 5 + Math.random() * 10, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 3, rx: (Math.random() - 0.5) * 0.08, rz: (Math.random() - 0.5) * 0.12, born: nowT });
+            }
+        }
+        state.entering = []; // cancel any in-flight entrances
+
+        // Refresh lights
+        [...scene.children].forEach(c => { if (c instanceof THREE.Light) scene.remove(c); });
+
+        // Intensities × π compensates for the BRDF 1/π correction added in Three.js r155
+        // (original poster-geo.js was authored against Three.js 0.128 which lacked this correction)
+        const accentCol = new THREE.Color(accent);
+        scene.add(new THREE.AmbientLight(0xfdfbf5, 0.62 * Math.PI));
+        const key = new THREE.DirectionalLight(accentCol.getHex(), 1.35 * Math.PI); key.position.set(-90, 130, 170); scene.add(key);
+        const fill = new THREE.DirectionalLight(0xffffff, 0.42 * Math.PI); fill.position.set(140, -30, 120); scene.add(fill);
+        const warm = new THREE.PointLight(0xfff1d8, 0.35 * Math.PI, 1200); warm.position.set(40, 60, 260); scene.add(warm);
+
+        const mk = (col: string) => new THREE.MeshStandardMaterial({ color: new THREE.Color(col), roughness: 0.92, metalness: 0.0 });
+
+        // spawn: starts the mesh behind the stage (z offset) and queues a staggered spring entrance
+        let spawnIdx = 0;
+        const spawn = (m: THREE.Mesh, restZ: number) => {
+            m.position.z = restZ - 280;
+            m.scale.setScalar(0.3);
+            group.add(m);
+            state.entering.push({ mesh: m, restZ, delay: 0.05 + spawnIdx++ * 0.034, born: nowT });
+        };
+        const disc = (x: number, y: number, r: number, d: number, col: string, z = 0) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, d, 56), mk(col)); m.rotation.x = Math.PI / 2; m.position.set(x, y, z); spawn(m, z); };
+        const ring = (x: number, y: number, r: number, tube: number, col: string, z = 0) => { const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 18, 72), mk(col)); m.position.set(x, y, z); spawn(m, z); };
+        const bar = (x: number, y: number, w: number, h: number, dep: number, col: string, z = 0, rot?: number) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, dep), mk(col)); m.position.set(x, y, z); if (rot != null) m.rotation.z = rot; spawn(m, z); };
+        // 'ZXY' Euler order: Rz spins the face in-plane AFTER Rx lays it flat
+        const ngon = (sides: number, x: number, y: number, r: number, d: number, col: string, z = 0, rotZ = 0) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, d, sides), mk(col)); m.rotation.order = 'ZXY'; m.rotation.x = Math.PI / 2; m.rotation.z = rotZ; m.position.set(x, y, z); spawn(m, z); };
+
+        switch (hobby) {
+            case 'soccer': {
+                // Ball body + decorative outer ring
+                disc(0, 0, 62, 22, accent, 0);
+                ring(0, 0, 84, 2.4, c3, -12);
+                // Centre hexagon — flat-top (rotZ=0 puts first vertex at 3 o'clock, flat edge at top)
+                ngon(6, 0, 0, 20, 8, bg, 13, 0);
+                // 6 dark pentagons — at hex EDGE directions (+30°); rotZ=a keeps face flat with ZXY order
+                for (let k = 0; k < 6; k++) {
+                    const a = k * Math.PI / 3 + Math.PI / 6;
+                    ngon(5, 30 * Math.cos(a), 30 * Math.sin(a), 11, 4, ink, 12, a);
+                }
+                // 6 light outer hexagons — at hex VERTEX directions (0°, 60°, …)
+                for (let k = 0; k < 6; k++) {
+                    const a = k * Math.PI / 3;
+                    ngon(6, 50 * Math.cos(a), 50 * Math.sin(a), 14, 6, bg, 11, 0);
+                }
+                break;
+            }
+            case 'gaming':
+                bar(0, 4, 150, 70, 26, accent, 0); disc(-55, 4, 35, 26, accent, 0); disc(55, 4, 35, 26, accent, 0);
+                bar(-40, 4, 30, 9, 10, bg, 16); bar(-40, 4, 9, 30, 10, bg, 16);
+                disc(40, 16, 6.5, 8, c3, 17); disc(40, -8, 6.5, 8, c3, 17); disc(28, 4, 6.5, 8, bg, 17); disc(52, 4, 6.5, 8, bg, 17);
+                bar(-58, -40, 10, 10, 6, c3, -8); bar(-46, -40, 10, 10, 6, accent, -8); bar(-58, -28, 10, 10, 6, accent, -8);
+                break;
+            case 'music':
+                disc(0, 4, 60, 16, accent, 0); [50, 40, 30, 20].forEach(r => ring(0, 4, r, 0.8, bg, 9));
+                disc(0, 4, 11, 5, c3, 11); disc(0, 4, 3.6, 4, bg, 13);
+                disc(52, 42, 5.5, 5, c3, 16); bar(55, 30, 2.6, 18, 4, c3, 16); disc(66, 30, 5.5, 5, c3, 16); bar(69, 19, 2.6, 16, 4, c3, 16);
+                break;
+            case 'food':
+                disc(0, -6, 68, 18, accent, 0); ring(0, -6, 68, 4, c3, 10);
+                [-30, -12, 8, 28].forEach((x, i) => bar(x, -4, 5, 58, 5, c2, 13, (i % 2 ? 1 : -1) * 0.14));
+                bar(8, 12, 4, 118, 4, c3, 20, -0.62); bar(22, 8, 4, 118, 4, c3, 20, -0.62);
+                [[-10, 60], [6, 66], [22, 60]].forEach(([x, y]) => disc(x, y, 4, 4, c2, 15));
+                break;
+        }
+    }, [hobby, accent, bg, c2, c3, ink]);
+
+    return <div ref={elRef} style={{ position: 'absolute', inset: 0, display: 'block', pointerEvents: 'none' }} />;
+}
+
 // ─── Slime reveal ─────────────────────────────────────────────────────────
 function buildSlimePath(cx: number, cy: number, progress: number): string {
     if (progress <= 0) return `M ${cx} ${cy} Z`;
@@ -329,7 +537,14 @@ function Poster({ d, layout, onJump }: { d: CardData; layout: typeof CARD_LAYOUT
             </div>
             {/* Art */}
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, padding: '30px 30px 10px' }}>
-                <Art name={d.art} pal={pal} />
+                {layout.big ? (
+                    <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Art name={d.art} pal={pal} />
+                        <PosterGeo hobby={d.art} accent={pal.accent} bg={pal.bg} c2={pal.c2} c3={pal.c3} ink={pal.ink} />
+                    </div>
+                ) : (
+                    <Art name={d.art} pal={pal} />
+                )}
             </div>
             {/* Meta */}
             <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', padding: '0 28px 26px' }}>
@@ -684,6 +899,15 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                                 <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible', pointerEvents: 'none', zIndex: 1 }} viewBox="0 0 1440 840" preserveAspectRatio="none">
                                     <path d="M 1018 392 Q 760 340 524 392" fill="none" stroke={accent} strokeWidth={1.2} strokeDasharray="1.5 7" strokeLinecap="round" opacity={0.5} style={{ transition: 'stroke .5s' }} />
                                 </svg>
+                                {/* Portrait */}
+                                <div style={{ position: 'absolute', right: 34, bottom: 0, height: 768, zIndex: 2 }}>
+                                    <div style={{ position: 'absolute', top: 42, left: -14, right: 18, bottom: 0, borderTop: `1.5px solid ${accent}`, borderLeft: `1.5px solid ${accent}`, borderRight: `1.5px solid ${accent}`, opacity: 0.3, pointerEvents: 'none', transition: 'border-color .5s' }} />
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src="/subject.webp" alt="Olric Zeng" draggable={false} onClick={() => commitRef.current(1)} style={{ height: 768, width: 'auto', display: 'block', userSelect: 'none', cursor: 'pointer', position: 'relative', zIndex: 1 } as React.CSSProperties} />
+                                    <span style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%) rotate(180deg)', writingMode: 'vertical-rl', fontFamily: BODY, fontSize: '.56rem', letterSpacing: '.36em', textTransform: 'uppercase', color: accent, opacity: 0.62, zIndex: 2, transition: 'color .5s', pointerEvents: 'none' } as React.CSSProperties}>
+                                        Olric Zeng — CS @ Cornell
+                                    </span>
+                                </div>
                                 <span style={{ position: 'absolute', left: 1018, top: 392, width: 13, height: 13, transform: 'translate(-50%,-50%)', zIndex: 3 }}>
                                     <span style={{ position: 'absolute', left: '50%', top: '50%', width: 32, height: 32, border: `1px solid ${accent}`, borderRadius: '50%', transform: 'translate(-50%,-50%)', opacity: 0.4, transition: 'border-color .5s' }} />
                                     <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: accent, transition: 'background .5s' }} />
@@ -698,7 +922,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                             transition: deckTransition,
                         }}>
                             {([H.main, H.subs[0], H.subs[1]] as CardData[]).map((d, i) => (
-                                <Poster key={`${H.id}-${i}`} d={d} layout={CARD_LAYOUT[i]}
+                                <Poster key={i === 0 ? 'main' : `${H.id}-${i}`} d={d} layout={CARD_LAYOUT[i]}
                                     onJump={d.jump != null ? () => goToRef.current(d.jump!) : undefined} />
                             ))}
                         </div>
