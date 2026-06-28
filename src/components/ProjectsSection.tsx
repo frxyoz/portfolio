@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { projects } from '@/data/projects';
 import type { Project } from '@/types';
 import { useOverlay } from '@/contexts/OverlayContext';
@@ -241,14 +241,41 @@ function ProjectDetail({
     useEffect(() => {
         document.body.classList.add('overlay-open');
         if (scrollRef.current) scrollRef.current.scrollTop = 0;
-        return () => document.body.classList.remove('overlay-open');
+
+        // Capture focus on open, restore it on close
+        const previousFocus = document.activeElement as HTMLElement | null;
+        const firstFocusable = scrollRef.current?.querySelector<HTMLElement>(
+            'button:not([disabled]), [href], input, [tabindex]:not([tabindex="-1"])'
+        );
+        firstFocusable?.focus();
+
+        return () => {
+            document.body.classList.remove('overlay-open');
+            previousFocus?.focus();
+        };
     }, [project.id]);
 
     useEffect(() => {
         const fn = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-            if (e.key === 'ArrowRight' && nextProject) onNext();
-            if (e.key === 'ArrowLeft' && prevProject) onPrev();
+            if (e.key === 'Escape') { onClose(); return; }
+            if (e.key === 'ArrowRight' && nextProject) { onNext(); return; }
+            if (e.key === 'ArrowLeft' && prevProject) { onPrev(); return; }
+            if (e.key === 'Tab' && scrollRef.current) {
+                const focusable = Array.from(
+                    scrollRef.current.querySelectorAll<HTMLElement>(
+                        'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                    )
+                );
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
         };
         window.addEventListener('keydown', fn);
         return () => window.removeEventListener('keydown', fn);
@@ -257,11 +284,20 @@ function ProjectDetail({
     const currentIndex = projects.findIndex(p => p.id === project.id);
 
     return (
-        <div ref={scrollRef} style={{
-            position: 'fixed', inset: 0, zIndex: 400,
-            background: '#fff', overflowY: 'auto',
-            animation: 'slideUp 0.55s cubic-bezier(.22,1,.36,1) forwards',
-        }}>
+        <motion.div
+            ref={scrollRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${project.name} project detail`}
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -24, opacity: 0 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+                position: 'fixed', inset: 0, zIndex: 400,
+                background: '#fff', overflowY: 'auto',
+            }}
+        >
             {/* Sticky header */}
             <div style={{
                 position: 'sticky', top: 0, zIndex: 10,
@@ -456,7 +492,7 @@ function ProjectDetail({
                     ) : <div />}
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }
 
@@ -511,18 +547,21 @@ export default function ProjectsSection() {
                 </div>
             </div>
 
-            {/* Full-screen detail overlay */}
-            {activeProject && (
-                <ProjectDetail
-                    project={activeProject}
-                    onClose={handleClose}
-                    onPrev={() => prevProject && setActiveProject(prevProject)}
-                    onNext={() => nextProject && setActiveProject(nextProject)}
-                    prevProject={prevProject}
-                    nextProject={nextProject}
-                    isMobile={isMobile}
-                />
-            )}
+            {/* Full-screen detail overlay — AnimatePresence gives it a proper exit animation */}
+            <AnimatePresence>
+                {activeProject && (
+                    <ProjectDetail
+                        key="overlay"
+                        project={activeProject}
+                        onClose={handleClose}
+                        onPrev={() => prevProject && setActiveProject(prevProject)}
+                        onNext={() => nextProject && setActiveProject(nextProject)}
+                        prevProject={prevProject}
+                        nextProject={nextProject}
+                        isMobile={isMobile}
+                    />
+                )}
+            </AnimatePresence>
         </section>
     );
 }

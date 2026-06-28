@@ -81,6 +81,11 @@ export default function NavBar() {
           background: 'none', border: 'none', cursor: 'pointer',
           minHeight: isMobile ? 44 : undefined,
           padding: isMobile ? '0 4px' : 0,
+          paddingBottom: !isMobile && active === 'hero' && !overlayOpen ? 3 : 0,
+          borderBottom: !isMobile && active === 'hero' && !overlayOpen
+            ? `1px solid ${ACCENT}`
+            : '1px solid transparent',
+          transition: 'border-color 0.2s ease',
         }}
       >
         OZ

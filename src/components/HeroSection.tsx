@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import { motion, useScroll, useTransform, useMotionValue } from 'framer-motion';
 import { profile } from '@/data/profile';
 import MagneticButton from './MagneticButton';
@@ -34,6 +34,20 @@ function FixedPhoto({
     isMobile: boolean;
 }) {
     const [hov, setHov] = useState(false);
+    const [hintReady, setHintReady] = useState(false);
+    const [hintIsOpen, setHintIsOpen] = useState(false);
+
+    // Hide + swap text before the browser paints — prevents 1-frame flash of wrong label
+    useLayoutEffect(() => {
+        setHintReady(false);
+        setHintIsOpen(mindMapOpen);
+    }, [mindMapOpen]);
+
+    // Start the 3-second reveal timer after paint
+    useEffect(() => {
+        const t = setTimeout(() => setHintReady(true), 3000);
+        return () => clearTimeout(t);
+    }, [mindMapOpen]);
 
     // Boost to 1 when mind map is open so photo is always fully visible over overlay
     const boost = useMotionValue(mindMapOpen ? 1 : 0);
@@ -140,8 +154,12 @@ function FixedPhoto({
                         draggable={false}
                     />
 
-                    {/* Handwritten click hint */}
-                    {!mindMapOpen && (
+                    {/* Handwritten hint — "click here!" on home, "return to home" on mindmap */}
+                    <div style={{
+                        opacity: hintReady ? 1 : 0,
+                        transition: 'opacity 0.5s ease',
+                        pointerEvents: 'none',
+                    }}>
                         <motion.div
                             animate={{ y: [0, -5, 0] }}
                             transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
@@ -163,8 +181,9 @@ function FixedPhoto({
                                 display: 'block',
                                 lineHeight: 1,
                                 opacity: 0.9,
+                                whiteSpace: 'nowrap',
                             }}>
-                                click here!
+                                {hintIsOpen ? 'return to home' : 'click here!'}
                             </span>
                             <svg width="22" height="38" viewBox="0 0 22 38" fill="none" style={{ marginBottom: 2 }}>
                                 <path d="M 10 2 C 14 10 18 20 10 36" stroke={ACCENT} strokeWidth="1.6" strokeLinecap="round" fill="none" />
@@ -172,27 +191,6 @@ function FixedPhoto({
                                 <path d="M 10 36 L 16 29" stroke={ACCENT} strokeWidth="1.6" strokeLinecap="round" />
                             </svg>
                         </motion.div>
-                    )}
-
-                    {/* Hover hint */}
-                    <div style={{
-                        position: 'absolute',
-                        bottom: 16,
-                        left: '50%', transform: 'translateX(-50%)',
-                        opacity: hov && mindMapOpen ? 1 : 0,
-                        transition: 'opacity 0.3s ease',
-                        pointerEvents: 'none',
-                        whiteSpace: 'nowrap',
-                        zIndex: 2,
-                    }}>
-                        <p style={{
-                            fontFamily: BODY, fontSize: '0.6rem', letterSpacing: '0.18em',
-                            textTransform: 'uppercase', color: ACCENT,
-                            background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(8px)',
-                            padding: '5px 14px',
-                        }}>
-                            ← Return Home
-                        </p>
                     </div>
                 </motion.div>
             </motion.div>
@@ -210,6 +208,7 @@ export default function HeroSection() {
     const [aboutExpanded, setAboutExpanded] = useState(false);
     const aboutTextRef = useRef<HTMLParagraphElement>(null);
     const [aboutNaturalHeight, setAboutNaturalHeight] = useState(0);
+    const [windowHeight, setWindowHeight] = useState(900);
 
     useEffect(() => {
         const t = setTimeout(() => setEntered(true), 80);
@@ -222,6 +221,13 @@ export default function HeroSection() {
         }
         if (!isMobile) setAboutExpanded(false);
     }, [isMobile]);
+
+    useEffect(() => {
+        setWindowHeight(window.innerHeight);
+        const fn = () => setWindowHeight(window.innerHeight);
+        window.addEventListener('resize', fn, { passive: true });
+        return () => window.removeEventListener('resize', fn);
+    }, []);
 
     // Fade photo out when hero scrolls out of view (past the 280vh wrapper)
     useEffect(() => {
@@ -260,10 +266,10 @@ export default function HeroSection() {
     const aboutText = profile.tagline.replace(/^[“'”””]+|[“'”””]+$/g, '');
     // Collapsed: fits alongside social links + button. Expanded: those are hidden, freeing 215px.
     const collapsedHeight = isMobile
-        ? Math.max(100, Math.min(document.documentElement.clientHeight - 548, 280))
+        ? Math.max(100, Math.min(windowHeight - 548, 280))
         : 120;
     const expandedTextHeight = isMobile
-        ? Math.min(aboutNaturalHeight || 400, document.documentElement.clientHeight - 329)
+        ? Math.min(aboutNaturalHeight || 400, windowHeight - 329)
         : 0;
 
     return (
@@ -328,20 +334,12 @@ export default function HeroSection() {
                             <h1 style={{
                                 fontFamily: DISPLAY, fontWeight: 300,
                                 letterSpacing: '-0.015em', lineHeight: 0.88,
-                                color: '#7a7672',
                                 fontSize: isMobile ? 'clamp(3.8rem, 16vw, 5rem)' : 'clamp(4.5rem, 9vw, 9.5rem)',
                                 margin: 0,
-                            }}>
-                                Olric
-                            </h1>
-                            <h1 style={{
-                                fontFamily: DISPLAY, fontWeight: 300,
-                                letterSpacing: '-0.015em', lineHeight: 0.88,
-                                fontStyle: 'italic', color: ACCENT,
-                                fontSize: isMobile ? 'clamp(3.8rem, 16vw, 5rem)' : 'clamp(4.5rem, 9vw, 9.5rem)',
                                 marginBottom: isMobile ? 24 : 36,
                             }}>
-                                Zeng
+                                <span style={{ color: '#7a7672', display: 'block' }}>Olric</span>
+                                <span style={{ fontStyle: 'italic', color: ACCENT, display: 'block' }}>Zeng</span>
                             </h1>
                         </div>
 

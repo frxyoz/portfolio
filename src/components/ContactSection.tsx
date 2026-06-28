@@ -23,6 +23,7 @@ export default function ContactSection() {
     const [form, setForm] = useState({ name: '', email: '', message: '' });
     const [submitted, setSubmitted] = useState(false);
     const [sending, setSending] = useState(false);
+    const [error, setError] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -31,13 +32,20 @@ export default function ContactSection() {
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
         setSending(true);
-        await fetch(process.env.NEXT_PUBLIC_FORMSPREE_KEY as string, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-            body: JSON.stringify(form),
-        });
-        setSending(false);
-        setSubmitted(true);
+        setError(false);
+        try {
+            const res = await fetch(process.env.NEXT_PUBLIC_FORMSPREE_KEY as string, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify(form),
+            });
+            if (!res.ok) throw new Error('submit failed');
+            setSubmitted(true);
+        } catch {
+            setError(true);
+        } finally {
+            setSending(false);
+        }
     };
 
     return (
@@ -111,20 +119,28 @@ export default function ContactSection() {
                                 onFocus={e => { e.target.style.borderColor = ACCENT; }}
                                 onBlur={e => { e.target.style.borderColor = `${ACCENT}33`; }}
                             />
-                            <button
-                                type="submit"
-                                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#d4a017'; }}
-                                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = ACCENT; }}
-                                style={{
-                                    fontFamily: BODY, fontSize: '0.78rem', fontWeight: 500,
-                                    letterSpacing: '0.14em', textTransform: 'uppercase',
-                                    color: '#1a1a1a', background: ACCENT, border: 'none',
-                                    padding: '16px 40px', cursor: 'pointer', alignSelf: 'flex-start',
-                                    transition: 'background 0.2s',
-                                }}
-                            >
-                                {sending ? 'Sending…' : 'Send Message'}
-                            </button>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignSelf: 'flex-start' }}>
+                                <button
+                                    type="submit"
+                                    disabled={sending}
+                                    onMouseEnter={e => { if (!sending) (e.currentTarget as HTMLButtonElement).style.background = '#d4a017'; }}
+                                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = sending ? `${ACCENT}99` : ACCENT; }}
+                                    style={{
+                                        fontFamily: BODY, fontSize: '0.78rem', fontWeight: 500,
+                                        letterSpacing: '0.14em', textTransform: 'uppercase',
+                                        color: '#1a1a1a', background: sending ? `${ACCENT}99` : ACCENT, border: 'none',
+                                        padding: '16px 40px', cursor: sending ? 'default' : 'pointer',
+                                        transition: 'background 0.2s',
+                                    }}
+                                >
+                                    {sending ? 'Sending…' : 'Send Message'}
+                                </button>
+                                {error && (
+                                    <p style={{ fontFamily: BODY, fontSize: '0.8rem', color: '#c0392b' }}>
+                                        Something went wrong — please try again.
+                                    </p>
+                                )}
+                            </div>
                         </form>
                     ) : (
                         <div style={{ padding: '40px', border: `1px solid ${ACCENT}44`, textAlign: 'center' }}>
