@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Cormorant_Garamond, DM_Sans, Caveat } from 'next/font/google';
 import './globals.css';
 import Cursor from '@/components/Cursor';
+import LoadingScreen from '@/components/LoadingScreen';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <link rel="preload" as="image" href="/subject.webp" fetchPriority="high" />
             </head>
             <body>
+                <LoadingScreen />
                 <Cursor />
                 {children}
                 <Analytics />

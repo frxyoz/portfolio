@@ -897,18 +897,9 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                         {!mobile && (
                             <>
                                 <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible', pointerEvents: 'none', zIndex: 1 }} viewBox="0 0 1440 840" preserveAspectRatio="none">
-                                    <path d="M 1018 392 Q 760 340 524 392" fill="none" stroke={accent} strokeWidth={1.2} strokeDasharray="1.5 7" strokeLinecap="round" opacity={0.5} style={{ transition: 'stroke .5s' }} />
+                                    <path d="M 1160 420 Q 840 360 524 392" fill="none" stroke={accent} strokeWidth={1.2} strokeDasharray="1.5 7" strokeLinecap="round" opacity={0.5} style={{ transition: 'stroke .5s' }} />
                                 </svg>
-                                {/* Portrait */}
-                                <div style={{ position: 'absolute', right: 34, bottom: 0, height: 768, zIndex: 2 }}>
-                                    <div style={{ position: 'absolute', top: 42, left: -14, right: 18, bottom: 0, borderTop: `1.5px solid ${accent}`, borderLeft: `1.5px solid ${accent}`, borderRight: `1.5px solid ${accent}`, opacity: 0.3, pointerEvents: 'none', transition: 'border-color .5s' }} />
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src="/subject.webp" alt="Olric Zeng" draggable={false} onClick={() => commitRef.current(1)} style={{ height: 768, width: 'auto', display: 'block', userSelect: 'none', cursor: 'pointer', position: 'relative', zIndex: 1 } as React.CSSProperties} />
-                                    <span style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%) rotate(180deg)', writingMode: 'vertical-rl', fontFamily: BODY, fontSize: '.56rem', letterSpacing: '.36em', textTransform: 'uppercase', color: accent, opacity: 0.62, zIndex: 2, transition: 'color .5s', pointerEvents: 'none' } as React.CSSProperties}>
-                                        Olric Zeng — CS @ Cornell
-                                    </span>
-                                </div>
-                                <span style={{ position: 'absolute', left: 1018, top: 392, width: 13, height: 13, transform: 'translate(-50%,-50%)', zIndex: 3 }}>
+                                <span style={{ position: 'absolute', left: 1160, top: 420, width: 13, height: 13, transform: 'translate(-50%,-50%)', zIndex: 3 }}>
                                     <span style={{ position: 'absolute', left: '50%', top: '50%', width: 32, height: 32, border: `1px solid ${accent}`, borderRadius: '50%', transform: 'translate(-50%,-50%)', opacity: 0.4, transition: 'border-color .5s' }} />
                                     <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: accent, transition: 'background .5s' }} />
                                 </span>

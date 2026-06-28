@@ -51,7 +51,7 @@ function FixedPhoto({
     const photoScale = useTransform(
         [scrollScale, boost] as const, ([sc, b]: number[]) => b > 0.5 ? 1 : sc);
 
-    const visible = heroInView && !mindMapOpen;
+    const visible = heroInView || mindMapOpen;
 
     if (isMobile) return null;
 
