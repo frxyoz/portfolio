@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { T, FONT, MONO, H2, H3, P, C, Lede, Note, Table } from './minddo/ui';
+import { T, FONT, MONO, H2, H3, P, C, Lede, Note, Table, Video } from './minddo/ui';
 import Architecture from './minddo/Architecture';
 import Lifecycle from './minddo/Lifecycle';
 import Pipeline from './minddo/Pipeline';
@@ -95,18 +95,32 @@ export default function MinddoShowcase() {
                     </h1>
                     <p style={{ fontSize: 'clamp(1rem, 2vw, 1.15rem)', color: T.muted, marginBottom: 22 }}>{minddo.subtitle}</p>
 
-                    <div style={{ maxWidth: 700 }}>
-                        <Lede>{minddo.lede}</Lede>
+                    {/* Prose left, demo right: the summary block leaves the right half empty on wide screens. */}
+                    <div className="minddo-hero" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 36, alignItems: 'start' }}>
+                        <div style={{ minWidth: 0 }}>
+                            <div style={{ maxWidth: 700 }}>
+                                <Lede>{minddo.lede}</Lede>
+                            </div>
+
+                            <dl style={{ display: 'grid', gridTemplateColumns: 'minmax(64px, auto) 1fr', gap: '10px 20px', maxWidth: 900, margin: '26px 0 0' }}>
+                                {[['Role', minddo.role], ['Stack', minddo.stack], ['Scale', minddo.scale], ['Status', minddo.status]].map(([k, v]) => (
+                                    <div key={k} style={{ display: 'contents' }}>
+                                        <dt style={{ fontFamily: MONO, fontSize: '0.7rem', color: T.accent, textTransform: 'uppercase', letterSpacing: '0.06em', paddingTop: 2 }}>{k}</dt>
+                                        <dd style={{ fontSize: '0.86rem', color: T.body, lineHeight: 1.6 }}>{v}</dd>
+                                    </div>
+                                ))}
+                            </dl>
+                        </div>
+
+                        <Video
+                            label="DEMO"
+                            title="Screen recording"
+                            src={minddo.demoVideo}
+                            style={{ margin: 0, minWidth: 0 }}
+                        />
                     </div>
 
-                    <dl style={{ display: 'grid', gridTemplateColumns: 'minmax(64px, auto) 1fr', gap: '10px 20px', maxWidth: 900, margin: '26px 0 30px' }}>
-                        {[['Role', minddo.role], ['Stack', minddo.stack], ['Scale', minddo.scale], ['Status', minddo.status]].map(([k, v]) => (
-                            <div key={k} style={{ display: 'contents' }}>
-                                <dt style={{ fontFamily: MONO, fontSize: '0.7rem', color: T.accent, textTransform: 'uppercase', letterSpacing: '0.06em', paddingTop: 2 }}>{k}</dt>
-                                <dd style={{ fontSize: '0.86rem', color: T.body, lineHeight: 1.6 }}>{v}</dd>
-                            </div>
-                        ))}
-                    </dl>
+                    <div style={{ height: 30 }} />
 
                     <div style={{
                         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 1,
@@ -425,6 +439,7 @@ export default function MinddoShowcase() {
                 @media (min-width: 1120px) {
                     .minddo-grid { grid-template-columns: 210px minmax(0, 1fr) !important; }
                     .minddo-toc  { display: block !important; }
+                    .minddo-hero { grid-template-columns: minmax(0, 1fr) minmax(380px, 520px) !important; }
                 }
             `}</style>
         </div>

@@ -320,3 +320,44 @@ export function useFocus<Id extends string>() {
     });
     return { active, pinned, hover, setPinned, bind, ref };
 }
+
+/* ── Video: a YouTube embed in the same frame the diagrams use ───────────── */
+
+export function Video({ label, title, src, caption, style }: {
+    label: string;
+    title: string;
+    /** Privacy-preserving embed URL, e.g. https://www.youtube-nocookie.com/embed/<id> */
+    src: string;
+    caption?: ReactNode;
+    style?: CSSProperties;
+}) {
+    return (
+        <figure className="minddo-bleed" style={{ marginTop: 22, marginBottom: 26, ...style }}>
+            <div style={{ border: `1px solid ${T.rule}`, borderRadius: 6, background: '#fff', overflow: 'hidden' }}>
+                <div style={{
+                    display: 'flex', alignItems: 'baseline', gap: 10,
+                    padding: '10px 14px', borderBottom: `1px solid ${T.rule}`, background: T.surface,
+                }}>
+                    <span style={{ fontFamily: MONO, fontSize: '0.7rem', color: T.accent, flexShrink: 0 }}>{label}</span>
+                    <span style={{ fontFamily: FONT, fontSize: '0.82rem', fontWeight: 600, color: T.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {title}
+                    </span>
+                </div>
+                <iframe
+                    src={src}
+                    title={title}
+                    loading="lazy"
+                    style={{ width: '100%', aspectRatio: '16 / 9', display: 'block', border: 'none', background: T.ink }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                />
+            </div>
+            {caption && (
+                <figcaption style={{ fontFamily: FONT, fontSize: '0.8rem', color: T.muted, lineHeight: 1.6, marginTop: 9 }}>
+                    {caption}
+                </figcaption>
+            )}
+        </figure>
+    );
+}

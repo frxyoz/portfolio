@@ -10,6 +10,8 @@ export const minddo = {
     scale: '~2,200 lines of Python, ~4,900 of JSX, 12 Kubernetes manifests',
     status: 'Runs on docker compose and on k3d with KEDA. The AWS deployment is scripted but not executed.',
     lede: 'A student project URL goes in. About 100 seconds later there are eleven artifacts: screenshots, a recorded demo, a narrated video in English and Mandarin, AI-written copy, a QR code and a print-ready flyer.',
+    // youtube-nocookie so the embed sets no cookie until playback starts.
+    demoVideo: 'https://www.youtube-nocookie.com/embed/_IFdL_suGr0',
 };
 
 export const metrics = [
