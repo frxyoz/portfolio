@@ -87,7 +87,7 @@ export function Note({ label, tone = 'accent', children }: { label: string; tone
     const c = tone === 'warn' ? T.bad : { stroke: T.accent, fill: T.accentSoft, text: T.ink };
     return (
         <div style={{
-            border: `1px solid ${c.stroke}44`, borderLeft: `3px solid ${c.stroke}`,
+            border: `1px solid ${c.stroke}44`,
             background: tone === 'warn' ? '#fff8f7' : T.surfaceAlt,
             padding: '14px 16px', margin: '18px 0', borderRadius: 4,
         }}>
