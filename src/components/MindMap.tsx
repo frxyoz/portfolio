@@ -414,7 +414,6 @@ function PosterGeo({ hobby, accent, bg, c2, c3, ink }: { hobby: string; accent: 
             renderer.dispose();
             renderer.domElement.parentNode?.removeChild(renderer.domElement);
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Rebuild geometry whenever palette or hobby changes
@@ -611,16 +610,21 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
     const popRaf = useRef<number | null>(null);
 
     useEffect(() => { aiRef.current = ai; }, [ai]);
+    useEffect(() => { dxRef.current = dx; }, [dx]);
 
-    // Open/close
-    useEffect(() => {
+    // Open/close. Resetting during render rather than in an effect keeps the carousel
+    // from painting the previous hobby for one frame as the overlay mounts.
+    const [wasOpen, setWasOpen] = useState(open);
+    if (wasOpen !== open) {
+        setWasOpen(open);
         if (open) {
             setMounted(true);
-            setAi(0); aiRef.current = 0;
-            setPhase('idle'); setDx(0); dxRef.current = 0;
-            swipingRef.current = false;
+            setAi(0);
+            setPhase('idle');
+            setDx(0);
         }
-    }, [open]);
+    }
+    useEffect(() => { if (open) swipingRef.current = false; }, [open]);
 
     // Resize — mobile breakpoint at 720px
     useEffect(() => {
@@ -683,27 +687,28 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
         t3.current = setTimeout(() => { setPhase('idle'); swipingRef.current = false; }, 940);
     }, []);
 
-    const commitRef = useRef<(dir: number) => void>(() => { });
-    commitRef.current = (dir: number) => {
+    // Stable callbacks rather than refs written during render: `swap` never changes
+    // identity, and both read the live values through refs.
+    const commit = useCallback((dir: number) => {
         const n = HOBBIES.length;
         swap((aiRef.current + dir + n) % n, dir);
-    };
-    const goToRef = useRef<(i: number) => void>(() => { });
-    goToRef.current = (i: number) => {
+    }, [swap]);
+
+    const goTo = useCallback((i: number) => {
         if (i === aiRef.current || swipingRef.current) return;
         swap(i, i > aiRef.current ? 1 : -1);
-    };
+    }, [swap]);
 
     // Keyboard
     useEffect(() => {
         const fn = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose();
-            if (e.key === 'ArrowRight') commitRef.current(1);
-            if (e.key === 'ArrowLeft') commitRef.current(-1);
+            if (e.key === 'ArrowRight') commit(1);
+            if (e.key === 'ArrowLeft') commit(-1);
         };
         if (open) window.addEventListener('keydown', fn);
         return () => window.removeEventListener('keydown', fn);
-    }, [open, onClose]);
+    }, [open, onClose, commit]);
 
     // Scroll lock
     useEffect(() => {
@@ -730,12 +735,12 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
             const final = dxRef.current;
             dxRef.current = 0; setDx(0); setDragging(false);
             const threshold = window.innerWidth <= 720 ? 64 : 120;
-            if (final <= -threshold) commitRef.current(1);
-            else if (final >= threshold) commitRef.current(-1);
+            if (final <= -threshold) commit(1);
+            else if (final >= threshold) commit(-1);
         };
         document.addEventListener('pointermove', handleMove);
         document.addEventListener('pointerup', handleUp);
-    }, []);
+    }, [commit]);
 
     // Cleanup
     useEffect(() => () => {
@@ -866,7 +871,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                         <div style={{ position: 'absolute', left: 26, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 16, zIndex: 8 }}>
                             {HOBBIES.map((h, i) => (
                                 <button key={h.id}
-                                    onClick={e => { e.stopPropagation(); goToRef.current(i); }}
+                                    onClick={e => { e.stopPropagation(); goTo(i); }}
                                     onPointerDown={e => e.stopPropagation()}
                                     style={{
                                         width: 11, height: 11, borderRadius: '50%', border: 'none', padding: 0, cursor: 'pointer',
@@ -914,7 +919,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                         }}>
                             {([H.main, H.subs[0], H.subs[1]] as CardData[]).map((d, i) => (
                                 <Poster key={i === 0 ? 'main' : `${H.id}-${i}`} d={d} layout={CARD_LAYOUT[i]}
-                                    onJump={d.jump != null ? () => goToRef.current(d.jump!) : undefined} />
+                                    onJump={d.jump != null ? () => goTo(d.jump!) : undefined} />
                             ))}
                         </div>
                     </div>
@@ -929,7 +934,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                         >
                             <button
                                 aria-label="Previous interest"
-                                onClick={() => commitRef.current(-1)}
+                                onClick={() => commit(-1)}
                                 style={btnStyle}
                             >
                                 <svg viewBox="0 0 24 14" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" style={{ width: 21, height: 13 }}>
@@ -943,7 +948,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                                     {HOBBIES.map((h, i) => (
                                         <button key={h.id}
-                                            onClick={() => goToRef.current(i)}
+                                            onClick={() => goTo(i)}
                                             style={{
                                                 width: 11, height: 11, borderRadius: '50%', border: 'none', padding: 0, cursor: 'pointer',
                                                 background: h.accent, opacity: i === ai ? 1 : 0.4,
@@ -959,7 +964,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                             </div>
                             <button
                                 aria-label="Next interest"
-                                onClick={() => commitRef.current(1)}
+                                onClick={() => commit(1)}
                                 style={btnStyle}
                             >
                                 <svg viewBox="0 0 24 14" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" style={{ width: 21, height: 13 }}>

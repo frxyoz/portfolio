@@ -1,12 +1,29 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 const ACCENT = '#b8860b';
+const POINTER_FINE = '(pointer: fine)';
+
+function subscribePointerFine(onChange: () => void) {
+  const mq = window.matchMedia(POINTER_FINE);
+  mq.addEventListener('change', onChange);
+  return () => mq.removeEventListener('change', onChange);
+}
+
+/** True on devices with a precise pointer. Server snapshot is false, so the
+ *  custom cursor is never part of the initial HTML. */
+function usePointerFine() {
+  return useSyncExternalStore(
+    subscribePointerFine,
+    () => window.matchMedia(POINTER_FINE).matches,
+    () => false,
+  );
+}
 
 export default function Cursor() {
-  const [ready,   setReady]   = useState(false);
+  const fine = usePointerFine();
   const [hovered, setHovered] = useState(false);
 
   const mx = useMotionValue(-200);
@@ -21,8 +38,7 @@ export default function Cursor() {
   const ringY = useSpring(my, { stiffness: 90, damping: 18, mass: 0.5 });
 
   useEffect(() => {
-    if (!window.matchMedia('(pointer: fine)').matches) return;
-    setReady(true);
+    if (!fine) return;
 
     const onMove = (e: MouseEvent) => { mx.set(e.clientX); my.set(e.clientY); };
 
@@ -36,15 +52,16 @@ export default function Cursor() {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseover', onOver);
     };
-  }, [mx, my]);
+  }, [fine, mx, my]);
 
-  if (!ready) return null;
+  if (!fine) return null;
 
   return (
     <>
       {/* Gold dot — tight follow */}
       <motion.div
         aria-hidden
+        className="oz-cursor"
         style={{
           position: 'fixed', top: 0, left: 0, zIndex: 9999,
           width: 6, height: 6, borderRadius: '50%',
@@ -60,6 +77,7 @@ export default function Cursor() {
       {/* Ghost ring — spring lag */}
       <motion.div
         aria-hidden
+        className="oz-cursor"
         style={{
           position: 'fixed', top: 0, left: 0, zIndex: 9998,
           width: 30, height: 30, borderRadius: '50%',

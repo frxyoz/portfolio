@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect, useLayoutEffect } from 'react';
+import { useRef, useState, useEffect, useSyncExternalStore } from 'react';
 import { motion, useScroll, useTransform, useMotionValue } from 'framer-motion';
 import { profile } from '@/data/profile';
 import MagneticButton from './MagneticButton';
@@ -8,6 +8,16 @@ import { MindMapOverlay } from './MindMap';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 const ACCENT = '#b8860b';
+
+function subscribeResize(onChange: () => void) {
+    window.addEventListener('resize', onChange, { passive: true });
+    return () => window.removeEventListener('resize', onChange);
+}
+
+/** Viewport height, with a fixed server snapshot so hydration stays stable. */
+function useWindowHeight() {
+    return useSyncExternalStore(subscribeResize, () => window.innerHeight, () => 900);
+}
 const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
 const BODY = 'var(--font-body, "DM Sans", "Helvetica Neue", sans-serif)';
 
@@ -35,13 +45,14 @@ function FixedPhoto({
 }) {
     const [hov, setHov] = useState(false);
     const [hintReady, setHintReady] = useState(false);
-    const [hintIsOpen, setHintIsOpen] = useState(false);
+    const [hintFor, setHintFor] = useState(mindMapOpen);
 
-    // Hide + swap text before the browser paints — prevents 1-frame flash of wrong label
-    useLayoutEffect(() => {
+    // Reset the reveal during render rather than in a layout effect: the label swaps
+    // in the same commit as the prop, so there is still no frame with the wrong text.
+    if (hintFor !== mindMapOpen) {
+        setHintFor(mindMapOpen);
         setHintReady(false);
-        setHintIsOpen(mindMapOpen);
-    }, [mindMapOpen]);
+    }
 
     // Start the 3-second reveal timer after paint
     useEffect(() => {
@@ -183,7 +194,7 @@ function FixedPhoto({
                                 opacity: 0.9,
                                 whiteSpace: 'nowrap',
                             }}>
-                                {hintIsOpen ? 'return to home' : 'click here!'}
+                                {mindMapOpen ? 'return to home' : 'click here!'}
                             </span>
                             <svg width="22" height="38" viewBox="0 0 22 38" fill="none" style={{ marginBottom: 2 }}>
                                 <path d="M 10 2 C 14 10 18 20 10 36" stroke={ACCENT} strokeWidth="1.6" strokeLinecap="round" fill="none" />
@@ -208,7 +219,7 @@ export default function HeroSection() {
     const [aboutExpanded, setAboutExpanded] = useState(false);
     const aboutTextRef = useRef<HTMLParagraphElement>(null);
     const [aboutNaturalHeight, setAboutNaturalHeight] = useState(0);
-    const [windowHeight, setWindowHeight] = useState(900);
+    const windowHeight = useWindowHeight();
 
     useEffect(() => {
         const t = setTimeout(() => setEntered(true), 80);
@@ -221,13 +232,6 @@ export default function HeroSection() {
         }
         if (!isMobile) setAboutExpanded(false);
     }, [isMobile]);
-
-    useEffect(() => {
-        setWindowHeight(window.innerHeight);
-        const fn = () => setWindowHeight(window.innerHeight);
-        window.addEventListener('resize', fn, { passive: true });
-        return () => window.removeEventListener('resize', fn);
-    }, []);
 
     // Fade photo out when hero scrolls out of view (past the 280vh wrapper)
     useEffect(() => {
