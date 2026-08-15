@@ -6,7 +6,6 @@ const IMAGES = [
     '/subject.webp',
     '/boroughs.png',
     '/noteform.png',
-    '/ima.png',
     '/luminary.png',
     '/hack.png',
     '/cornell.png',
