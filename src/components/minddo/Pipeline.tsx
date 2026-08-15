@@ -126,7 +126,7 @@ export default function Pipeline() {
                 })}
                 <span style={{ fontFamily: FONT, fontSize: '0.75rem', color: T.muted }}>
                     {mode === 'seq'
-                        ? 'Seven steps in order, including three that share no data.'
+                        ? 'Seven steps in order, three of which share no data with each other.'
                         : 'The real chain is capture, AI, video.'}
                 </span>
             </div>
@@ -153,8 +153,9 @@ export default function Pipeline() {
                     </>
                 ) : (
                     <p style={{ fontSize: '0.86rem', color: T.muted, lineHeight: 1.6 }}>
-                        Every step degrades rather than fails: a TTS failure yields a silent video, a Supabase
-                        outage logs and continues. Only capture and AI are fatal, and those write
+                        Most steps degrade instead of failing outright. If TTS falls over you get a silent video,
+                        and if Supabase is down the run logs it and carries on. Only capture and the AI call are
+                        genuinely fatal, and those write
                         <span style={{ fontFamily: MONO, fontSize: '0.82em' }}> generationStatus: &quot;failed&quot; </span>
                         so the frontend stops polling.
                     </p>
@@ -169,7 +170,7 @@ export default function Pipeline() {
             minWidth={1060}
             caption={
                 <>
-                    Layout, not timing bars. Measured end to end: 102.7 s, of which roughly 25 s is avoidable.
+                    These are layout positions rather than timing bars. End to end it measures 102.7 s, and roughly 25 s of that is avoidable.
                 </>
             } controls={controls} panel={panel}
         >

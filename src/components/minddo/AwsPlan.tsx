@@ -53,7 +53,7 @@ const NODES: Node[] = [
     },
     {
         id: 'supa', x: 16, y: 264, w: 156, h: 56, tone: 'extern', lines: ['Supabase', 'hosted Postgres', 'outside AWS'],
-        detail: 'Managed Postgres, auth and RLS, none worth operating at this size. Costs a network hop per read and coupling to auth.users.',
+        detail: 'Supabase gives me managed Postgres, auth and row-level security, none of which I want to be running myself at this size. The trade is a network hop on every read and being coupled to auth.users.',
     },
 ];
 
@@ -80,7 +80,7 @@ export default function AwsPlan() {
                 <p style={{ fontSize: '0.86rem', color: sel ? T.body : T.muted, lineHeight: 1.62 }}>
                     {sel
                         ? sel.detail
-                        : 'Not EKS: $73 a month for the control plane before a single pod runs, and single-node k3s gives the same workflow. Not ECR: k3s has no credential provider, so pulling needs a 12 hour token that has to be refreshed.'}
+                        : 'I skipped EKS because the control plane alone is $73 a month before a single pod runs, and single-node k3s gives me the same workflow for nothing. ECR went the same way: k3s has no credential provider for it, so pulling images means juggling a 12 hour token that something has to keep refreshing.'}
                 </p>
             </div>
     );
@@ -95,7 +95,7 @@ export default function AwsPlan() {
                 { tone: 'tier', text: 'AWS resource' },
                 { tone: 'extern', text: 'outside AWS' },
             ]}
-            caption="Nothing has been provisioned. The manifests target this topology; every number on this page was measured on docker compose and k3d." panel={panel}
+            caption="None of this is running anywhere. The manifests target this topology, but every number on this page was measured on docker compose and k3d." panel={panel}
         >
             <svg viewBox="0 0 920 350" style={{ width: '100%', display: 'block' }} onClick={() => setPinned(null)}>
                 <Arrowheads />

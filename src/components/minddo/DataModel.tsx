@@ -52,7 +52,7 @@ const ENTITIES: Entity[] = [
             { name: 'is_public', type: 'bool', note: 'the RLS gate' },
             { name: 'generation_status', type: 'text', note: 'pending | completed | failed' },
         ],
-        detail: 'Blobs in S3, metadata here: a 4 MB MP4 in Postgres bloats every backup and blocks any CDN path. The cache key pair makes an unchanged re-submission free, and its missing student column is the known bug.',
+        detail: 'The files themselves go to S3 and only the metadata lives here, because a 4 MB MP4 sitting in Postgres bloats every backup and rules out ever putting a CDN in front of it. The pair of cache key columns is what makes an unchanged re-submission free, and the fact that neither of them includes the student is the bug I know about.',
     },
 ];
 
@@ -75,7 +75,7 @@ export default function DataModel() {
                 <p style={{ fontSize: '0.86rem', color: sel ? T.body : T.muted, lineHeight: 1.62 }}>
                     {sel
                         ? sel.detail
-                        : 'The public read policy gates on is_public, so the browser key only ever sees public rows. Verified before shipping: anon read 4 of 6 showcases and nothing from profiles.'}
+                        : 'The public read policy gates on is_public, so the key sitting in the browser can only ever see public rows. I checked this against the live project before shipping: an anonymous client read 4 of the 6 showcases and got nothing at all out of profiles.'}
                 </p>
             </div>
     );

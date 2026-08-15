@@ -1,5 +1,5 @@
 // Tabular content for the MindDo case study at /projects/minddo.
-// Kept deliberately terse: the diagrams carry the detail.
+// Table cells stay terse; the prose lives in MinddoShowcase and the diagrams.
 
 export const minddo = {
     name: 'MindDo AI',
@@ -9,7 +9,7 @@ export const minddo = {
     stack: 'FastAPI, Celery, Redis, Playwright, Claude Sonnet 4.6, ffmpeg, Supabase, S3, Kubernetes, KEDA',
     scale: '~2,200 lines of Python, ~4,900 of JSX, 12 Kubernetes manifests',
     status: 'Runs on docker compose and on k3d with KEDA. The AWS deployment is scripted but not executed.',
-    lede: 'A student project URL goes in. About 100 seconds later there are eleven artifacts: screenshots, a recorded demo, a narrated video in English and Mandarin, AI-written copy, a QR code and a print-ready flyer.',
+    lede: 'You give it a link to a student\'s project and about a hundred seconds later you get eleven files back: two screenshots, a recorded walkthrough of the site, narrated videos in English and Mandarin, copy written by Claude, a QR code, and a flyer that is ready to print.',
     // youtube-nocookie so the embed sets no cookie until playback starts.
     demoVideo: 'https://www.youtube-nocookie.com/embed/_IFdL_suGr0',
 };
@@ -69,10 +69,10 @@ export const security: Finding[] = [
 ];
 
 export const residualRisks: { risk: string; status: string }[] = [
-    { risk: 'Prompt injection via page text', status: 'Unmitigated. Scraped text steers parent-facing copy. Fix: label it as data, validate output against a schema.' },
-    { risk: 'SYS_ADMIN on worker pods', status: 'Likely redundant: Chromium runs with --no-sandbox anyway. First thing to test removing.' },
-    { risk: 'No structured output validation', status: 'json.loads on raw model output. A bad response kills the run after two browser launches.' },
-    { risk: 'Shared secret admin auth', status: 'Interim. The real design verifies the caller JWT against profiles.role and lets RLS enforce it.' },
+    { risk: 'Prompt injection via page text', status: 'Still unmitigated. Scraped page text goes into the prompt, so it can steer the copy that parents end up reading. The fix is to label it clearly as data and validate what comes back against a schema.' },
+    { risk: 'SYS_ADMIN on worker pods', status: 'Probably not needed at all, since Chromium is running with --no-sandbox regardless. This is the first thing I want to try taking away.' },
+    { risk: 'No structured output validation', status: 'The model output goes straight into json.loads, so one malformed response kills a run that has already paid for two browser launches.' },
+    { risk: 'Shared secret admin auth', status: 'An interim measure. What it should do is check the caller JWT against profiles.role and let row-level security do the enforcing.' },
 ];
 
 export const reliability: { control: string; value: string; prevents: string }[] = [
@@ -116,9 +116,24 @@ export const limitations: { limitation: string; consequence: string; fix: string
 ];
 
 export const takeaways: { title: string; body: string }[] = [
-    { title: 'Distributed systems', body: 'Queue and worker split on independent scaling signals, at-least-once delivery with late acks, permanent verdicts distinguished from transient faults.' },
-    { title: 'Kubernetes in anger', body: 'Probes that separate liveness from readiness, grace periods sized to the workload, autoscaling on a metric tied to user-visible wait.' },
-    { title: 'Security review of my own code', body: 'Four hardening passes, each closing a hole found by asking one question: what does this actually check?' },
-    { title: 'Cost engineering', body: 'Content addressed caching, a TTS migration that halved unit cost, ceilings chosen as blast radius rather than capacity.' },
-    { title: 'Honest measurement', body: 'A benchmark number I disqualified, and a load test I report as proving the control loop rather than the benefit.' },
+    {
+        title: 'Distributed systems',
+        body: 'Splitting the queue from the workers let each side scale on its own signal. Getting at-least-once delivery right took me much longer, mostly because I had to work out which failures deserve a retry and which are permanent verdicts that should never get one.',
+    },
+    {
+        title: 'Kubernetes in anger',
+        body: 'Liveness and readiness are not the same probe, and treating them as one restarts the entire fleet the first time Redis hiccups. Grace periods have to match how long the work actually takes, and an autoscaler is only worth having if it watches something a user would feel.',
+    },
+    {
+        title: 'Reviewing my own code',
+        body: 'Four passes over the codebase turned up four holes. The question that found every one of them was the same: what is this check actually checking?',
+    },
+    {
+        title: 'Cost engineering',
+        body: 'Caching on a content hash and moving off paid TTS took the unit cost from $0.043 to $0.023. The ceilings I set are not capacity estimates; they are there to limit how much a runaway loop can spend before I notice.',
+    },
+    {
+        title: 'Honest measurement',
+        body: 'I threw out one benchmark number after realising it was profiling the wrong process, and the load test I ran only shows that the autoscaler reacts, not that the pods it added did any work.',
+    },
 ];

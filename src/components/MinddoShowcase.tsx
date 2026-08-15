@@ -176,7 +176,7 @@ export default function MinddoShowcase() {
                     {/* 01 output */}
                     <section id="output" style={{ marginBottom: 56 }}>
                         <H2 id="output-h" index="01">What it produces</H2>
-                        <P>One URL in, eleven artifacts and one database row out.</P>
+                        <P>Every submission ends up as eleven files in S3 and one row in Postgres. Here is what each file is and what makes it.</P>
                         <Table
                             head={['Artifact', 'Produced by', 'Detail']}
                             widths={['26%', '18%', '56%']}
@@ -187,8 +187,9 @@ export default function MinddoShowcase() {
                             ])}
                         />
                         <Note label="The AI layer">
-                            Fourteen fields come back in one Claude call, English and Mandarin together, so the second
-                            language costs output tokens rather than a second round trip.
+                            All fourteen fields come back from a single Claude call, with the English and the Mandarin
+                            generated together in the same response. Doing it that way means the second language only
+                            costs me output tokens instead of an entire second round trip.
                         </Note>
                     </section>
 
@@ -196,8 +197,11 @@ export default function MinddoShowcase() {
                     <section id="architecture" style={{ marginBottom: 56 }}>
                         <H2 id="architecture-h" index="02">System architecture</H2>
                         <P>
-                            The API is routing and JSON, scaling on request rate. The worker is two Chromium launches
-                            and two x264 encodes, scaling on queue depth. Separate deployments keep the knobs independent.
+                            The API barely does any work — it validates the payload, pushes a task onto the queue and
+                            answers. All the expensive parts live in the worker, which launches Chromium twice and runs
+                            two x264 encodes for every job. Since those two things get busy for completely unrelated
+                            reasons, they are separate deployments: the API scales on request rate and the worker scales
+                            on how deep the queue is.
                         </P>
                         <Architecture />
 
@@ -220,14 +224,14 @@ export default function MinddoShowcase() {
                     {/* 03 lifecycle */}
                     <section id="lifecycle" style={{ marginBottom: 56 }}>
                         <H2 id="lifecycle-h" index="03">Request lifecycle</H2>
-                        <P>Two details here were bugs first: the held ack, and the asset read that falls through to S3.</P>
+                        <P>Two of the details in this diagram started out as bugs — the ack that gets held until the job actually finishes, and the asset read that falls through to S3 when the file is not on local disk.</P>
                         <Lifecycle />
                     </section>
 
                     {/* 04 pipeline */}
                     <section id="pipeline" style={{ marginBottom: 56 }}>
                         <H2 id="pipeline-h" index="04">The generation pipeline</H2>
-                        <P>Seven steps run in order. The real dependency graph is narrower, which is where the latency hides.</P>
+                        <P>The seven steps run one after another, but they do not all genuinely depend on each other. The gap between the order they run in and the order they would need to run in is where most of the wasted time sits.</P>
                         <Pipeline />
                     </section>
 
@@ -236,9 +240,11 @@ export default function MinddoShowcase() {
                         <H2 id="scaling-h" index="05">Autoscaling control loop</H2>
                         <Scaling />
                         <Note label="Caveat" tone="warn">
-                            Twenty submissions scaled workers 1 to 4 in about 5 seconds, but the existing workers
-                            absorbed all 20 tasks before the new pods finished pulling a 3 GB image. The test proved the
-                            control loop works. It did not prove the scaling helped.
+                            I threw twenty submissions at the queue and KEDA took the worker from one pod to four in
+                            about five seconds, which is exactly the reaction I was hoping for. The catch is that the
+                            pods already running got through all twenty tasks before the new ones finished pulling a
+                            3 GB image, so the extra capacity showed up after it was needed. That makes this evidence
+                            the control loop fires, and no evidence whatsoever that the scaling did anything useful.
                         </Note>
                     </section>
 
@@ -246,8 +252,10 @@ export default function MinddoShowcase() {
                     <section id="data" style={{ marginBottom: 56 }}>
                         <H2 id="data-h" index="06">Data model and storage split</H2>
                         <P>
-                            Blobs in S3, metadata in Postgres, local disk as scratch. Row-level security is the
-                            authorization boundary, enforced by the database rather than application code.
+                            Anything large enough to be a file goes to S3, everything else lives in Postgres, and the
+                            worker only uses its local disk as scratch space while a job is running. Who can read what
+                            is decided by row-level security in the database rather than by checks in my route
+                            handlers, so a mistake in the application cannot hand somebody else&apos;s data out.
                         </P>
                         <DataModel />
                     </section>
@@ -256,8 +264,10 @@ export default function MinddoShowcase() {
                     <section id="security" style={{ marginBottom: 56 }}>
                         <H2 id="security-h" index="07">Security engineering</H2>
                         <P>
-                            Four hardening passes, each closing a hole in my own code. The largest is traced below:
-                            the system loads an attacker-controlled URL in a browser and publishes what it sees.
+                            I went back through the codebase four separate times looking for holes, and found one on
+                            every pass. The worst is traced in the diagram below, and it falls directly out of what the
+                            product is for: somebody hands me a URL, I open it in a real browser, and then I publish
+                            whatever came back.
                         </P>
                         <SsrfGuard />
 
@@ -285,11 +295,13 @@ export default function MinddoShowcase() {
                         </div>
 
                         <Note label="The pattern">
-                            Both worst holes were a control I believed existed and did not. Found by re-reading my own
-                            code against one question: what does this actually check?
+                            Both of the serious ones were controls I was certain I had already written. I remembered
+                            writing them, and they did not do what I thought they did. What eventually turned them up
+                            was reading back through my own code and asking of each check, fairly slowly, what it was
+                            really testing.
                         </Note>
 
-                        <H3>Residual risks, named</H3>
+                        <H3>What is still wrong with it</H3>
                         <Table
                             head={['Risk', 'Status']}
                             widths={['28%', '72%']}
@@ -300,7 +312,7 @@ export default function MinddoShowcase() {
                     {/* 08 reliability */}
                     <section id="reliability" style={{ marginBottom: 56 }}>
                         <H2 id="reliability-h" index="08">Reliability engineering</H2>
-                        <P>Each control exists because its absence produced a specific failure.</P>
+                        <P>None of these were added as a precaution. Each one went in after something specific broke in a way I had to go and debug.</P>
                         <Table
                             head={['Control', 'Value', 'Failure it prevents']}
                             widths={['24%', '20%', '56%']}
@@ -311,9 +323,12 @@ export default function MinddoShowcase() {
                             ])}
                         />
                         <Note label="Hardest bug debugged">
-                            KEDA crash looped binding :6443, which the k3s API server owns. An earlier
-                            <C>hostNetwork: true</C> had put the pod in the node namespace, inheriting every conflict
-                            the node had. The lesson: when a symptom appears right after a fix, suspect the fix.
+                            KEDA started crash looping trying to bind :6443, which is the port the k3s API server
+                            already owns. It took me an embarrassingly long time to connect that back to a
+                            <C>hostNetwork: true</C> I had added earlier for something unrelated, which had dropped the
+                            pod into the node&apos;s network namespace and handed it every port conflict the node had.
+                            These days, if something breaks immediately after I fix something else, I go and look at
+                            the fix first.
                         </Note>
                     </section>
 
@@ -321,8 +336,9 @@ export default function MinddoShowcase() {
                     <section id="performance" style={{ marginBottom: 56 }}>
                         <H2 id="performance-h" index="09">Performance and cost</H2>
                         <P>
-                            Measured on docker compose. The 102.7 s is two Chromium cold starts, a real-time demo
-                            recording, one Claude call, two TTS round trips and two x264 encodes.
+                            All of these numbers come off docker compose. The 102.7 s is mostly accounted for by two
+                            Chromium cold starts, a demo recording that has to happen in real time, one call to Claude,
+                            two TTS round trips and two x264 encodes.
                         </P>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
@@ -337,12 +353,12 @@ export default function MinddoShowcase() {
                                     ])}
                                 />
                                 <P style={{ fontSize: '0.85rem' }}>
-                                    A cache hit skips Claude, which is the whole per showcase cost. Video generation has
-                                    no cache of its own yet.
+                                    Claude is the entire per-showcase cost, so a cache hit takes it to zero. Video
+                                    generation has no cache of its own yet, which is the obvious thing to do next.
                                 </P>
                             </div>
                             <div>
-                                <H3>Available wins, outputs unchanged</H3>
+                                <H3>Speedups that would not change the output</H3>
                                 <ol style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 9, margin: '14px 0 12px' }}>
                                     {wins.map((w, i) => (
                                         <li key={w} style={{ display: 'flex', gap: 11, fontSize: '0.87rem', color: T.body, lineHeight: 1.6 }}>
@@ -351,30 +367,34 @@ export default function MinddoShowcase() {
                                         </li>
                                     ))}
                                 </ol>
-                                <p style={{ fontFamily: MONO, fontSize: '0.9rem', color: T.ink, fontWeight: 600 }}>Realistic target: under 45 s.</p>
+                                <p style={{ fontFamily: MONO, fontSize: '0.9rem', color: T.ink, fontWeight: 600 }}>Together those should get it under 45 s.</p>
                             </div>
                         </div>
 
                         <Note label="A number I don't quote" tone="warn">
-                            The benchmark reports 23.4 MB peak RSS. It sampled uvicorn while the pipeline runs in the
-                            Celery worker, so it measured the wrong process. Real peak is Chromium plus ffmpeg, able to
-                            spike past 1 GB against a 2 Gi limit.
+                            My benchmark prints 23.4 MB peak RSS and I do not use that figure anywhere, because it is
+                            sampling uvicorn while the pipeline is actually running inside the Celery worker. It is
+                            measuring the wrong process. The number that matters is Chromium and ffmpeg together, which
+                            can spike past 1 GB against a 2 Gi limit.
                         </Note>
                     </section>
 
                     {/* 10 limitations */}
                     <section id="limitations" style={{ marginBottom: 56 }}>
                         <H2 id="limitations-h" index="10">Known limitations</H2>
-                        <P>Listed because a case study that claims no weaknesses is not describing real software.</P>
+                        <P>These are the things I already know are wrong with it and have not got to yet.</P>
                         <Table
                             head={['Limitation', 'Consequence', 'Fix']}
                             widths={['26%', '38%', '36%']}
                             rows={limitations.map(l => [l.limitation, l.consequence, l.fix])}
                         />
                         <Note label="If I started over">
-                            No state on local disk: it works in compose, breaks in Kubernetes, and forced a rewrite. An
-                            idempotency key before a queue, since retries and deduplication both need it. Auth before
-                            anything is public.
+                            Three things I would do differently. I would keep state off the local disk from the
+                            beginning, since it works fine under compose, falls apart under Kubernetes and cost me a
+                            rewrite to undo. I would put an idempotency key in front of the queue before writing
+                            anything else, because retries and deduplication both need one and I ended up wanting both.
+                            And I would get auth working before making any of it public, rather than bolting it on
+                            afterwards.
                         </Note>
                     </section>
 
@@ -382,15 +402,17 @@ export default function MinddoShowcase() {
                     <section id="aws" style={{ marginBottom: 56 }}>
                         <H2 id="aws-h" index="11">AWS plan, not yet executed</H2>
                         <P>
-                            Nothing has been provisioned. The code is written for it: instance-profile credentials, a
-                            URL guard that exists because of the metadata endpoint, an architecture-asserting build.
+                            None of this has actually been provisioned yet, though the code already assumes it. AWS
+                            credentials come from an instance profile rather than the environment, the URL guard exists
+                            in the first place because of the EC2 metadata endpoint, and the build asserts the
+                            architecture it is targeting.
                         </P>
                         <AwsPlan />
                     </section>
 
                     {/* takeaways */}
                     <section style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 32 }}>
-                        <H3>What this project demonstrates</H3>
+                        <H3>What I got out of building it</H3>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 22, marginTop: 16 }}>
                             {takeaways.map(t => (
                                 <div key={t.title}>
