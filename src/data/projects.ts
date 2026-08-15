@@ -10,19 +10,19 @@ export const projects: Project[] = [
         award: 'Best Overall App — AppDev Hack Challenge 2025',
         githubUrl: 'https://github.com/tnt07-t/luminary-backend',
         overview:
-            'Luminary is a collaborative study tracker designed to help students organize sessions, track progress, and stay accountable. Built end-to-end in under 2 weeks, it won Best Overall App at Cornell\'s AppDev Hack Challenge 2025.',
+            'Luminary is a collaborative study tracker: students log sessions, set goals, and see their streaks and subject totals over time. Built in under two weeks, it won Best Overall App at Cornell\'s AppDev Hack Challenge 2025.',
         details: [
             {
                 heading: 'REST API',
-                body: 'Architected a Flask/SQLAlchemy REST API with 25+ endpoints covering users, sessions, goals, streaks, and analytics, supporting full CRUD with relational data integrity.',
+                body: 'Built a Flask/SQLAlchemy REST API with 25+ endpoints covering users, sessions, goals, streaks and analytics, with full CRUD and foreign-key integrity across the tables.',
             },
             {
                 heading: 'Infrastructure',
-                body: 'Containerized with Docker for reproducible builds and deployed to Google Cloud Platform for reliable, low-latency access during the live demo.',
+                body: 'Containerized with Docker and deployed to Google Cloud Platform, so the live demo ran against the same image that was built locally.',
             },
             {
                 heading: 'Data Model',
-                body: 'Designed a normalized relational schema to track study sessions, subject categories, and user progress over time to enable instant tracking and analytics.',
+                body: 'Designed a normalized relational schema for study sessions, subject categories and progress over time, which is what the analytics endpoints read from directly.',
             },
         ],
         stack: [
@@ -44,19 +44,19 @@ export const projects: Project[] = [
         award: '#1 Live Right Award — Cornell Claude Hackathon (100+ participants)',
         githubUrl: 'https://github.com/aayanhussainw07/Boroughs',
         overview:
-            'Boroughs helps people moving to New York City find their ideal neighborhood by scoring compatibility across commute, cost, noise, green space, and nightlife — backed by a machine learning price forecasting model trained on 4,000+ real listings.',
+            'Boroughs scores NYC neighborhoods against a user\'s stated preferences — commute, cost, noise, green space, nightlife — and returns them ranked. Rent estimates come from a regression model trained on 4,000+ real listings.',
         details: [
             {
                 heading: 'ML Price Forecasting',
-                body: 'Trained a scikit-learn regression model on 4,000+ NYC housing rows from public datasets, achieving strong predictive accuracy for neighborhood rent ranges across all five boroughs.',
+                body: 'Trained a scikit-learn regression model on 4,000+ NYC housing rows from public datasets to predict rent ranges per neighborhood across all five boroughs.',
             },
             {
                 heading: 'Compatibility Scoring',
-                body: 'Developed a multi-factor scoring algorithm that weighs user preferences against neighborhood data across 8 dimensions, and outputting a ranked match list with explanations.',
+                body: 'Wrote a scoring function that weighs user preferences against neighborhood data across 8 dimensions and returns a ranked list, with the per-dimension scores behind each match.',
             },
             {
                 heading: 'Claude Integration',
-                body: 'Integrated the Anthropic Claude API to generate natural-language neighborhood summaries and answer follow-up questions, enabling conversational exploration of housing options.',
+                body: 'Integrated the Anthropic Claude API to write neighborhood summaries and answer follow-up questions about the ranked results.',
             },
         ],
         stack: [
@@ -79,19 +79,19 @@ export const projects: Project[] = [
         award: '1st Place — IgniteCS Programming Expo 2024',
         githubUrl: 'https://github.com/frxyoz/noteform',
         overview:
-            'NoteForm is an iOS application that uses the device camera and Google\'s Mediapipe hand landmark model to analyze a pianist\'s hand posture in real-time — providing live feedback on wrist angle, finger curvature, and thumb position, with Firebase-backed progress tracking over time.',
+            'NoteForm is an iOS application that uses the device camera and Google\'s Mediapipe hand landmark model to analyze a pianist\'s hand posture in real-time — reporting wrist angle, finger curvature and thumb position as the student plays, with per-session scores stored in Firebase.',
         details: [
             {
                 heading: 'Real-Time Pose Analysis',
-                body: 'Integrated Mediapipe\'s hand landmark detection to extract 21 key points per hand per frame at 30fps, running entirely on-device for zero-latency feedback during practice.',
+                body: 'Integrated Mediapipe\'s hand landmark detection to extract 21 key points per hand per frame at 30fps, running on-device so feedback never waits on a network round trip.',
             },
             {
                 heading: 'Posture Scoring',
-                body: 'Developed a custom scoring algorithm mapping hand landmark geometry to known good-posture heuristics — flagging wrist collapse, flat fingers, and thumb tucking in real time.',
+                body: 'Wrote a scoring function mapping hand landmark geometry to posture heuristics — flagging wrist collapse, flat fingers and thumb tucking as they happen.',
             },
             {
                 heading: 'Progress Tracking',
-                body: 'Sessions are logged to Firebase with per-metric scores over time, allowing students and teachers to review improvement trends across practice history.',
+                body: 'Sessions are logged to Firebase with per-metric scores, so students and teachers can compare a practice session against earlier ones.',
             },
         ],
         stack: [

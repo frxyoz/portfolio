@@ -221,7 +221,7 @@ export default function MinddoShowcase() {
                     <section id="scaling" style={{ marginBottom: 56 }}>
                         <H2 id="scaling-h" index="05">Autoscaling control loop</H2>
                         <Scaling />
-                        <Note label="The honest caveat" tone="warn">
+                        <Note label="Caveat" tone="warn">
                             Twenty submissions scaled workers 1 to 4 in about 5 seconds, but the existing workers
                             absorbed all 20 tasks before the new pods finished pulling a 3 GB image. The test proved the
                             control loop works. It did not prove the scaling helped.
@@ -270,7 +270,7 @@ export default function MinddoShowcase() {
                             ))}
                         </div>
 
-                        <Note label="The durable lesson">
+                        <Note label="The pattern">
                             Both worst holes were a control I believed existed and did not. Found by re-reading my own
                             code against one question: what does this actually check?
                         </Note>
@@ -341,7 +341,7 @@ export default function MinddoShowcase() {
                             </div>
                         </div>
 
-                        <Note label="A number I will not quote, and why" tone="warn">
+                        <Note label="A number I don't quote" tone="warn">
                             The benchmark reports 23.4 MB peak RSS. It sampled uvicorn while the pipeline runs in the
                             Celery worker, so it measured the wrong process. Real peak is Chromium plus ffmpeg, able to
                             spike past 1 GB against a 2 Gi limit.

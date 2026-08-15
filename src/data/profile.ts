@@ -1,7 +1,7 @@
 import type { ProfileData } from '@/types';
 
 export const profile: ProfileData = {
-    tagline: 'Hi! I\'m Olric, a software developer passionate about building impactful applications and learning new technologies. I\'m currently a student at Cornell University studying Computer Science, and I love working on projects that combine creativity with technical problem-solving. My skillset includes both frontend and backend development, and I enjoy collaborating with others to bring ideas to life.',
+    tagline: 'I\'m Olric, a Computer Science student at Cornell. I work on both sides of the stack — REST APIs, data models and infrastructure on the backend, React and Flutter on the frontend. Most of my time goes into side projects that push me into something I haven\'t used before, and I currently build web tools for non-profits at Hack4Impact.',
     timeline: [
         {
             period: '2025 — present',
@@ -9,7 +9,7 @@ export const profile: ProfileData = {
             org: 'Hack4Impact',
             orgUrl: 'https://www.cornellh4i.org/',
             logo: '/hack.png',
-            desc: 'Developed web applications for non-profits. Worked closely with cross-functional teams including developers, designers, and product managers to implement best practices in web development and build scalable web tools.',
+            desc: 'Build web tools for non-profit clients on a team of developers, designers and product managers, from requirements through deployment.',
             tags: ['TypeScript', 'React', 'Supabase', 'Node.js'],
         },
         {

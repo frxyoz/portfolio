@@ -31,10 +31,10 @@ const caveat = Caveat({
 
 export const metadata: Metadata = {
     title: 'Olric Zeng',
-    description: 'Portfolio Website of Olric Zeng: CS @ Cornell, passionate about building software for good.',
+    description: 'Portfolio of Olric Zeng — Computer Science at Cornell. Full-stack and infrastructure projects.',
     openGraph: {
         title: 'Olric Zeng',
-        description: 'Portfolio Website of Olric Zeng: CS @ Cornell, passionate about building software for good.',
+        description: 'Portfolio of Olric Zeng — Computer Science at Cornell. Full-stack and infrastructure projects.',
         url: 'https://olriczeng.com',
         siteName: 'Olric Zeng',
         images: [
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     twitter: {
         card: 'summary_large_image',
         title: 'Olric Zeng',
-        description: 'Portfolio Website of Olric Zeng: CS @ Cornell, passionate about building software for good.',
+        description: 'Portfolio of Olric Zeng — Computer Science at Cornell. Full-stack and infrastructure projects.',
         images: ['https://olriczeng.com/og-image.png'],
     },
 };

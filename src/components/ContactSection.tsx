@@ -66,7 +66,7 @@ export default function ContactSection() {
                 <Reveal delay={0.08} style={{ width: 40, height: 1, background: ACCENT, margin: '0 auto 20px' }} />
                 <Reveal delay={0.12}>
                     <p style={{ fontFamily: BODY, fontSize: '0.9rem', color: '#6b6558', lineHeight: 1.7, marginBottom: 48 }}>
-                        Always open to collaborations, opportunities, and conversations!
+                        Open to internships, collaborations, or questions about any of the projects above.
                     </p>
                 </Reveal>
 

@@ -57,7 +57,7 @@ const HOBBIES: HobbyDef[] = [
                 title: 'FIFA / FM', art: 'fifafm', dark: true,
                 pal: { accent: '#cdc4f0', bg: '#2b2f5e', c2: '#2b2f5e', c3: '#e8674c', ink: '#2b2f5e' },
                 titleColor: '#eceaf8', capColor: '#cdc4f0', badge: '↔ Also in Soccer',
-                note: 'Out-thinking the table and building squads, match after match.',
+                note: 'The same squad-building itch as Soccer, minus the ninety minutes.',
                 jump: 0, jumpLabel: 'See it in Soccer →'
             },
             {
