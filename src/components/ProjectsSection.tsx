@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { projects } from '@/data/projects';
 import type { Project } from '@/types';
@@ -8,6 +9,9 @@ import { useOverlay } from '@/contexts/OverlayContext';
 import Reveal from './Reveal';
 import { useScrollTilt } from '@/hooks/useScrollTilt';
 import { useIsMobile } from '@/hooks/useIsMobile';
+
+// Projects with an `href` get their own route, so they never enter the overlay carousel.
+const OVERLAY_PROJECTS = projects.filter(p => !p.href);
 
 const ACCENT = '#b8860b';
 const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
@@ -17,20 +21,20 @@ const BODY = 'var(--font-body, "DM Sans", "Helvetica Neue", sans-serif)';
 const PALETTES: Record<string, { accent: string; bg: string; c3: string; ink: string }> = {
     luminary: { accent: '#7c5cbf', bg: '#ede8f7', c3: '#a78fd6', ink: '#2a1f42' },
     boroughs: { accent: '#3c6e57', bg: '#e7efe6', c3: '#d49a2b', ink: '#20302a' },
-    ima:      { accent: '#4a4f93', bg: '#eaebf3', c3: '#e8674c', ink: '#262a55' },
     noteform: { accent: '#2a2a2a', bg: '#f0f0f0', c3: '#888888', ink: '#111111' },
+    minddo:   { accent: '#b8860b', bg: '#f7f2e6', c3: '#c9a44c', ink: '#33280f' },
 };
 
-// ─── SVG poster artwork (4 abstract motifs) ───────────────────────────────────
-function ProjectArt({ seed, pal }: { seed: number; pal: typeof PALETTES.luminary }) {
+// ─── SVG poster artwork — one motif per project id ────────────────────────────
+function ProjectArt({ id, pal }: { id: string; pal: typeof PALETTES.luminary }) {
     const { accent, bg, c3 } = pal;
     const TAU = Math.PI * 2;
     const svgStyle: React.CSSProperties = { width: '100%', height: '100%', display: 'block', overflow: 'visible' };
     const orbitStyle: React.CSSProperties = { transformBox: 'fill-box', transformOrigin: 'center', animation: 'orbit 18s linear infinite' };
     const floatStyle: React.CSSProperties = { transformBox: 'fill-box', transformOrigin: 'center', animation: 'floaty 4.6s ease-in-out infinite' };
 
-    switch (seed % 4) {
-        case 0: // luminary — orbital rings
+    switch (id) {
+        case 'luminary': // orbital rings
             return (
                 <svg viewBox="0 0 200 200" style={svgStyle}>
                     {[0,1,2].flatMap(j => [0,1].map(i => (
@@ -56,7 +60,7 @@ function ProjectArt({ seed, pal }: { seed: number; pal: typeof PALETTES.luminary
                 </svg>
             );
 
-        case 1: // boroughs — geometric squares
+        case 'boroughs': // geometric squares
             return (
                 <svg viewBox="0 0 200 200" style={svgStyle}>
                     {[0,1,2,3,4].flatMap(j => [0,1,2,3,4].map(i => (
@@ -76,25 +80,73 @@ function ProjectArt({ seed, pal }: { seed: number; pal: typeof PALETTES.luminary
                 </svg>
             );
 
-        case 2: // ima — nested wave arcs
+        case 'minddo': { // isometric pipeline stack — ingest, queue, workers
+            const W = 50, H = 25, T = 11;                       // plate half-width, half-height, thickness
+            const plate = (cy: number) => ({
+                top:   `${100 - W},${cy} ${100},${cy - H} ${100 + W},${cy} ${100},${cy + H}`,
+                left:  `${100 - W},${cy} ${100},${cy + H} ${100},${cy + H + T} ${100 - W},${cy + T}`,
+                right: `${100 + W},${cy} ${100},${cy + H} ${100},${cy + H + T} ${100 + W},${cy + T}`,
+            });
+            // Isometric grid coords: (i, j) in [-1,1]² covers the plate, (0,0) is its centre.
+            const iso = (cy: number, i: number, j: number): [number, number] =>
+                [100 + (i - j) * W / 2, cy + (i + j) * H / 2];
+            // Box standing on the plate: base centred on (x, y), body rising by `t`.
+            const box = ([x, y]: [number, number], w: number, t: number) => {
+                const h = w / 2;
+                return {
+                    top:   `${x - w},${y - t} ${x},${y - t - h} ${x + w},${y - t} ${x},${y - t + h}`,
+                    left:  `${x - w},${y - t} ${x},${y - t + h} ${x},${y + h} ${x - w},${y}`,
+                    right: `${x + w},${y - t} ${x},${y - t + h} ${x},${y + h} ${x + w},${y}`,
+                };
+            };
+            const TIERS = [52, 104, 156];
+            // Ordered back-to-front so overlapping boxes paint correctly.
+            const submitted = box(iso(TIERS[0], 0, 0), 10, 11);
+            const queued    = [-0.62, 0, 0.62].map(i => box(iso(TIERS[1], i, 0), 8, 9));
+            const workers   = ([[-0.55, 0.18], [0, 0], [0.55, -0.18]] as [number, number][])
+                .map(([i, j]) => box(iso(TIERS[2], i, j), 11, 13));
+
             return (
                 <svg viewBox="0 0 200 200" style={svgStyle}>
-                    {[1,2,3,4].map(i => (
-                        <path key={`w${i}`} d={`M${104-i*20} 58 A ${i*20} ${i*20} 0 0 1 ${104-i*20} 150`}
-                            fill="none" stroke={i%2?accent:c3} strokeWidth={i===4?2:4} strokeLinecap="round" opacity={0.72} />
-                    ))}
-                    <path d="M44 62 V146" stroke={accent} strokeWidth={6} strokeLinecap="round" />
                     {[0,1,2].flatMap(j => [0,1].map(i => (
-                        <circle key={`h${i}${j}`} cx={150+i*9} cy={150+j*9} r={Math.max(0.7,2.4-0.45*(i+j))} fill={c3} opacity={0.5} />
+                        <circle key={`h${i}${j}`} cx={20+i*11} cy={30+j*11} r={Math.max(0.7,2.6-0.45*(i+j))} fill={c3} opacity={0.5} />
                     )))}
+
+                    {/* spine linking the three tiers — only visible in the gaps between plates */}
+                    <line x1={100} y1={44} x2={100} y2={176} stroke={accent} strokeWidth={1.4} strokeDasharray="2 7" opacity={0.55} />
+
+                    {TIERS.map((cy, k) => {
+                        const pl = plate(cy);
+                        const on = k === 0 ? [submitted] : k === 1 ? queued : workers;
+                        return (
+                            <g key={`t${k}`}>
+                                <polygon points={pl.left}  fill={accent} opacity={0.9} />
+                                <polygon points={pl.right} fill={c3}     opacity={0.75} />
+                                <polygon points={pl.top}   fill={bg} stroke={accent} strokeWidth={1.4} strokeLinejoin="round" />
+                                {on.map((o, n) => (
+                                    <g key={`b${k}${n}`} opacity={k === 1 && n > 0 ? 0.78 : 1}>
+                                        <polygon points={o.left}  fill={accent} />
+                                        <polygon points={o.right} fill={c3} />
+                                        <polygon points={o.top}   fill={bg} stroke={accent} strokeWidth={1.1} strokeLinejoin="round" />
+                                    </g>
+                                ))}
+                            </g>
+                        );
+                    })}
+
+                    {/* the submitted URL, orbiting above the ingest tier */}
+                    <g style={orbitStyle}>
+                        <ellipse cx={100} cy={22} rx={40} ry={16} fill="none" stroke={c3} strokeWidth={1.2} strokeDasharray="2 9" opacity={0.65} />
+                    </g>
                     <g style={floatStyle}>
-                        <circle cx={108} cy={104} r={23} fill="none" stroke={accent} strokeWidth={1} opacity={0.4} />
-                        <circle cx={108} cy={104} r={14} fill={accent} />
-                        <circle cx={108} cy={104} r={14} fill="none" stroke={bg} strokeWidth={1.6} />
-                        <circle cx={108} cy={104} r={4.76} fill={bg} />
+                        <circle cx={100} cy={22} r={16} fill="none" stroke={accent} strokeWidth={1} opacity={0.4} />
+                        <circle cx={100} cy={22} r={10} fill={accent} />
+                        <circle cx={100} cy={22} r={10} fill="none" stroke={bg} strokeWidth={1.6} />
+                        <circle cx={100} cy={22} r={3.4} fill={bg} />
                     </g>
                 </svg>
             );
+        }
 
         default: // noteform — piano keyboard
             return (
@@ -143,6 +195,7 @@ function ArrowIcon({ dir = 'right', size = 16 }: { dir?: 'left' | 'right'; size?
 // ─── Poster card ──────────────────────────────────────────────────────────────
 function ProjectCard({ project, index, onOpen, isMobile }: { project: Project; index: number; onOpen: (p: Project) => void; isMobile: boolean }) {
     const [hovered, setHovered] = useState(false);
+    const router = useRouter();
     const pal = PALETTES[project.id] ?? PALETTES.noteform;
     const TILTS = [-2, 1.6, -1.3, 2];
     const tilt = TILTS[index % TILTS.length];
@@ -154,7 +207,7 @@ function ProjectCard({ project, index, onOpen, isMobile }: { project: Project; i
             <div
                 onMouseEnter={isMobile ? undefined : () => setHovered(true)}
                 onMouseLeave={isMobile ? undefined : () => setHovered(false)}
-                onClick={() => onOpen(project)}
+                onClick={() => (project.href ? router.push(project.href) : onOpen(project))}
                 style={{
                     position: 'relative',
                     display: 'flex', flexDirection: 'column',
@@ -190,7 +243,7 @@ function ProjectCard({ project, index, onOpen, isMobile }: { project: Project; i
 
                 {/* Artwork */}
                 <div style={{ position: 'relative', aspectRatio: '1/1', padding: 32 }}>
-                    <ProjectArt seed={index} pal={pal} />
+                    <ProjectArt id={project.id} pal={pal} />
                 </div>
 
                 {/* Metadata */}
@@ -215,7 +268,7 @@ function ProjectCard({ project, index, onOpen, isMobile }: { project: Project; i
                         fontFamily: BODY, fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase',
                         display: 'inline-flex', alignItems: 'center', gap: 7, color: pal.accent,
                     }}>
-                        View Details{' '}
+                        {project.href ? 'Read Case Study' : 'View Details'}{' '}
                         <span style={{ display: 'inline-block', transition: 'transform .35s ease', transform: hovered ? 'translateX(5px)' : 'none' }}>→</span>
                     </span>
                 </div>
@@ -281,7 +334,7 @@ function ProjectDetail({
         return () => window.removeEventListener('keydown', fn);
     }, [project.id, nextProject, prevProject, onClose, onNext, onPrev]);
 
-    const currentIndex = projects.findIndex(p => p.id === project.id);
+    const currentIndex = OVERLAY_PROJECTS.findIndex(p => p.id === project.id);
 
     return (
         <motion.div
@@ -322,7 +375,7 @@ function ProjectDetail({
                     </button>
                     <div style={{ width: 1, height: 18, background: '#e0ddd8' }} />
                     <span style={{ fontFamily: BODY, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#aaa' }}>
-                        {currentIndex + 1} / {projects.length}
+                        {currentIndex + 1} / {OVERLAY_PROJECTS.length}
                     </span>
                 </div>
 
@@ -503,9 +556,9 @@ export default function ProjectsSection() {
     const [activeProject, setActiveProject] = useState<Project | null>(null);
     const { openOverlay, closeOverlay, overlayOpen } = useOverlay();
 
-    const currentIndex = activeProject ? projects.findIndex(p => p.id === activeProject.id) : -1;
-    const prevProject = currentIndex > 0 ? projects[currentIndex - 1] : null;
-    const nextProject = currentIndex < projects.length - 1 ? projects[currentIndex + 1] : null;
+    const currentIndex = activeProject ? OVERLAY_PROJECTS.findIndex(p => p.id === activeProject.id) : -1;
+    const prevProject = currentIndex > 0 ? OVERLAY_PROJECTS[currentIndex - 1] : null;
+    const nextProject = currentIndex > -1 && currentIndex < OVERLAY_PROJECTS.length - 1 ? OVERLAY_PROJECTS[currentIndex + 1] : null;
 
     const handleOpen = (project: Project) => {
         setActiveProject(project);

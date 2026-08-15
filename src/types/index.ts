@@ -22,6 +22,8 @@ export interface Project {
     mockLabel: string;
     mockImage?: string;
     demoVideo?: string;
+    /** When set, the card navigates to this route instead of opening the overlay. */
+    href?: string;
 }
 
 export interface TimelineEntry {

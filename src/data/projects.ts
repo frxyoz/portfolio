@@ -71,40 +71,6 @@ export const projects: Project[] = [
         demoVideo: 'https://www.youtube-nocookie.com/embed/PVqTMSDqXuE',
     },
     {
-        id: 'ima',
-        name: 'IMA',
-        subtitle: 'Internal Member Archive',
-        year: '2025',
-        desc: 'An alumni database and networking platform built for Hack4Impact Cornell.',
-        award: null,
-        githubUrl: 'https://github.com/cornellh4i/IMA',
-        overview:
-            'IMA (Internal Member Archive) is a living database of past and current Hack4Impact members, designed to make it easy for alumni to reconnect, for current members to find mentors, and for the organization to preserve institutional knowledge across generations.',
-        details: [
-            {
-                heading: 'Full-Stack Architecture',
-                body: 'Built with a React/TypeScript frontend and a Node.js backend, connected to Supabase for real-time database sync, authentication, and row-level security policies.',
-            },
-            {
-                heading: 'Search & Filtering',
-                body: 'Implemented full-text search with role, cohort, and skill filters — enabling members to quickly find alumni with specific expertise or shared history.',
-            },
-            {
-                heading: 'Role-Based Access',
-                body: 'Designed a tiered permissions system where admins can onboard members and manage data, while alumni retain control over their own profile visibility and contact preferences.',
-            },
-        ],
-        stack: [
-            { name: 'React', role: 'Frontend UI' },
-            { name: 'TypeScript', role: 'Type-safe codebase' },
-            { name: 'Node.js', role: 'Backend & API' },
-            { name: 'Supabase', role: 'DB, auth & real-time' },
-        ],
-        mockLabel: 'Member Directory — Search & Filter View',
-        mockImage: '/ima.png',
-
-    },
-    {
         id: 'noteform',
         name: 'NoteForm',
         subtitle: 'iOS Piano Hand Posture Analyzer',
@@ -135,5 +101,21 @@ export const projects: Project[] = [
         ],
         mockLabel: 'Live Analysis — Hand Posture Feedback',
         mockImage: '/noteform.png',
+    },
+    {
+        id: 'minddo',
+        name: 'MindDo',
+        subtitle: 'AI Showcase Pipeline',
+        year: '2026',
+        desc: 'An asynchronous, autoscaling media-generation pipeline that turns a student project URL into a full showcase package.',
+        award: null,
+        githubUrl: '',
+        // Full case study lives on its own route rather than in the overlay.
+        href: '/projects/minddo',
+        overview:
+            'A student project URL goes in; screenshots, a narrated demo video in English and Mandarin, an AI-written summary, skill tags, a QR code and a print-ready flyer come out — in about 100 seconds.',
+        details: [],
+        stack: [],
+        mockLabel: 'Pipeline — Queue to Showcase',
     },
 ];
