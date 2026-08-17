@@ -3,7 +3,7 @@ import MinddoShowcase from '@/components/MinddoShowcase';
 
 const TITLE = 'MindDo Showcase — Olric Zeng';
 const DESCRIPTION =
-    'An asynchronous, autoscaling media-generation pipeline: a student project URL goes in, a full parent-facing showcase package comes out. FastAPI, Celery, Playwright, Claude, Kubernetes + KEDA.';
+    'An asynchronous, autoscaling media-generation pipeline: a student project URL goes in, a full parent-facing showcase package comes out. FastAPI, Celery, Playwright, Claude, Kubernetes + KEDA, deployed on AWS.';
 
 export const metadata: Metadata = {
     title: TITLE,

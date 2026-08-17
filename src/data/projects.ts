@@ -32,7 +32,8 @@ export const projects: Project[] = [
             { name: 'GCP', role: 'Cloud deployment' },
         ],
         mockLabel: 'Dashboard — Study Session View',
-        mockImage: '/luminary.png',
+        mockImage: '/luminary.webp',
+        mockSize: [1200, 631],
         demoVideo: 'https://www.youtube-nocookie.com/embed/ZEVsYJFX-Fc',
     },
     {
@@ -67,7 +68,8 @@ export const projects: Project[] = [
             { name: 'Python', role: 'Core language' },
         ],
         mockLabel: 'Borough Match Results — User Dashboard',
-        mockImage: '/boroughs.png',
+        mockImage: '/boroughs.webp',
+        mockSize: [1200, 614],
         demoVideo: 'https://www.youtube-nocookie.com/embed/PVqTMSDqXuE',
     },
     {
@@ -100,7 +102,8 @@ export const projects: Project[] = [
             { name: 'Firebase', role: 'Auth & progress storage' },
         ],
         mockLabel: 'Live Analysis — Hand Posture Feedback',
-        mockImage: '/noteform.png',
+        mockImage: '/noteform.webp',
+        mockSize: [1200, 998],
     },
     {
         id: 'minddo',

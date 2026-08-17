@@ -21,6 +21,9 @@ export interface Project {
     stack: StackItem[];
     mockLabel: string;
     mockImage?: string;
+    /** Intrinsic [width, height] of mockImage, so the overlay reserves space
+     *  before the screenshot arrives instead of shifting layout under it. */
+    mockSize?: [number, number];
     demoVideo?: string;
     /** When set, the card navigates to this route instead of opening the overlay. */
     href?: string;

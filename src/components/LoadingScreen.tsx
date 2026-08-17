@@ -1,26 +1,48 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { ACCENT_TEXT, ACCENT_ORNAMENT, INK_SOFT, DISPLAY, BODY } from '@/design/tokens';
 
-const IMAGES = [
-    '/subject.webp',
-    '/boroughs.png',
-    '/noteform.png',
-    '/luminary.png',
-    '/hack.png',
-    '/cornell.png',
+/* Only the hero portrait gates the reveal — it is the one image the first
+   viewport actually paints, and layout.tsx already preloads it at high priority.
+   Everything else warms in the background after the curtain lifts, so a slow
+   asset can delay a screenshot inside an overlay but never the site itself. */
+const BLOCKING = ['/subject.webp'];
+
+const DEFERRED = [
+    '/hack.webp',
+    '/cornell.webp',
     '/codingmind.webp',
+    '/boroughs.webp',
+    '/noteform.webp',
+    '/luminary.webp',
 ];
 
-const TOTAL   = IMAGES.length;
+const TOTAL   = BLOCKING.length;
 const MIN_MS  = 600;
+/* Hard ceiling. Without it a single stalled request holds the whole site
+   behind a white screen with no way out. */
+const MAX_MS  = 2500;
 const FADE_MS = 500;
 const SK      = 'oz-loaded';
+
+function warm(src: string) {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = src;
+}
 
 export default function LoadingScreen() {
     const [visible, setVisible] = useState(true);
     const [fading,  setFading]  = useState(false);
     const [loaded,  setLoaded]  = useState(0);
+    // Flipped one frame after mount so the bar has a value to animate away from.
+    const [crept,   setCrept]   = useState(false);
+
+    useEffect(() => {
+        const id = requestAnimationFrame(() => setCrept(true));
+        return () => cancelAnimationFrame(id);
+    }, []);
 
     useEffect(() => {
         try {
@@ -31,20 +53,31 @@ export default function LoadingScreen() {
         let loadedCount  = 0;
         let minTimerDone = false;
         let imagesDone   = false;
+        let finished     = false;
 
-        function tryFinish() {
-            if (!isMounted || !minTimerDone || !imagesDone) return;
+        function finish() {
+            if (!isMounted || finished) return;
+            finished = true;
             setFading(true);
             setTimeout(() => {
                 if (!isMounted) return;
                 setVisible(false);
                 try { sessionStorage.setItem(SK, '1'); } catch { /* ignore */ }
+                // Curtain is gone: pull the rest in on idle time, never before.
+                const idle = window.requestIdleCallback ?? ((fn: () => void) => setTimeout(fn, 200));
+                idle(() => DEFERRED.forEach(warm));
             }, FADE_MS);
         }
 
-        const minTimer = setTimeout(() => { minTimerDone = true; tryFinish(); }, MIN_MS);
+        function tryFinish() {
+            if (!minTimerDone || !imagesDone) return;
+            finish();
+        }
 
-        IMAGES.forEach(src => {
+        const minTimer = setTimeout(() => { minTimerDone = true; tryFinish(); }, MIN_MS);
+        const maxTimer = setTimeout(finish, MAX_MS);
+
+        BLOCKING.forEach(src => {
             const img = new Image();
             img.onload = img.onerror = () => {
                 if (!isMounted) return;
@@ -55,12 +88,15 @@ export default function LoadingScreen() {
             img.src = src;
         });
 
-        return () => { isMounted = false; clearTimeout(minTimer); };
+        return () => { isMounted = false; clearTimeout(minTimer); clearTimeout(maxTimer); };
     }, []);
 
     if (!visible) return null;
 
-    const pct = (loaded / TOTAL) * 100;
+    /* The bar tracks the floor, not the fetch: one blocking image would snap it
+       0 to 100 in a single frame. It runs the MIN_MS floor on an exponential
+       ease-out, then completes the moment the hero actually lands. */
+    const done = loaded >= TOTAL || fading;
 
     return (
         <div
@@ -77,30 +113,33 @@ export default function LoadingScreen() {
         >
             {/* OZ monogram */}
             <div style={{
-                fontFamily: 'var(--font-display, "Cormorant Garamond", Georgia, serif)',
+                fontFamily: DISPLAY,
                 fontSize: 'clamp(4rem, 8vw, 7rem)',
                 fontWeight: 300, fontStyle: 'italic',
-                color: '#7a7672', letterSpacing: '-0.02em',
+                color: INK_SOFT, letterSpacing: '-0.02em',
                 lineHeight: 1, marginBottom: 32, userSelect: 'none',
             }}>
                 OZ
             </div>
 
-            {/* Progress bar */}
-            <div style={{ width: 160, height: 1.5, background: '#b8860b22' }}>
+            {/* Progress bar — scaleX rather than width, so the fill composites
+                instead of forcing layout on every frame of the reveal. */}
+            <div style={{ width: 160, height: 1.5, background: `${ACCENT_ORNAMENT}22`, overflow: 'hidden' }}>
                 <div style={{
-                    height: '100%', background: '#b8860b',
-                    width: `${pct}%`, transition: 'width 0.3s ease',
+                    height: '100%', background: ACCENT_ORNAMENT,
+                    width: '100%', transformOrigin: 'left center',
+                    transform: `scaleX(${done ? 1 : crept ? 0.72 : 0.04})`,
+                    transition: `transform ${done ? 260 : MIN_MS}ms cubic-bezier(.22, 1, .36, 1)`,
                 }} />
             </div>
 
             {/* Label */}
             <div style={{
                 marginTop: 16,
-                fontFamily: 'var(--font-body, "DM Sans", "Helvetica Neue", sans-serif)',
+                fontFamily: BODY,
                 fontSize: '0.6rem', letterSpacing: '0.18em',
-                textTransform: 'uppercase', color: '#b8860b',
-                opacity: 0.5, userSelect: 'none',
+                textTransform: 'uppercase', color: ACCENT_TEXT,
+                opacity: 0.75, userSelect: 'none',
             }}>
                 Loading
             </div>
