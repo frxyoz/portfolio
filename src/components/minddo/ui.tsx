@@ -11,13 +11,19 @@ export const T = {
     ink: '#12161d',
     body: '#39414f',
     muted: '#69727f',
-    faint: '#98a0ab',
+    /* Lightest text tier that still clears AA (4.6:1). It used to be #98a0ab at
+       2.64:1 — the worst contrast on the site, and every one of its uses is
+       text. Three greys cannot all pass on white; this page gets two. */
+    faint: '#6d7683',
     rule: '#e3e7ec',
     ruleStrong: '#cbd2db',
     surface: '#f7f8fa',
     surfaceAlt: '#fcfcfd',
-    accent: '#a97a09',
+    /* 5.3:1 on white. Matches src/design/tokens.ts ACCENT_TEXT — one gold. */
+    accent: '#8a6508',
     accentSoft: '#f6efdc',
+    /* Ornamental gold: rules and dots only, never a glyph. */
+    accentOrnament: '#b8860b',
     tier: { fill: '#fff7e0', stroke: '#d9a50f', text: '#5a4406' },
     store: { fill: '#eaf3ff', stroke: '#3b6ea5', text: '#123a5e' },
     extern: { fill: '#f3eaff', stroke: '#7a55b5', text: '#3b2065' },
@@ -165,13 +171,38 @@ export function Figure({
     minWidth?: number;
 }) {
     const [full, setFull] = useState(false);
+    const dialogRef = useRef<HTMLDivElement>(null);
+    const returnFocusTo = useRef<HTMLElement | null>(null);
 
     useEffect(() => {
         if (!full) return;
-        const fn = (e: KeyboardEvent) => { if (e.key === 'Escape') setFull(false); };
+        returnFocusTo.current = document.activeElement as HTMLElement;
+
+        const fn = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { setFull(false); return; }
+            if (e.key !== 'Tab') return;
+            // Keep Tab inside the dialog: without this the visitor tabs out into
+            // the page behind an opaque overlay and cannot see where they are.
+            const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
+                'a[href], button, input, textarea, select, [tabindex]:not([tabindex="-1"])',
+            );
+            if (!focusables?.length) return;
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        };
+
         window.addEventListener('keydown', fn);
         document.body.style.overflow = 'hidden';
-        return () => { window.removeEventListener('keydown', fn); document.body.style.overflow = ''; };
+        // Move focus in, so the dialog is where the keyboard already is.
+        dialogRef.current?.querySelector<HTMLElement>('button')?.focus();
+
+        return () => {
+            window.removeEventListener('keydown', fn);
+            document.body.style.overflow = '';
+            returnFocusTo.current?.focus();
+        };
     }, [full]);
 
     const frame = (
@@ -229,13 +260,17 @@ export function Figure({
     return (
         <figure className="minddo-bleed" style={{ marginTop: 22, marginBottom: 26 }}>
             {full ? (
-                <div style={{
-                    position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(18,22,29,0.55)',
-                    padding: 'clamp(12px, 3vw, 40px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={`${title} — expanded`}
+                    style={{
+                        position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(18,22,29,0.55)',
+                        padding: 'clamp(12px, 3vw, 40px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
                     onClick={e => { if (e.target === e.currentTarget) setFull(false); }}
                 >
-                    <div style={{ width: '100%', maxWidth: 1500, maxHeight: '94vh', overflowY: 'auto', borderRadius: 6 }}>
+                    <div ref={dialogRef} style={{ width: '100%', maxWidth: 1500, maxHeight: '94vh', overflowY: 'auto', borderRadius: 6 }}>
                         {frame}
                     </div>
                 </div>
@@ -307,15 +342,36 @@ export function Lines({ x, y, lines, size = 10.5, fill, weight = 400, anchor = '
 }
 
 /** Keeps the pinned/hovered selection state used by every interactive diagram. */
+/* The diagrams are the argument of this page, and the detail panel behind each
+   node is where the reasoning lives. `bind` therefore has to produce a real
+   control, not a hover target: tabbable, activatable from the keyboard, and
+   named for a screen reader. Focus mirrors hover so moving through a diagram
+   with Tab lights the same path the mouse would. */
 export function useFocus<Id extends string>() {
     const [hover, setHover] = useState<Id | null>(null);
     const [pinned, setPinned] = useState<Id | null>(null);
     const active = (hover ?? pinned) as Id | null;
     const ref = useRef<SVGSVGElement>(null);
-    const bind = (id: Id) => ({
+    const bind = (id: Id, label?: string) => ({
         onMouseEnter: () => setHover(id),
         onMouseLeave: () => setHover(null),
+        onFocus: () => setHover(id),
+        onBlur: () => setHover(null),
         onClick: (e: React.MouseEvent) => { e.stopPropagation(); setPinned(p => (p === id ? null : id)); },
+        onKeyDown: (e: React.KeyboardEvent) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            e.preventDefault();          // Space would otherwise scroll the page
+            e.stopPropagation();
+            setPinned(p => (p === id ? null : id));
+        },
+        tabIndex: 0,
+        role: 'button' as const,
+        'aria-pressed': pinned === id,
+        'aria-label': label ?? id,
+        /* No `outline: none` here on purpose. Focus already lights the node and
+           its edges via the hover path above, but that highlight also means
+           "hover"; the global :focus-visible ring is what makes keyboard focus
+           unambiguous, so it is left to paint on top. */
         style: { cursor: 'pointer' as const },
     });
     return { active, pinned, hover, setPinned, bind, ref };

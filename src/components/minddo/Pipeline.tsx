@@ -167,7 +167,7 @@ export default function Pipeline() {
         <Figure
             label="Fig 3"
             title="Generation pipeline, as built and as it could run"
-            minWidth={1060}
+            minWidth={1120}
             caption={
                 <>
                     These are layout positions rather than timing bars. End to end it measures 102.7 s, and roughly 25 s of that is avoidable.
@@ -215,15 +215,15 @@ export default function Pipeline() {
                                 stroke={on ? T.ink : mode === 'par' && independent ? T.good.stroke : T.tier.stroke}
                                 strokeWidth={on ? 2 : 1.3}
                             />
-                            <text x={11} y={19} style={{ fontFamily: MONO, fontSize: 9, fill: T.accent }}>step {s.step}</text>
+                            <text x={11} y={19} style={{ fontFamily: MONO, fontSize: 10.8, fill: T.accent }}>step {s.step}</text>
                             <text x={11} y={38} style={{ fontFamily: FONT, fontSize: 12, fontWeight: 600, fill: T.ink }}>{s.title}</text>
-                            <text x={11} y={54} style={{ fontFamily: MONO, fontSize: 8.8, fill: T.muted }}>{s.sub}</text>
+                            <text x={11} y={54} style={{ fontFamily: MONO, fontSize: 10.6, fill: T.muted }}>{s.sub}</text>
                         </motion.g>
                     );
                 })}
 
                 {mode === 'par' && (
-                    <text x={30} y={286} style={{ fontFamily: FONT, fontSize: 9.6, fill: T.good.text }}>
+                    <text x={30} y={286} style={{ fontFamily: FONT, fontSize: 10.8, fill: T.good.text }}>
                         green: depends only on the submitted URL
                     </text>
                 )}

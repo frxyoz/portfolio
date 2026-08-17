@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useOverlay } from '@/contexts/OverlayContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { ACCENT_TEXT, ACCENT_ORNAMENT as ACCENT } from '@/design/tokens';
 
-const ACCENT = '#b8860b';
 const LINKS = [
   { id: 'about',    label: 'About' },
   { id: 'projects', label: 'Projects' },
@@ -77,7 +77,7 @@ export default function NavBar() {
         style={{
           fontFamily: 'var(--font-display, "Cormorant Garamond", Georgia, serif)',
           fontSize: '1.15rem', fontWeight: 600,
-          color: ACCENT, letterSpacing: '0.04em',
+          color: ACCENT_TEXT, letterSpacing: '0.04em',
           background: 'none', border: 'none', cursor: 'pointer',
           minHeight: isMobile ? 44 : undefined,
           padding: isMobile ? '0 4px' : 0,

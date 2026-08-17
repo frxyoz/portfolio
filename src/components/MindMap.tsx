@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import * as THREE from 'three';
 
-const BODY = 'var(--font-body, "DM Sans", "Helvetica Neue", sans-serif)';
-const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
+import { ACCENT_TEXT, DISPLAY, BODY } from '@/design/tokens';
 
 // ─── Types ────────────────────────────────────────────────────────────────
 interface Pal { accent: string; bg: string; c2: string; c3: string; ink: string; }
@@ -591,7 +590,9 @@ function Poster({ d, layout, onJump }: { d: CardData; layout: typeof CARD_LAYOUT
 export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
     const clipPathRef = useRef<SVGPathElement>(null);
     const revealRaf = useRef<number | null>(null);
-    const [mounted, setMounted] = useState(false);
+    // Seeded from `open` so mounting while already open still renders: the
+    // open/close block below only fires on a change, never on first mount.
+    const [mounted, setMounted] = useState(open);
 
     const [ai, setAi] = useState(0);
     const [scale, setScale] = useState(1);
@@ -768,7 +769,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
         deckTransition = 'none';
     } else if (phase === 'pop') {
         deckTransform = 'translateY(0px) scale(1) rotate(0deg)';
-        deckTransition = 'transform .64s cubic-bezier(.34,1.46,.5,1)';
+        deckTransition = 'transform .64s cubic-bezier(.22,1,.36,1)';
     }
 
     const btnStyle: React.CSSProperties = {
@@ -809,7 +810,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                     padding: mobile ? '0 20px' : '0 46px',
                     position: 'relative', zIndex: 9,
                 }}>
-                    <button onClick={onClose} style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: '1.15rem', letterSpacing: '.04em', color: '#b8860b', background: 'none', border: 'none', cursor: 'pointer', padding: mobile ? '0 4px' : 0, minHeight: mobile ? 44 : undefined }}>
+                    <button onClick={onClose} style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: '1.15rem', letterSpacing: '.04em', color: ACCENT_TEXT, background: 'none', border: 'none', cursor: 'pointer', padding: mobile ? '0 4px' : 0, minHeight: mobile ? 44 : undefined }}>
                         OZ
                     </button>
                     <div style={{ textAlign: 'center' }}>

@@ -44,8 +44,8 @@ const EDGES: Edge[] = [
     { from: 'nav', to: 'sub', d: 'M 450 544 V 568' },
     { from: 'sub', to: 'recheck', d: 'M 350 590 H 240', label: 'no', lx: 286, ly: 584 },
     { from: 'sub', to: 'walk', d: 'M 550 590 H 580 V 672 H 610', label: 'yes', lx: 556, ly: 584 },
-    { from: 'walk', to: 'ok2', d: 'M 700 708 V 734 H 550', label: 'every hop clean', lx: 566, ly: 726 },
-    { from: 'walk', to: 'block2', d: 'M 800 708 V 730', label: 'a hop resolves somewhere forbidden', lx: 500, ly: 770 },
+    { from: 'walk', to: 'ok2', d: 'M 610 690 H 592 V 734 H 550', label: 'every hop clean', lx: 598, ly: 724 },
+    { from: 'walk', to: 'block2', d: 'M 800 708 V 730', label: 'a hop is forbidden', lx: 806, ly: 723 },
 ];
 
 interface Probe {
@@ -177,7 +177,7 @@ export default function SsrfGuard() {
         <Figure
             label="Fig 5"
             title="SSRF guard: scheme, destination, and every redirect hop"
-            minWidth={880}
+            minWidth={920}
             legend={[
                 { tone: 'tier', text: 'decision' },
                 { tone: 'bad', text: 'rejected' },
@@ -198,7 +198,7 @@ export default function SsrfGuard() {
                             <path d={e.d} fill="none" stroke={stroke} strokeWidth={on && probe ? 2 : 1.2}
                                 markerEnd={`url(#${!probe ? 'ah' : on ? (bad ? 'ah-bad' : good ? 'ah-good' : 'ah-on') : 'ah'})`} />
                             {e.label && (
-                                <text x={e.lx} y={e.ly} style={{ fontFamily: FONT, fontSize: 9, fill: on && probe ? stroke : T.faint }}>
+                                <text x={e.lx} y={e.ly} style={{ fontFamily: FONT, fontSize: 10.6, fill: on && probe ? stroke : T.faint }}>
                                     {e.label}
                                 </text>
                             )}

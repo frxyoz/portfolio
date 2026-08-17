@@ -9,7 +9,7 @@ interface Node { id: Id; x: number; y: number; w: number; h: number; tone: Tone;
 const NODES: Node[] = [
     {
         id: 'dev', x: 16, y: 150, w: 156, h: 56, tone: 'extern', lines: ['MacBook', 'arm64'],
-        detail: 'Cross-building linux/amd64 under emulation takes 30 to 45 minutes. The build script asserts the image architecture rather than trusting it.',
+        detail: 'Cross-building linux/amd64 under emulation takes 30 to 45 minutes, so I did not use that path. I rsynced the tree up and built natively on the box instead: 7 min 46 s and nothing but source crossed the internet. The catch is that rsync ships whatever is on disk, and it delivered the gitignored k8s/secret.yaml, which COPY . . then baked into the image. .dockerignore covers it now.',
     },
     {
         id: 'tr', x: 258, y: 126, w: 116, h: 46, tone: 'store', lines: ['Traefik ingress', 'node port 80'],
@@ -17,11 +17,11 @@ const NODES: Node[] = [
     },
     {
         id: 'api', x: 386, y: 126, w: 122, h: 46, tone: 'store', lines: ['Deployment api x2', '`imagePullPolicy: Never'],
-        detail: 'The image is imported straight into containerd, so nothing pulls from a registry.',
+        detail: 'The image is imported straight into containerd, so nothing pulls from a registry. These pods originally declared no resources at all, which made them BestEffort and therefore the first thing the node killed under memory pressure, even though the workers caused it.',
     },
     {
-        id: 'wrk', x: 520, y: 126, w: 124, h: 46, tone: 'store', lines: ['Deployment worker', '1 to 8, KEDA'],
-        detail: 'Memory binds, not CPU: each slot holds a Chromium plus an x264 encode. t3.small would OOM under one worker, two API replicas, Redis and the control plane.',
+        id: 'wrk', x: 520, y: 126, w: 124, h: 46, tone: 'store', lines: ['Deployment worker', '1 to 4, KEDA'],
+        detail: 'Memory binds, not CPU: each slot holds a Chromium plus an x264 encode. The ceiling went 8, then 6, then 4. Eight would not schedule; six scheduled and then got OOM killed, because the scheduler admits pods on requests while the kernel kills on usage.',
     },
     {
         id: 'rds', x: 258, y: 190, w: 116, h: 46, tone: 'store', lines: ['Redis pod', 'broker + counters'],
@@ -32,8 +32,8 @@ const NODES: Node[] = [
         detail: 'Polls the queue every 5 s and writes the replica count to a managed HPA.',
     },
     {
-        id: 'sec', x: 520, y: 190, w: 124, h: 46, tone: 'store', lines: ['Secret app-secrets', 'four values'],
-        detail: 'An early commit added five real values. Response: rotate everything, migrate Supabase to a new project, rewrite history, and verify by fingerprint that no current value matches a leaked one.',
+        id: 'sec', x: 520, y: 190, w: 124, h: 46, tone: 'store', lines: ['Secret app-secrets', 'created imperatively'],
+        detail: 'Created with kubectl rather than kustomize, so apply -k can never clobber it. The cluster generates its own ADMIN_API_TOKEN, which differs from the one in my local .env, so a token leaked off my laptop does not unlock the cluster. An early commit did add five real values to git: I rotated everything, migrated Supabase to a new project, rewrote history, and verified by fingerprint that no current value matches a leaked one.',
     },
     {
         id: 'prof', x: 246, y: 264, w: 398, h: 44, tone: 'tier', lines: ['IAM instance profile', '`s3:PutObject / GetObject on one bucket ARN'],
@@ -48,8 +48,8 @@ const NODES: Node[] = [
         detail: 'Two rules, one scoped to a single address. The k3s API server is never exposed.',
     },
     {
-        id: 'bud', x: 706, y: 260, w: 190, h: 48, tone: 'tier', lines: ['Budgets alarm', '$10 threshold'],
-        detail: 'A weekend left running is roughly $4 to $5, under $1 if scaled to hours worked. The alarm is the difference between noticing and not.',
+        id: 'bud', x: 706, y: 260, w: 190, h: 48, tone: 'tier', lines: ['Budgets alarm', '$5 threshold'],
+        detail: 'Leaving a system running costs about $4 to $5 for a weekend.',
     },
     {
         id: 'supa', x: 16, y: 264, w: 156, h: 56, tone: 'extern', lines: ['Supabase', 'hosted Postgres', 'outside AWS'],
@@ -80,7 +80,7 @@ export default function AwsPlan() {
                 <p style={{ fontSize: '0.86rem', color: sel ? T.body : T.muted, lineHeight: 1.62 }}>
                     {sel
                         ? sel.detail
-                        : 'I skipped EKS because the control plane alone is $73 a month before a single pod runs, and single-node k3s gives me the same workflow for nothing. ECR went the same way: k3s has no credential provider for it, so pulling images means juggling a 12 hour token that something has to keep refreshing.'}
+                        : 'This is running. I skipped EKS because the control plane alone is $73 a month before a single pod runs, and single-node k3s gives me the same kubectl apply -k workflow for the price of the instance. ECR went the same way: k3s has no credential provider for it, so pulling images means juggling a 12 hour token that something has to keep refreshing.'}
                 </p>
             </div>
     );
@@ -88,14 +88,14 @@ export default function AwsPlan() {
     return (
         <Figure
             label="Fig 7"
-            title="AWS target topology (designed, not yet executed)"
-            minWidth={900}
+            title="AWS topology, deployed 16 August 2026"
+            minWidth={920}
             legend={[
                 { tone: 'store', text: 'in-cluster workload' },
                 { tone: 'tier', text: 'AWS resource' },
                 { tone: 'extern', text: 'outside AWS' },
             ]}
-            caption="None of this is running anywhere. The manifests target this topology, but every number on this page was measured on docker compose and k3d." panel={panel}
+            caption="This is what is running. The 20-job load test in section 09 ran against this cluster; the 102.7 s single-job baseline is still a docker compose number." panel={panel}
         >
             <svg viewBox="0 0 920 350" style={{ width: '100%', display: 'block' }} onClick={() => setPinned(null)}>
                 <Arrowheads />
@@ -118,7 +118,7 @@ export default function AwsPlan() {
                             <path d={e.d} fill="none" stroke={on ? T.accent : T.ruleStrong} strokeWidth={on ? 1.9 : 1.2}
                                 strokeDasharray={e.dash ? '4 4' : undefined} markerEnd={`url(#${on ? 'ah-on' : 'ah'})`} />
                             {e.label && (
-                                <text x={e.lx} y={e.ly} style={{ fontFamily: FONT, fontSize: 8.8, fill: on ? T.accent : T.faint }}>{e.label}</text>
+                                <text x={e.lx} y={e.ly} style={{ fontFamily: FONT, fontSize: 10.4, fill: on ? T.accent : T.faint }}>{e.label}</text>
                             )}
                         </g>
                     );
@@ -129,7 +129,7 @@ export default function AwsPlan() {
                     const on = !active || active === n.id
                         || EDGES.some(e => (e.from === active && e.to === n.id) || (e.to === active && e.from === n.id));
                     return (
-                        <g key={n.id} {...bind(n.id)} opacity={on ? 1 : 0.24} style={{ ...bind(n.id).style, transition: 'opacity .18s' }}>
+                        <g key={n.id} {...bind(n.id, n.lines[0])} opacity={on ? 1 : 0.24} style={{ ...bind(n.id, n.lines[0]).style, transition: 'opacity .18s' }}>
                             <rect x={n.x} y={n.y} width={n.w} height={n.h} rx={5} fill={tone.fill} stroke={active === n.id ? T.ink : tone.stroke} strokeWidth={active === n.id ? 2 : 1.2} />
                             {n.lines.map((l, i) => (
                                 <text

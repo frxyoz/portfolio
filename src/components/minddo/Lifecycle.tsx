@@ -117,7 +117,7 @@ Three messages were bugs first: late acks (10), the re-validated redirect chain 
         <Figure
             label="Fig 2"
             title="Request lifecycle"
-            minWidth={1040}
+            minWidth={1200}
             caption="Hover a message for the reasoning. Phase buttons dim the rest." controls={controls} panel={panel}
         >
             <svg viewBox={`0 0 1200 ${height}`} style={{ width: '100%', display: 'block' }}>
@@ -126,7 +126,7 @@ Three messages were bugs first: late acks (10), the re-validated redirect chain 
                 {LANES.map(l => (
                     <g key={l.id}>
                         <rect x={l.x - 62} y={10} width={124} height={30} rx={4} fill={T.surface} stroke={T.ruleStrong} />
-                        <text x={l.x} y={29} textAnchor="middle" style={{ fontFamily: FONT, fontSize: 10.5, fontWeight: 600, fill: T.ink }}>
+                        <text x={l.x} y={29} textAnchor="middle" style={{ fontFamily: FONT, fontSize: 11.5, fontWeight: 600, fill: T.ink }}>
                             {l.label}
                         </text>
                         <line x1={l.x} y1={40} x2={l.x} y2={height - 12} stroke={T.rule} strokeWidth={1} strokeDasharray="3 4" />
@@ -151,7 +151,7 @@ Three messages were bugs first: late acks (10), the re-validated redirect chain 
                             style={{ cursor: 'default', transition: 'opacity .16s' }}
                         >
                             <rect x={16} y={y - 15} width={1170} height={GAP - 4} fill={hot ? T.accentSoft : 'transparent'} rx={3} />
-                            <text x={26} y={y + 4} style={{ fontFamily: MONO, fontSize: 9, fill: hot ? T.accent : T.faint }}>
+                            <text x={26} y={y + 4} style={{ fontFamily: MONO, fontSize: 11.5, fill: hot ? T.accent : T.faint }}>
                                 {String(s.n).padStart(2, '0')}
                             </text>
 
@@ -162,7 +162,7 @@ Three messages were bugs first: late acks (10), the re-validated redirect chain 
                                         fill="none" stroke={color} strokeWidth={hot ? 1.8 : 1.2}
                                         markerEnd={`url(#${hot ? 'ah-on' : 'ah'})`}
                                     />
-                                    <text x={x1 + 42} y={y + 3} style={{ fontFamily: FONT, fontSize: 9.6, fill: textColor, fontWeight: hot ? 600 : 400 }}>
+                                    <text x={x1 + 42} y={y + 3} style={{ fontFamily: FONT, fontSize: 10.8, fill: textColor, fontWeight: hot ? 600 : 400 }}>
                                         {s.text}
                                     </text>
                                 </>
@@ -178,7 +178,7 @@ Three messages were bugs first: late acks (10), the re-validated redirect chain 
                                         x={(x1 + x2) / 2}
                                         y={y - 6}
                                         textAnchor="middle"
-                                        style={{ fontFamily: FONT, fontSize: 9.6, fill: textColor, fontWeight: hot ? 600 : 400 }}
+                                        style={{ fontFamily: FONT, fontSize: 10.8, fill: textColor, fontWeight: hot ? 600 : 400 }}
                                     >
                                         {s.text}
                                     </text>

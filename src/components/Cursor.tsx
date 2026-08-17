@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { ACCENT_ORNAMENT as ACCENT } from '@/design/tokens';
 
-const ACCENT = '#b8860b';
 const POINTER_FINE = '(pointer: fine)';
 
 function subscribePointerFine(onChange: () => void) {
@@ -36,6 +36,17 @@ export default function Cursor() {
   // Ring lags with soft spring
   const ringX = useSpring(mx, { stiffness: 90, damping: 18, mass: 0.5 });
   const ringY = useSpring(my, { stiffness: 90, damping: 18, mass: 0.5 });
+
+  /* globals.css hides the system cursor only under `body.cursor-ready`. Adding
+     the class here — after this component has actually mounted — means a JS
+     failure or a slow hydration leaves the visitor with a real pointer rather
+     than none at all. Reduced motion keeps the cursor but drops the lagging
+     ring, which is the part that moves independently of the hand. */
+  useEffect(() => {
+    if (!fine) return;
+    document.body.classList.add('cursor-ready');
+    return () => document.body.classList.remove('cursor-ready');
+  }, [fine]);
 
   useEffect(() => {
     if (!fine) return;

@@ -9,20 +9,21 @@ import { useOverlay } from '@/contexts/OverlayContext';
 import Reveal from './Reveal';
 import { useScrollTilt } from '@/hooks/useScrollTilt';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { ACCENT_TEXT, ACCENT_ORNAMENT as ACCENT, DISPLAY, BODY, BODY_TEXT, BODY_MUTED, MUTED, ACCENT_DEEP } from '@/design/tokens';
 
 // Projects with an `href` get their own route, so they never enter the overlay carousel.
 const OVERLAY_PROJECTS = projects.filter(p => !p.href);
 
-const ACCENT = '#b8860b';
-const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
-const BODY = 'var(--font-body, "DM Sans", "Helvetica Neue", sans-serif)';
 
 // Per-project color palettes
-const PALETTES: Record<string, { accent: string; bg: string; c3: string; ink: string }> = {
-    luminary: { accent: '#7c5cbf', bg: '#ede8f7', c3: '#a78fd6', ink: '#2a1f42' },
-    boroughs: { accent: '#3c6e57', bg: '#e7efe6', c3: '#d49a2b', ink: '#20302a' },
-    noteform: { accent: '#2a2a2a', bg: '#f0f0f0', c3: '#888888', ink: '#111111' },
-    minddo:   { accent: '#b8860b', bg: '#f7f2e6', c3: '#c9a44c', ink: '#33280f' },
+/* `accent` drives the poster artwork; `accentText` is the same hue darkened
+   until it clears AA on that card's own background, for the label, subtitle
+   and call to action. Two roles, because one value cannot serve both. */
+const PALETTES: Record<string, { accent: string; accentText: string; bg: string; c3: string; ink: string }> = {
+    luminary: { accent: '#7c5cbf', accentText: '#6e4bb8', bg: '#ede8f7', c3: '#a78fd6', ink: '#2a1f42' },
+    boroughs: { accent: '#3c6e57', accentText: '#3b6b55', bg: '#e7efe6', c3: '#d49a2b', ink: '#20302a' },
+    noteform: { accent: '#2a2a2a', accentText: '#2a2a2a', bg: '#f0f0f0', c3: '#888888', ink: '#111111' },
+    minddo:   { accent: '#b8860b', accentText: '#835f08', bg: '#f7f2e6', c3: '#c9a44c', ink: '#33280f' },
 };
 
 // ─── SVG poster artwork — one motif per project id ────────────────────────────
@@ -219,7 +220,7 @@ function ProjectCard({ project, index, onOpen, isMobile }: { project: Project; i
                             ? '0 34px 66px rgba(40,30,15,.26), 0 8px 18px rgba(40,30,15,.12)'
                             : '0 16px 38px rgba(40,30,15,.15), 0 3px 9px rgba(40,30,15,.07)',
                     transform: tf,
-                    transition: 'transform .55s cubic-bezier(.34,1.26,.5,1), box-shadow .45s ease',
+                    transition: 'transform .55s cubic-bezier(.22,1,.36,1), box-shadow .45s ease',
                     willChange: 'transform',
                     zIndex: hovered ? 5 : 1,
                     cursor: 'pointer',
@@ -236,7 +237,7 @@ function ProjectCard({ project, index, onOpen, isMobile }: { project: Project; i
                 <span style={{
                     position: 'absolute', right: 15, top: 13, zIndex: 2,
                     fontFamily: DISPLAY, fontStyle: 'italic', fontSize: '1.05rem',
-                    color: pal.accent, opacity: 0.72,
+                    color: pal.accentText,
                 }}>
                     {project.year}
                 </span>
@@ -248,14 +249,14 @@ function ProjectCard({ project, index, onOpen, isMobile }: { project: Project; i
 
                 {/* Metadata */}
                 <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '2px 22px 24px' }}>
-                    <span style={{ fontFamily: BODY, fontSize: '0.55rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: pal.accent, opacity: 0.92, marginBottom: 7 }}>
+                    <span style={{ fontFamily: BODY, fontSize: '0.55rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: pal.accentText, marginBottom: 7 }}>
                         {project.subtitle}
                     </span>
                     <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 500, lineHeight: 0.92, fontSize: '2.05rem', letterSpacing: '-0.01em', color: pal.ink }}>
                         {project.name}
                     </span>
                     {project.award && (
-                        <span style={{ fontFamily: BODY, fontSize: '0.55rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: pal.accent, marginTop: 6, opacity: 0.8, lineHeight: 1.4 }}>
+                        <span style={{ fontFamily: BODY, fontSize: '0.55rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: pal.accentText, marginTop: 6, lineHeight: 1.4 }}>
                             {project.award}
                         </span>
                     )}
@@ -266,7 +267,7 @@ function ProjectCard({ project, index, onOpen, isMobile }: { project: Project; i
                     <span style={{
                         alignSelf: 'flex-start', marginTop: 'auto', paddingTop: 20,
                         fontFamily: BODY, fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase',
-                        display: 'inline-flex', alignItems: 'center', gap: 7, color: pal.accent,
+                        display: 'inline-flex', alignItems: 'center', gap: 7, color: pal.accentText,
                     }}>
                         {project.href ? 'Read Case Study' : 'View Details'}{' '}
                         <span style={{ display: 'inline-block', transition: 'transform .35s ease', transform: hovered ? 'translateX(5px)' : 'none' }}>→</span>
@@ -415,7 +416,7 @@ function ProjectDetail({
                 <div style={{ maxWidth: 960, margin: '0 auto' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap' }}>
                         <div style={{ flex: 1, minWidth: 280 }}>
-                            <p style={{ fontFamily: BODY, fontSize: '0.7rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT, marginBottom: 12 }}>
+                            <p style={{ fontFamily: BODY, fontSize: '0.7rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 12 }}>
                                 {project.year}
                             </p>
                             <h1 style={{ fontFamily: DISPLAY, fontSize: 'clamp(3rem, 7vw, 5.5rem)', fontWeight: 300, color: '#1a1a1a', lineHeight: 0.9, marginBottom: 8 }}>
@@ -425,12 +426,12 @@ function ProjectDetail({
                                 {project.subtitle}
                             </p>
                             <div style={{ width: 40, height: 1, background: ACCENT, marginBottom: 28 }} />
-                            <p style={{ fontFamily: BODY, fontSize: '1rem', color: '#3a3530', lineHeight: 1.8, maxWidth: 560, marginBottom: 32 }}>
+                            <p style={{ fontFamily: BODY, fontSize: '1rem', color: BODY_TEXT, lineHeight: 1.8, maxWidth: 560, marginBottom: 32 }}>
                                 {project.overview}
                             </p>
                             {project.award && (
                                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, padding: '10px 18px', marginBottom: 32 }}>
-                                    <span style={{ fontFamily: BODY, fontSize: '0.8rem', fontWeight: 500, color: ACCENT, lineHeight: 1.4 }}>{project.award}</span>
+                                    <span style={{ fontFamily: BODY, fontSize: '0.8rem', fontWeight: 500, color: ACCENT_TEXT, lineHeight: 1.4 }}>{project.award}</span>
                                 </div>
                             )}
                             <div style={{ display: 'flex', gap: 12 }}>
@@ -438,12 +439,14 @@ function ProjectDetail({
                                     href={project.githubUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#9a720a'; }}
+                                    onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = ACCENT_DEEP; }}
                                     onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = ACCENT; }}
                                     style={{
                                         fontFamily: BODY, fontSize: '0.78rem', fontWeight: 500,
                                         letterSpacing: '0.12em', textTransform: 'uppercase',
-                                        color: '#fff', background: ACCENT, border: `1px solid ${ACCENT}`,
+                                        /* White on the ornamental gold is 3.26:1. The text-safe gold
+                                           takes it to 5.3:1 and looks the same at this size. */
+                                        color: '#fff', background: ACCENT_TEXT, border: `1px solid ${ACCENT_TEXT}`,
                                         padding: '12px 24px', display: 'inline-flex', alignItems: 'center', gap: 8,
                                         transition: 'all 0.2s',
                                     }}
@@ -474,7 +477,15 @@ function ProjectDetail({
                             )}
                             {project.mockImage && (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src={project.mockImage} alt={project.mockLabel} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                                <img
+                                    src={project.mockImage}
+                                    alt={project.mockLabel}
+                                    width={project.mockSize?.[0]}
+                                    height={project.mockSize?.[1]}
+                                    loading="lazy"
+                                    decoding="async"
+                                    style={{ width: '100%', height: 'auto', display: 'block' }}
+                                />
                             )}
                             {!project.demoVideo && !project.mockImage && (
                                 <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', letterSpacing: '0.1em', textAlign: 'center', color: '#c0b89a', padding: '0 24px', lineHeight: 1.7, position: 'relative', zIndex: 1 }}>
@@ -491,7 +502,7 @@ function ProjectDetail({
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 40 : 64, alignItems: 'start' }}>
                     {/* Technical breakdown */}
                     <div>
-                        <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT, marginBottom: 32 }}>
+                        <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 32 }}>
                             Technical Breakdown
                         </p>
                         {project.details.map((d, i) => (
@@ -499,7 +510,7 @@ function ProjectDetail({
                                 <h4 style={{ fontFamily: DISPLAY, fontSize: '1.35rem', fontWeight: 500, color: '#1a1a1a', marginBottom: 10 }}>
                                     {d.heading}
                                 </h4>
-                                <p style={{ fontFamily: BODY, fontSize: '0.88rem', color: '#4a4540', lineHeight: 1.75 }}>
+                                <p style={{ fontFamily: BODY, fontSize: '0.88rem', color: BODY_MUTED, lineHeight: 1.75 }}>
                                     {d.body}
                                 </p>
                             </div>
@@ -508,7 +519,7 @@ function ProjectDetail({
 
                     {/* Tech stack */}
                     <div>
-                        <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT, marginBottom: 32 }}>
+                        <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 32 }}>
                             Tech Stack
                         </p>
                         {project.stack.map((s, i) => (
@@ -517,7 +528,7 @@ function ProjectDetail({
                                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT, flexShrink: 0 }} />
                                     <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', fontWeight: 600, color: '#1a1a1a', letterSpacing: '0.03em' }}>{s.name}</span>
                                 </div>
-                                <span style={{ fontFamily: BODY, fontSize: '0.78rem', color: '#8a8078', textAlign: 'right', maxWidth: 160 }}>{s.role}</span>
+                                <span style={{ fontFamily: BODY, fontSize: '0.78rem', color: MUTED, textAlign: 'right', maxWidth: 160 }}>{s.role}</span>
                             </div>
                         ))}
                     </div>
@@ -583,7 +594,7 @@ export default function ProjectsSection() {
 
                 {/* Section header */}
                 <Reveal style={{ marginBottom: 8 }}>
-                    <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT, marginBottom: 12 }}>
+                    <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 12 }}>
                         02
                     </p>
                     <motion.h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: '#1a1a1a', lineHeight: 1, rotateX: tilt, transformPerspective: 800 }}>

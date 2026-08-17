@@ -84,7 +84,7 @@ export default function DataModel() {
         <Figure
             label="Fig 6"
             title="Data model and the storage split"
-            minWidth={860}
+            minWidth={990}
             caption="Hover a table for what it is responsible for." panel={panel}
         >
             <svg viewBox="0 0 990 396" style={{ width: '100%', display: 'block' }} onClick={() => setPinned(null)}>
@@ -98,7 +98,7 @@ export default function DataModel() {
                             <text
                                 x={Number(r.d.split(' ')[1]) + 8}
                                 y={Number(r.d.split(' ')[2]) - 6}
-                                style={{ fontFamily: FONT, fontSize: 9, fill: on ? T.accent : T.faint }}
+                                style={{ fontFamily: FONT, fontSize: 10.2, fill: on ? T.accent : T.faint }}
                             >
                                 {r.label}
                             </text>
@@ -110,7 +110,7 @@ export default function DataModel() {
                     const h = height(e);
                     const on = !active || active === e.id;
                     return (
-                        <g key={e.id} {...bind(e.id)} opacity={on ? 1 : 0.28} style={{ ...bind(e.id).style, transition: 'opacity .18s' }}>
+                        <g key={e.id} {...bind(e.id, e.title)} opacity={on ? 1 : 0.28} style={{ ...bind(e.id, e.title).style, transition: 'opacity .18s' }}>
                             <rect x={e.x} y={e.y} width={e.w} height={h} rx={5} fill="#fff" stroke={active === e.id ? T.ink : T.store.stroke} strokeWidth={active === e.id ? 2 : 1.3} />
                             <rect x={e.x} y={e.y} width={e.w} height={HEAD_H} rx={5} fill={T.store.fill} />
                             <rect x={e.x} y={e.y + HEAD_H - 6} width={e.w} height={6} fill={T.store.fill} />
@@ -121,12 +121,12 @@ export default function DataModel() {
                                 const y = e.y + HEAD_H + 14 + i * ROW_H;
                                 return (
                                     <g key={r.name}>
-                                        <text x={e.x + 12} y={y} style={{ fontFamily: MONO, fontSize: 9.4, fill: T.ink }}>{r.name}</text>
-                                        <text x={e.x + 12} y={y} textAnchor="end" style={{ fontFamily: MONO, fontSize: 9.4, fill: T.muted }} dx={e.w - 24}>
+                                        <text x={e.x + 12} y={y} style={{ fontFamily: MONO, fontSize: 10.4, fill: T.ink }}>{r.name}</text>
+                                        <text x={e.x + 12} y={y} textAnchor="end" style={{ fontFamily: MONO, fontSize: 10.4, fill: T.muted }} dx={e.w - 24}>
                                             {r.type}
                                         </text>
                                         {r.note && e.w > 400 && (
-                                            <text x={e.x + 250} y={y} style={{ fontFamily: FONT, fontSize: 9, fill: T.faint }}>{r.note}</text>
+                                            <text x={e.x + 250} y={y} style={{ fontFamily: FONT, fontSize: 10.2, fill: T.faint }}>{r.note}</text>
                                         )}
                                     </g>
                                 );

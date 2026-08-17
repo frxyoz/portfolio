@@ -6,15 +6,23 @@ import { profile } from '@/data/profile';
 import Reveal from './Reveal';
 import { useScrollTilt } from '@/hooks/useScrollTilt';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { ACCENT_TEXT, ACCENT_ORNAMENT as ACCENT, ACCENT_DEEP, DISPLAY, BODY, MUTED, INK } from '@/design/tokens';
 
-const ACCENT = '#b8860b';
-const DISPLAY = 'var(--font-display, "Cormorant Garamond", Georgia, serif)';
-const BODY = 'var(--font-body, "DM Sans", "Helvetica Neue", sans-serif)';
 
+/* 16px, not 0.9rem: Safari auto-zooms into any input below 16px on focus and
+   never zooms back, which strands the visitor mid-form on a phone. */
 const inputStyle: React.CSSProperties = {
-    fontFamily: BODY, fontSize: '0.9rem', color: '#1a1a1a',
+    fontFamily: BODY, fontSize: '1rem', color: INK,
     background: 'rgba(255,255,255,0.72)', border: `1px solid ${ACCENT}28`, padding: '14px 18px',
-    width: '100%', outline: 'none', transition: 'border-color 0.2s ease',
+    width: '100%', minHeight: 48, transition: 'border-color 0.2s ease',
+};
+
+/* Visible to screen readers, not to the eye. The fields are designed to carry
+   their names in the placeholder, but a placeholder disappears the moment
+   anyone types and is not an accessible name to begin with. */
+const srOnly: React.CSSProperties = {
+    position: 'absolute', width: 1, height: 1, padding: 0, margin: -1,
+    overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0,
 };
 
 export default function ContactSection() {
@@ -54,7 +62,7 @@ export default function ContactSection() {
 
                 {/* Section header */}
                 <Reveal>
-                    <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT, marginBottom: 12 }}>
+                    <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 12 }}>
                         03
                     </p>
                 </Reveal>
@@ -78,16 +86,21 @@ export default function ContactSection() {
                             href={s.href}
                             target={s.href.startsWith('mailto') ? undefined : '_blank'}
                             rel="noopener noreferrer"
-                            onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = '#d4a017'; }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = ACCENT_DEEP; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = ACCENT; }}
                             style={{
                                 fontFamily: BODY, fontSize: '0.75rem', fontWeight: 500,
                                 letterSpacing: '0.14em', textTransform: 'uppercase',
-                                color: ACCENT, borderBottom: `1px solid ${ACCENT}55`, paddingBottom: 3,
+                                color: ACCENT_TEXT,
                                 transition: 'color 0.2s',
+                                /* 44px target centred on the label; the underline sits on the inner
+                                   span so it keeps hugging the text. */
+                                display: 'inline-flex', alignItems: 'center', minHeight: 44,
                             }}
                         >
-                            {s.label}
+                            <span style={{ borderBottom: `1px solid ${ACCENT}55`, paddingBottom: 3 }}>
+                                {s.label}
+                            </span>
                         </a>
                     ))}
                 </Reveal>
@@ -97,22 +110,30 @@ export default function ContactSection() {
                     {!submitted ? (
                         <form onSubmit={handleSubmit} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 16 }}>
                             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
+                                <label htmlFor="contact-name" style={srOnly}>Your name</label>
                                 <input
+                                    id="contact-name"
                                     type="text" name="name" placeholder="Name"
+                                    autoComplete="name"
                                     value={form.name} onChange={handleChange} required
                                     style={inputStyle}
                                     onFocus={e => { e.target.style.borderColor = ACCENT; }}
                                     onBlur={e => { e.target.style.borderColor = `${ACCENT}33`; }}
                                 />
+                                <label htmlFor="contact-email" style={srOnly}>Your email address</label>
                                 <input
+                                    id="contact-email"
                                     type="email" name="email" placeholder="Email"
+                                    autoComplete="email"
                                     value={form.email} onChange={handleChange} required
                                     style={inputStyle}
                                     onFocus={e => { e.target.style.borderColor = ACCENT; }}
                                     onBlur={e => { e.target.style.borderColor = `${ACCENT}33`; }}
                                 />
                             </div>
+                            <label htmlFor="contact-message" style={srOnly}>Your message</label>
                             <textarea
+                                id="contact-message"
                                 name="message" placeholder="Message" rows={5}
                                 value={form.message} onChange={handleChange} required
                                 style={{ ...inputStyle, resize: 'vertical' }}
@@ -144,7 +165,7 @@ export default function ContactSection() {
                         </form>
                     ) : (
                         <div style={{ padding: '40px', border: `1px solid ${ACCENT}44`, textAlign: 'center' }}>
-                            <p style={{ fontFamily: DISPLAY, fontSize: '1.6rem', fontWeight: 400, color: ACCENT, fontStyle: 'italic' }}>
+                            <p style={{ fontFamily: DISPLAY, fontSize: '1.6rem', fontWeight: 400, color: ACCENT_TEXT, fontStyle: 'italic' }}>
                                 Thank you, {form.name}.
                             </p>
                             <p style={{ fontFamily: BODY, fontSize: '0.85rem', color: '#a09890', marginTop: 8 }}>
@@ -156,8 +177,8 @@ export default function ContactSection() {
 
                 {/* Footer */}
                 <div style={{ marginTop: 96, paddingTop: 32, borderTop: `1px solid ${ACCENT}28`, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'center' : 'center', gap: isMobile ? 8 : 0, textAlign: 'center' }}>
-                    <span style={{ fontFamily: DISPLAY, fontSize: '1.1rem', fontStyle: 'italic', color: ACCENT }}>Olric Zeng</span>
-                    <span style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.12em', color: '#8a8078', textTransform: 'uppercase' }}>
+                    <span style={{ fontFamily: DISPLAY, fontSize: '1.1rem', fontStyle: 'italic', color: ACCENT_TEXT }}>Olric Zeng</span>
+                    <span style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase' }}>
                         © {new Date().getFullYear()} · olriczeng@gmail.com
                     </span>
                 </div>

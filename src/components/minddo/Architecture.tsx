@@ -118,9 +118,9 @@ const SPECS: Spec[] = [
     },
     {
         id: 'celery', tone: 'tier', title: 'Celery worker',
-        sub: ['`--concurrency=2', 'acks_late, prefetch 1', 'soft 600 s / hard 720 s'],
+        sub: ['`--concurrency=1', 'acks_late, prefetch 1', 'soft 600 s / hard 720 s'],
         detail: [
-            'Scales 1 to 8 on queue depth, independently of the API.',
+            'Scales 1 to 4 on queue depth, independently of the API.',
             'Late acks plus a 660 s grace period make scale-down a warm drain.',
         ],
     },
@@ -234,7 +234,7 @@ const GROUPS = [
         h: bottomOf(COLUMNS.api.ids) + 16 - 64,
     },
     {
-        label: 'Worker tier', note: 'Deployment worker, KEDA 1 to 8',
+        label: 'Worker tier', note: 'Deployment worker, KEDA 1 to 4',
         x: COLUMNS.worker.x - 14, y: 64, w: COLUMNS.worker.w + 28,
         h: bottomOf(COLUMNS.worker.ids) + 16 - 64,
     },
@@ -355,7 +355,7 @@ export default function Architecture() {
         <Figure
             label="Fig 1"
             title="System architecture"
-            minWidth={1060}
+            minWidth={1200}
             legend={[
                 { tone: 'tier', text: 'compute tier' },
                 { tone: 'store', text: 'persistence' },
@@ -371,7 +371,7 @@ export default function Architecture() {
                     <g key={g.label}>
                         <rect x={g.x} y={g.y} width={g.w} height={g.h} rx={7} fill="none" stroke={T.rule} strokeWidth={1.4} strokeDasharray="4 4" />
                         <text x={g.x + 10} y={g.y + 18} style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, fill: T.muted }}>{g.label}</text>
-                        <text x={g.x + 10} y={g.y + 32} style={{ fontFamily: MONO, fontSize: 10.5, fill: T.faint }}>{g.note}</text>
+                        <text x={g.x + 10} y={g.y + 32} style={{ fontFamily: MONO, fontSize: 12.6, fill: T.faint }}>{g.note}</text>
                     </g>
                 ))}
 
@@ -397,7 +397,7 @@ export default function Architecture() {
                                         <rect x={x} y={lp.y - 9} width={w} height={12} fill="#fff" opacity={0.92} rx={2} />
                                         <text
                                             x={lp.x} y={lp.y} textAnchor={lp.anchor}
-                                            style={{ fontFamily: FONT, fontSize: 10.5, fontWeight: on ? 600 : 400, fill: on ? T.accent : T.muted }}
+                                            style={{ fontFamily: FONT, fontSize: 12.6, fontWeight: on ? 600 : 400, fill: on ? T.accent : T.muted }}
                                         >
                                             {e.label}
                                         </text>
@@ -413,7 +413,7 @@ export default function Architecture() {
                     const lit = nodeLit(n.id);
                     const isSel = active === n.id;
                     return (
-                        <g key={n.id} {...bind(n.id)} opacity={lit ? 1 : 0.22} style={{ ...bind(n.id).style, transition: 'opacity .18s' }}>
+                        <g key={n.id} {...bind(n.id, n.title)} opacity={lit ? 1 : 0.22} style={{ ...bind(n.id, n.title).style, transition: 'opacity .18s' }}>
                             <rect
                                 x={n.x} y={n.y} width={n.w} height={n.h} rx={5}
                                 fill={tone.fill}
@@ -431,7 +431,7 @@ export default function Architecture() {
                                     key={i}
                                     x={n.x + 11}
                                     y={n.y + SUB_Y + i * SUB_LH}
-                                    style={{ fontFamily: s.startsWith('`') ? MONO : FONT, fontSize: s.startsWith('`') ? 10.5 : 11, fill: tone.text, opacity: 0.84 }}
+                                    style={{ fontFamily: s.startsWith('`') ? MONO : FONT, fontSize: s.startsWith('`') ? 12.2 : 12.6, fill: tone.text, opacity: 0.92 }}
                                 >
                                     {s.startsWith('`') ? s.slice(1) : s}
                                 </text>

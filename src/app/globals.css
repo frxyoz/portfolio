@@ -1,18 +1,31 @@
 @import "tailwindcss";
 
+/* Mirror of src/design/tokens.ts, which is canonical. Only the values CSS
+   itself needs live here; everything else is consumed from the TS module,
+   because the components are inline-styled and concatenate hex alpha. */
+:root {
+  --color-accent: #8a6508;
+  --color-accent-ornament: #b8860b;
+  --color-ink: #1a1a1a;
+  --color-canvas: #ffffff;
+  --color-selection: #f5e6a3;
+  --focus-ring: #8a6508;
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; font-size: 16px; }
 
 body {
   font-family: var(--font-body, 'DM Sans', 'Helvetica Neue', sans-serif);
-  background: #ffffff;
-  color: #1a1a1a;
+  background: var(--color-canvas);
+  color: var(--color-ink);
   overflow-x: clip; /* clip (not hidden) avoids creating a scroll container, keeping IntersectionObserver working on mobile Safari */
   -webkit-font-smoothing: antialiased;
 }
 
-::selection { background: #f5e6a3; color: #1a1a1a; }
+::selection { background: var(--color-selection); color: var(--color-ink); }
 
 a { color: inherit; text-decoration: none; }
 
@@ -22,9 +35,35 @@ a { color: inherit; text-decoration: none; }
 
 body.overlay-open { overflow: hidden; }
 
-/* Hide system cursor on pointer devices — replaced by custom Cursor component */
+/* Keyboard focus. The browser default is a blue ring that belongs to no design
+   system and disappears against the dark contact section; this one is drawn
+   from the palette and carries its own offset ring so it reads on any surface.
+   :focus-visible, so a mouse click never paints it. */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+/* On dark ground the gold alone is too close to the background: pair it with a
+   light halo so the ring survives either direction. */
+.on-dark :focus-visible,
+[data-surface="dark"] :focus-visible {
+  outline-color: #e8c25f;
+  box-shadow: 0 0 0 5px rgba(0, 0, 0, .55);
+}
+
+/* The custom cursor replaces the system one — but only once it has actually
+   mounted. Gating on the class means a JS failure, an extension, or a slow
+   hydration leaves the visitor with a working pointer instead of none. */
 @media (pointer: fine) {
-  * { cursor: none !important; }
+  body.cursor-ready * { cursor: none !important; }
+  body.cursor-ready a,
+  body.cursor-ready button,
+  body.cursor-ready summary,
+  body.cursor-ready label,
+  body.cursor-ready [role="button"],
+  body.cursor-ready input,
+  body.cursor-ready textarea { cursor: none !important; }
 }
 
 @keyframes slideUp {
@@ -61,5 +100,35 @@ body.overlay-open { overflow: hidden; }
   .project-grid {
     grid-template-columns: 1fr;
     gap: 26px;
+  }
+}
+
+/* Reduced motion.
+   Not a blanket `animation: none` — that would strip the feedback that tells a
+   visitor something changed. What goes is travel: the ambient drift, the orbit,
+   the scroll-driven blur and scale, the long slide-up. What stays is every
+   state change, expressed as a short cross-fade instead of movement. The
+   signature still draws; HeroSection settles it to its finished stroke rather
+   than tracing it, so the moment survives without the scroll-linked motion. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  .project-grid *,
+  [class*="reveal"] {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes floaty {
+    0%, 100% { transform: none; }
+  }
+
+  @keyframes orbit {
+    to { transform: none; }
   }
 }
