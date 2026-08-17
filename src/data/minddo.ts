@@ -8,17 +8,20 @@ export const minddo = {
     role: 'Sole engineer: architecture, backend, infra, security',
     stack: 'FastAPI, Celery, Redis, Playwright, Claude Sonnet 4.6, ffmpeg, Supabase, S3, Kubernetes, KEDA',
     scale: '~2,200 lines of Python, ~4,900 of JSX, 12 Kubernetes manifests',
-    status: 'Runs on docker compose and on k3d with KEDA. The AWS deployment is scripted but not executed.',
+    status: 'Live on AWS: k3s on a t3.large, KEDA autoscaling verified under a 20-job load test. Also runs on docker compose and k3d.',
     lede: 'You give it a link to a student\'s project and about a hundred seconds later you get eleven files back: two screenshots, a recorded walkthrough of the site, narrated videos in English and Mandarin, copy written by Claude, a QR code, and a flyer that is ready to print.',
     // youtube-nocookie so the embed sets no cookie until playback starts.
     demoVideo: 'https://www.youtube-nocookie.com/embed/_IFdL_suGr0',
 };
 
-export const metrics = [
-    { value: '102.7 s', label: 'End to end', note: 'URL to eleven assets' },
-    { value: '5 ms', label: 'API accept', note: '202 with a submission_id' },
-    { value: '1.04x', label: 'At 3x load', note: '3 jobs, 106.9 s wall clock' },
-    { value: '$0.023', label: 'Per showcase', note: 'Was $0.043 before edge-tts' },
+// The 2026-08-16 load test: 20 jobs at once against k3s on one t3.large.
+export const awsLoad: { value: string; label: string; note: string }[] = [
+    { value: '20 / 20', label: 'Jobs completed', note: 'Nothing lost, despite pods restarting mid-run' },
+    { value: '17 s', label: '1 to 4 workers', note: 'From submit to four pods Ready' },
+    { value: '18.9 min', label: 'Queue drained', note: 'About 1.06 jobs a minute at the ceiling' },
+    { value: '257 s', label: 'Median per job', note: '142.6 s fastest, 276 s slowest' },
+    { value: '3.3 min', label: 'Scale-down', note: 'After the queue emptied' },
+    { value: '253 files', label: 'Assets in S3', note: '185 MB across 23 showcases' },
 ];
 
 export const artifacts: { file: string; by: string; detail: string }[] = [
@@ -85,8 +88,15 @@ export const reliability: { control: string; value: string; prevents: string }[]
     { control: 'startupProbe', value: '5 min budget', prevents: 'Pods killed before a 3 GB image finishes booting' },
     { control: 'liveness /health/live', value: 'process only', prevents: 'A Redis blip restarting every replica at once' },
     { control: 'readiness /health', value: 'checks broker', prevents: 'A pod accepting a POST it cannot queue' },
-    { control: 'worker liveness', value: 'celery inspect ping', prevents: 'A deadlocked worker still counting as capacity' },
+    { control: 'worker liveness', value: 'ping every 120 s', prevents: 'A deadlocked worker still counting as capacity. Retuned from 15 s after the probe mistook busy for dead and restarted five of six workers mid job' },
     { control: 'prune after upload', value: 'on by default', prevents: 'Showcases at 20 to 40 MB filling the node until pods are evicted' },
+];
+
+export const sizing: { change: string; from: string; to: string; why: string }[] = [
+    { change: 'KEDA ceiling', from: '8', to: '4', why: 'Eight pods at 512 Mi requests do not schedule next to the control plane, Traefik, KEDA, Redis and two API replicas on 8 GiB. Six did schedule, then the node OOM killer went after actual usage instead of requests, so six was wrong too.' },
+    { change: 'Worker concurrency', from: '2, limit 2 Gi', to: '1, limit 1200 Mi', why: 'Six pods could ask for 12 GiB on an 8 GiB box. One Chromium per pod, and KEDA scales pod count instead of packing slots into a pod.' },
+    { change: 'API resources', from: 'none declared', to: 'requests and limits', why: 'With nothing declared the API pods were BestEffort, so the kubelet killed them instead of the workers causing the pressure: three restarts each, exit 137, while every worker survived.' },
+    { change: 'Worker liveness probe', from: '15 s timeout', to: '120 s period, 30 s timeout', why: 'celery inspect ping is a broker round trip. On two saturated cores it could not answer in time, so five of six workers were restarted mid job.' },
 ];
 
 export const cost = [
@@ -113,6 +123,8 @@ export const limitations: { limitation: string; consequence: string; fix: string
     { limitation: 'Redis has no persistence', consequence: 'A pod restart loses the queue', fix: 'AOF, or move the broker to SQS' },
     { limitation: 'Model output parsed with json.loads', consequence: 'A bad response kills the run at step 3', fix: 'Schema constrained output plus validation' },
     { limitation: 'Frontend has no build step', consequence: 'Babel transpiles on every page load', fix: 'Vite before real traffic' },
+    { limitation: 'Probes are tuned for an idle node', consequence: 'Under load they restart healthy processes', fix: 'Widen the windows, or size the node so the cores are not saturated' },
+    { limitation: 'One node', consequence: 'Four workers share 2 vCPU, so per-job latency degrades as throughput improves', fix: 'A second node; the manifests do not change' },
 ];
 
 export const takeaways: { title: string; body: string }[] = [
@@ -122,7 +134,7 @@ export const takeaways: { title: string; body: string }[] = [
     },
     {
         title: 'Kubernetes in anger',
-        body: 'Liveness and readiness are not the same probe, and treating them as one restarts the entire fleet the first time Redis hiccups. Grace periods have to match how long the work actually takes, and an autoscaler is only worth having if it watches something a user would feel.',
+        body: 'Liveness and readiness are not the same probe, and treating them as one restarts the entire fleet the first time Redis hiccups. Grace periods have to match how long the work actually takes. The thing I only learned on a real node is that a ceiling which fits in requests is not a ceiling that fits: the scheduler admits pods on requests, the OOM killer acts on usage.',
     },
     {
         title: 'Reviewing my own code',
@@ -134,6 +146,6 @@ export const takeaways: { title: string; body: string }[] = [
     },
     {
         title: 'Honest measurement',
-        body: 'I threw out one benchmark number after realising it was profiling the wrong process, and the load test I ran only shows that the autoscaler reacts, not that the pods it added did any work.',
+        body: 'I threw out one benchmark number after realising it was profiling the wrong process. The load test on AWS drained twenty jobs in 18.9 minutes, but the median job took 257 s against a 102.7 s baseline, so scaling out on one node bought throughput and cost latency. The two-cent Claude bill for that run is a cache hit rate, not an efficiency, and I would not quote it as a per-showcase cost.',
     },
 ];

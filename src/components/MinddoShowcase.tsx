@@ -11,8 +11,8 @@ import DataModel from './minddo/DataModel';
 import SsrfGuard from './minddo/SsrfGuard';
 import AwsPlan from './minddo/AwsPlan';
 import {
-    minddo, metrics, artifacts, security, residualRisks,
-    reliability, cost, wins, limitations, takeaways,
+    minddo, awsLoad, artifacts, security, residualRisks,
+    reliability, sizing, cost, wins, limitations, takeaways,
 } from '@/data/minddo';
 
 const SECTIONS = [
@@ -26,7 +26,7 @@ const SECTIONS = [
     { id: 'reliability', n: '08', label: 'Reliability' },
     { id: 'performance', n: '09', label: 'Performance and cost' },
     { id: 'limitations', n: '10', label: 'Limitations' },
-    { id: 'aws', n: '11', label: 'AWS plan' },
+    { id: 'aws', n: '11', label: 'On AWS' },
 ];
 
 function useActiveSection() {
@@ -118,21 +118,6 @@ export default function MinddoShowcase() {
                             src={minddo.demoVideo}
                             style={{ margin: 0, minWidth: 0 }}
                         />
-                    </div>
-
-                    <div style={{ height: 30 }} />
-
-                    <div style={{
-                        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 1,
-                        background: T.rule, border: `1px solid ${T.rule}`, borderRadius: 6, overflow: 'hidden',
-                    }}>
-                        {metrics.map(m => (
-                            <div key={m.label} style={{ background: '#fff', padding: '16px 18px' }}>
-                                <div style={{ fontFamily: MONO, fontSize: '1.35rem', fontWeight: 600, color: T.ink, letterSpacing: '-0.02em' }}>{m.value}</div>
-                                <div style={{ fontSize: '0.78rem', fontWeight: 600, color: T.body, margin: '6px 0 4px' }}>{m.label}</div>
-                                <div style={{ fontSize: '0.75rem', color: T.muted, lineHeight: 1.5 }}>{m.note}</div>
-                            </div>
-                        ))}
                     </div>
                 </div>
             </section>
@@ -239,13 +224,23 @@ export default function MinddoShowcase() {
                     <section id="scaling" style={{ marginBottom: 56 }}>
                         <H2 id="scaling-h" index="05">Autoscaling control loop</H2>
                         <Scaling />
-                        <Note label="Caveat" tone="warn">
-                            I threw twenty submissions at the queue and KEDA took the worker from one pod to four in
-                            about five seconds, which is exactly the reaction I was hoping for. The catch is that the
-                            pods already running got through all twenty tasks before the new ones finished pulling a
-                            3 GB image, so the extra capacity showed up after it was needed. That makes this evidence
-                            the control loop fires, and no evidence whatsoever that the scaling did anything useful.
-                        </Note>
+                        <H3>Sizing the ceiling, three times</H3>
+                        <P>
+                            Everything below came out of running this on a real node rather than a laptop. The lesson
+                            underneath all four rows is the same: the scheduler admits pods based on what they
+                            <em> request</em>, and the kernel kills them based on what they <em>use</em>. A ceiling
+                            that fits in requests is not a ceiling that fits.
+                        </P>
+                        <Table
+                            head={['What changed', 'From', 'To', 'Why']}
+                            widths={['18%', '13%', '15%', '54%']}
+                            rows={sizing.map(r => [
+                                r.change,
+                                <code key="f" style={{ fontFamily: MONO, fontSize: '0.78rem', color: T.muted }}>{r.from}</code>,
+                                <code key="t" style={{ fontFamily: MONO, fontSize: '0.78rem', color: T.accent }}>{r.to}</code>,
+                                r.why,
+                            ])}
+                        />
                     </section>
 
                     {/* 06 data */}
@@ -336,10 +331,44 @@ export default function MinddoShowcase() {
                     <section id="performance" style={{ marginBottom: 56 }}>
                         <H2 id="performance-h" index="09">Performance and cost</H2>
                         <P>
-                            All of these numbers come off docker compose. The 102.7 s is mostly accounted for by two
-                            Chromium cold starts, a demo recording that has to happen in real time, one call to Claude,
-                            two TTS round trips and two x264 encodes.
+                            There are two sets of numbers here and they disagree, which is the interesting part. The
+                            baseline comes off docker compose with one job running alone: 102.7 s, mostly two Chromium
+                            cold starts, a demo recording that happens in real time, one call to Claude, two TTS round
+                            trips and two x264 encodes. The second set comes off the AWS cluster with twenty jobs
+                            landing at once.
                         </P>
+
+                        <H3>Twenty jobs at once, k3s on one t3.large</H3>
+                        <div style={{
+                            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(168px, 1fr))', gap: 1,
+                            background: T.rule, border: `1px solid ${T.rule}`, borderRadius: 6, overflow: 'hidden',
+                            margin: '16px 0 18px',
+                        }}>
+                            {awsLoad.map(m => (
+                                <div key={m.label} style={{ background: '#fff', padding: '14px 16px' }}>
+                                    <div style={{ fontFamily: MONO, fontSize: '1.15rem', fontWeight: 600, color: T.ink, letterSpacing: '-0.02em' }}>{m.value}</div>
+                                    <div style={{ fontSize: '0.76rem', fontWeight: 600, color: T.body, margin: '5px 0 3px' }}>{m.label}</div>
+                                    <div style={{ fontSize: '0.73rem', color: T.muted, lineHeight: 1.5 }}>{m.note}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <P>
+                            The median job took two and a half times the baseline, and that is the honest headline
+                            rather than a footnote. Four pipelines, each holding a Chromium and an x264 encode, do not
+                            fit in two cores. What scaling bought was a queue that drains four times faster while every
+                            individual job gets slower.
+                        </P>
+
+                        <Note label="Nothing was lost, and that was not luck">
+                            Probe timeouts restarted the API pods six or seven times during that run, and two workers
+                            twice each: on a saturated node, neither <C>celery inspect ping</C> nor even
+                            <C>/health/live</C> can answer inside its window. Every job still finished, because
+                            <C>task_acks_late</C> puts an unacknowledged task back on the queue and the 660 s grace
+                            period lets Celery finish what it is holding. The reliability design absorbed a fault the
+                            sizing did not prevent. The unfixed half is that those probes are still tuned for an idle
+                            node, and a probe that restarts a healthy process under load is a self-inflicted outage
+                            waiting for a busier day.
+                        </Note>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
                             <div>
@@ -355,6 +384,10 @@ export default function MinddoShowcase() {
                                 <P style={{ fontSize: '0.85rem' }}>
                                     Claude is the entire per-showcase cost, so a cache hit takes it to zero. Video
                                     generation has no cache of its own yet, which is the obvious thing to do next.
+                                    The whole twenty-job run cost about two cents, but that is a cache hit rate rather
+                                    than an efficiency: the load generator submits the same URL twenty times, so one
+                                    job paid Claude and nineteen did not. Twenty different projects would be nearer
+                                    forty cents.
                                 </P>
                             </div>
                             <div>
@@ -375,7 +408,9 @@ export default function MinddoShowcase() {
                             My benchmark prints 23.4 MB peak RSS and I do not use that figure anywhere, because it is
                             sampling uvicorn while the pipeline is actually running inside the Celery worker. It is
                             measuring the wrong process. The number that matters is Chromium and ffmpeg together, which
-                            can spike past 1 GB against a 2 Gi limit.
+                            can spike past 1 GB. The worker limit is now 1200 Mi at concurrency 1, which is a tighter
+                            ceiling drawn over an unmeasured peak rather than a measured fit. If the pipeline ever
+                            OOMKills on a heavy page, this is the number I guessed.
                         </Note>
                     </section>
 
@@ -400,14 +435,31 @@ export default function MinddoShowcase() {
 
                     {/* 11 aws */}
                     <section id="aws" style={{ marginBottom: 56 }}>
-                        <H2 id="aws-h" index="11">AWS plan, not yet executed</H2>
+                        <H2 id="aws-h" index="11">Running on AWS</H2>
                         <P>
-                            None of this has actually been provisioned yet, though the code already assumes it. AWS
-                            credentials come from an instance profile rather than the environment, the URL guard exists
-                            in the first place because of the EC2 metadata endpoint, and the build asserts the
-                            architecture it is targeting.
+                            This went live on 16 August 2026: k3s on a single t3.large, KEDA installed with Helm, real
+                            S3 in place of MinIO, and no AWS keys anywhere in the cluster because boto3 picks up the
+                            instance profile. The URL guard existed before any of it, which turned out to matter, since
+                            the metadata endpoint it blocks is now a real endpoint holding real credentials.
+                        </P>
+                        <P>
+                            Three of the seven verification steps I run after a deploy are there because the
+                            corresponding hole was once real: fetch <C>/.env</C> and expect a 404, submit the metadata
+                            URL and expect a 422, call the admin delete unauthenticated and expect a 401.
                         </P>
                         <AwsPlan />
+
+                        <Note label="The faster path, and what it costs">
+                            The build script cross-compiles on my laptop and streams the image over ssh into the
+                            node&apos;s containerd, which is the right shape when the node is a black box. I did not
+                            use it. Emulating linux/amd64 on Apple Silicon puts <C>playwright install chromium</C> at
+                            thirty to forty-five minutes, so I rsynced the tree up and built natively on the box
+                            instead: 7 min 46 s, and nothing crossed the internet but source. The bill for that is
+                            real. Docker now lives on the node, there is a second copy of the tree to keep in sync,
+                            the image exists twice on the same 30 GB disk, and rsync ships whatever is on disk rather
+                            than whatever is in git, so it delivered the gitignored <C>k8s/secret.yaml</C> and
+                            <C>COPY . .</C> baked it into the image. That is the failure mode of the quick path.
+                        </Note>
                     </section>
 
                     {/* takeaways */}
