@@ -3,7 +3,7 @@
 
 export const minddo = {
     name: 'MindDo AI',
-    subtitle: 'Student Project Showcase pipeline',
+    subtitle: 'Student Project Showcase Pipeline',
     year: '2026',
     role: 'Sole engineer: architecture, backend, infra, security',
     stack: 'FastAPI, Celery, Redis, Playwright, Claude Sonnet 4.6, ffmpeg, Supabase, S3, Kubernetes, KEDA',
