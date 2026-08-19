@@ -2,6 +2,22 @@ import type { Project } from '@/types';
 
 export const projects: Project[] = [
     {
+        id: 'minddo',
+        name: 'MindDo.ai Showcase',
+        subtitle: 'AI Showcase Pipeline',
+        year: '2026',
+        desc: 'An asynchronous, autoscaling media-generation pipeline that turns a student project URL into a full showcase package.',
+        award: null,
+        githubUrl: '',
+        // Full case study lives on its own route rather than in the overlay.
+        href: '/projects/minddo',
+        overview:
+            'A student project URL goes in; screenshots, a narrated demo video in English and Mandarin, an AI-written summary, skill tags, a QR code and a print-ready flyer come out — in about 100 seconds.',
+        details: [],
+        stack: [],
+        mockLabel: 'Pipeline — Queue to Showcase',
+    },
+    {
         id: 'luminary',
         name: 'Luminary',
         subtitle: 'Study Tracker App',
@@ -104,21 +120,5 @@ export const projects: Project[] = [
         mockLabel: 'Live Analysis — Hand Posture Feedback',
         mockImage: '/noteform.webp',
         mockSize: [1200, 998],
-    },
-    {
-        id: 'minddo',
-        name: 'MindDo',
-        subtitle: 'AI Showcase Pipeline',
-        year: '2026',
-        desc: 'An asynchronous, autoscaling media-generation pipeline that turns a student project URL into a full showcase package.',
-        award: null,
-        githubUrl: '',
-        // Full case study lives on its own route rather than in the overlay.
-        href: '/projects/minddo',
-        overview:
-            'A student project URL goes in; screenshots, a narrated demo video in English and Mandarin, an AI-written summary, skill tags, a QR code and a print-ready flyer come out — in about 100 seconds.',
-        details: [],
-        stack: [],
-        mockLabel: 'Pipeline — Queue to Showcase',
     },
 ];

@@ -16,7 +16,7 @@ export const minddo = {
 
 // The 2026-08-16 load test: 20 jobs at once against k3s on one t3.large.
 export const awsLoad: { value: string; label: string; note: string }[] = [
-    { value: '20 / 20', label: 'Jobs completed', note: 'Nothing lost, despite pods restarting mid-run' },
+    { value: '20 / 20', label: 'Jobs completed', note: 'Pods restarted mid-run; every job still finished' },
     { value: '17 s', label: '1 to 4 workers', note: 'From submit to four pods Ready' },
     { value: '18.9 min', label: 'Queue drained', note: 'About 1.06 jobs a minute at the ceiling' },
     { value: '257 s', label: 'Median per job', note: '142.6 s fastest, 276 s slowest' },
@@ -133,7 +133,7 @@ export const takeaways: { title: string; body: string }[] = [
         body: 'Splitting the queue from the workers let each side scale on its own signal. Getting at-least-once delivery right took me much longer, mostly because I had to work out which failures deserve a retry and which are permanent verdicts that should never get one.',
     },
     {
-        title: 'Kubernetes in anger',
+        title: 'Kubernetes experience',
         body: 'Liveness and readiness are not the same probe, and treating them as one restarts the entire fleet the first time Redis hiccups. Grace periods have to match how long the work actually takes. The thing I only learned on a real node is that a ceiling which fits in requests is not a ceiling that fits: the scheduler admits pods on requests, the OOM killer acts on usage.',
     },
     {

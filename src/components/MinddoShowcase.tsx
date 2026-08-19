@@ -131,9 +131,6 @@ export default function MinddoShowcase() {
                 </Link>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0 }}>
                     <span style={{ fontSize: '0.85rem', fontWeight: 600, color: T.ink, whiteSpace: 'nowrap' }}>{minddo.name}</span>
-                    <span style={{ fontFamily: MONO, fontSize: '0.72rem', color: T.faint, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        engineering case study
-                    </span>
                 </div>
                 <Link
                     href="/#contact"
@@ -243,11 +240,10 @@ export default function MinddoShowcase() {
                     <section id="architecture" style={{ marginBottom: 56 }}>
                         <H2 id="architecture-h">System architecture</H2>
                         <P>
-                            The API barely does any work — it validates the payload, pushes a task onto the queue and
-                            answers. All the expensive parts live in the worker, which launches Chromium twice and runs
-                            two x264 encodes for every job. Since those two things get busy for completely unrelated
-                            reasons, they are separate deployments: the API scales on request rate and the worker scales
-                            on how deep the queue is.
+                            The API does almost nothing. It validates the payload, pushes a task onto the queue and
+                            answers. The worker carries the cost: two Chromium launches and two x264 encodes per job.
+                            The two get busy for unrelated reasons, so they ship as separate deployments. The API scales
+                            on request rate, the worker on queue depth.
                         </P>
                         <Architecture />
 
@@ -392,11 +388,10 @@ export default function MinddoShowcase() {
                     <section id="performance" style={{ marginBottom: 56 }}>
                         <H2 id="performance-h">Performance and cost</H2>
                         <P>
-                            There are two sets of numbers here and they disagree, which is the interesting part. The
-                            baseline comes off docker compose with one job running alone: 102.7 s, mostly two Chromium
-                            cold starts, a demo recording that happens in real time, one call to Claude, two TTS round
-                            trips and two x264 encodes. The second set comes off the AWS cluster with twenty jobs
-                            landing at once.
+                            Two sets of numbers here, and they disagree. The baseline comes off docker compose with
+                            one job running alone: 102.7 s, mostly two Chromium cold starts, a demo recording that runs
+                            in real time, one call to Claude, two TTS round trips and two x264 encodes. The second set
+                            comes off the AWS cluster with twenty jobs landing at once.
                         </P>
 
                         <H3>Twenty jobs at once, k3s on one t3.large</H3>
@@ -414,13 +409,15 @@ export default function MinddoShowcase() {
                             ))}
                         </div>
                         <P>
-                            The median job took two and a half times the baseline, and that is the honest headline
-                            rather than a footnote. Four pipelines, each holding a Chromium and an x264 encode, do not
-                            fit in two cores. What scaling bought was a queue that drains four times faster while every
-                            individual job gets slower.
+                            The median job took two and a half times the baseline. Four pipelines, each holding a
+                            Chromium and an x264 encode, do not fit in two cores. Scaling bought a queue that drains
+                            four times faster, at the cost of every job getting slower. Some of that is the box I
+                            picked: a t3.large is two burstable vCPUs, so four pipelines that each want a core for
+                            Chromium and another for ffmpeg are contending for hardware that was never there. A
+                            compute-optimised instance with more cores would move the median back down.
                         </P>
 
-                        <Note label="Nothing was lost, and that was not luck">
+                        <Note label="Probe restarts during the run">
                             Probe timeouts restarted the API pods six or seven times during that run, and two workers
                             twice each: on a saturated node, neither <C>celery inspect ping</C> nor even
                             <C>/health/live</C> can answer inside its window. Every job still finished, because
@@ -465,14 +462,6 @@ export default function MinddoShowcase() {
                             </div>
                         </div>
 
-                        <Note label="A number I don't quote" tone="warn">
-                            My benchmark prints 23.4 MB peak RSS and I do not use that figure anywhere, because it is
-                            sampling uvicorn while the pipeline is actually running inside the Celery worker. It is
-                            measuring the wrong process. The number that matters is Chromium and ffmpeg together, which
-                            can spike past 1 GB. The worker limit is now 1200 Mi at concurrency 1, which is a tighter
-                            ceiling drawn over an unmeasured peak rather than a measured fit. If the pipeline ever
-                            OOMKills on a heavy page, this is the number I guessed.
-                        </Note>
                     </section>
 
                     {/* limitations */}
