@@ -4,7 +4,7 @@ export const profile: ProfileData = {
     tagline: 'Hi! I\'m Olric, a Computer Science student at Cornell. I\'m interested in fullstack development, infrastructure engineering and machine learning. I am really passionate about creating software solutions that make a difference. Most of my time goes into side projects that push me into something I haven\'t used before, and I currently build web tools for non-profits at Hack4Impact.',
     timeline: [
         {
-            period: 'Jun. 2026 – Aug. 2026',
+            period: '2026',
             title: 'Software Engineering Intern',
             org: 'SiteFit AI',
             orgUrl: 'https://www.linkedin.com/in/sitefit-ai-48b2183b9',
