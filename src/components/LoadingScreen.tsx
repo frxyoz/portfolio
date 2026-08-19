@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ACCENT_TEXT, ACCENT_ORNAMENT, INK_SOFT, DISPLAY, BODY } from '@/design/tokens';
+import { useReducedMotion } from 'framer-motion';
+import { ACCENT_TEXT, ACCENT_ORNAMENT, INK_SOFT, DISPLAY, BODY, CANVAS } from '@/design/tokens';
 
 /* Only the hero portrait gates the reveal — it is the one image the first
    viewport actually paints, and layout.tsx already preloads it at high priority.
@@ -33,6 +34,11 @@ function warm(src: string) {
 }
 
 export default function LoadingScreen() {
+    /* The curtain is a held beat before the site arrives — it exists to make an
+       entrance, and an entrance is exactly what this setting asks for less of.
+       Under reduced motion it does not run at all, which also hands that visitor
+       the fastest version of the site. */
+    const reduced = useReducedMotion();
     const [visible, setVisible] = useState(true);
     const [fading,  setFading]  = useState(false);
     const [loaded,  setLoaded]  = useState(0);
@@ -45,6 +51,7 @@ export default function LoadingScreen() {
     }, []);
 
     useEffect(() => {
+        if (reduced) { setVisible(false); DEFERRED.forEach(warm); return; }
         try {
             if (sessionStorage.getItem(SK)) { setVisible(false); return; }
         } catch { /* private browsing — show screen */ }
@@ -89,7 +96,7 @@ export default function LoadingScreen() {
         });
 
         return () => { isMounted = false; clearTimeout(minTimer); clearTimeout(maxTimer); };
-    }, []);
+    }, [reduced]);
 
     if (!visible) return null;
 
@@ -103,7 +110,7 @@ export default function LoadingScreen() {
             aria-hidden="true"
             style={{
                 position: 'fixed', inset: 0, zIndex: 9999,
-                background: '#ffffff',
+                background: CANVAS,
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
                 opacity: fading ? 0 : 1,
@@ -137,7 +144,7 @@ export default function LoadingScreen() {
             <div style={{
                 marginTop: 16,
                 fontFamily: BODY,
-                fontSize: '0.6rem', letterSpacing: '0.18em',
+                fontSize: '0.75rem', letterSpacing: '0.16em',
                 textTransform: 'uppercase', color: ACCENT_TEXT,
                 opacity: 0.75, userSelect: 'none',
             }}>

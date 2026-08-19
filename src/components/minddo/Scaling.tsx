@@ -21,14 +21,24 @@ export default function Scaling() {
 
     const controls = (
         <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: FONT, fontSize: '0.8rem', color: T.body }}>
+                <label
+                    htmlFor="keda-queue-depth"
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: FONT, fontSize: '0.8rem', color: T.body }}
+                >
                     <span style={{ whiteSpace: 'nowrap' }}>Queued jobs</span>
                     <input
+                        id="keda-queue-depth"
                         type="range" min={0} max={24} value={q}
                         onChange={e => setQ(Number(e.target.value))}
-                        style={{ width: 220, accentColor: T.accent }}
+                        /* The value alone is a bare number. What the visitor needs to
+                           hear is what it does to the cluster, which is the whole point
+                           of dragging it. */
+                        aria-valuetext={`${q} queued ${q === 1 ? 'job' : 'jobs'}, ${pods} ${pods === 1 ? 'worker' : 'workers'}`}
+                        /* The native thumb is 16px tall on its own; the padding gives
+                           the control a real target without changing the track. */
+                        style={{ width: 220, accentColor: T.accent, minHeight: 24, padding: '4px 0' }}
                     />
-                    <span style={{ fontFamily: MONO, fontSize: '0.85rem', color: T.ink, width: 26 }}>{q}</span>
+                    <span aria-hidden style={{ fontFamily: MONO, fontSize: '0.85rem', color: T.ink, width: 26 }}>{q}</span>
                 </label>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {PRESETS.map(p => {
@@ -38,8 +48,8 @@ export default function Scaling() {
                                 key={p.label}
                                 onClick={() => setQ(p.q)}
                                 style={{
-                                    fontFamily: FONT, fontSize: '0.73rem', color: on ? '#fff' : T.body,
-                                    background: on ? T.ink : '#fff', border: `1px solid ${on ? T.ink : T.ruleStrong}`,
+                                    fontFamily: FONT, fontSize: '0.73rem', color: on ? T.canvas : T.body,
+                                    background: on ? T.ink : T.canvas, border: `1px solid ${on ? T.ink : T.ruleStrong}`,
                                     borderRadius: 4, padding: '4px 10px', cursor: 'pointer',
                                 }}
                             >
@@ -73,7 +83,9 @@ export default function Scaling() {
             minWidth={1080}
             caption="Drag the queue depth. The replica count is the real control law: one pod per three queued jobs, clamped to 1 through 4. Measured on AWS: twenty jobs took the deployment from one pod to four in 17 s." controls={controls} panel={panel}
         >
-            <svg viewBox="0 0 1080 292" style={{ width: '100%', display: 'block' }}>
+            <svg viewBox="0 0 1080 292"
+                role="img"
+                aria-label="The KEDA control loop: Redis queue depth is polled, compared against the target per worker, and turned into a replica count for the worker deployment." style={{ width: '100%', display: 'block' }}>
                 <Arrowheads />
 
                 {/* Redis queue */}
@@ -90,7 +102,7 @@ export default function Scaling() {
                             width={22} height={20} rx={3}
                             animate={{ opacity: filled ? 1 : 0.16 }}
                             transition={{ duration: 0.18 }}
-                            fill={filled ? T.store.stroke : '#fff'}
+                            fill={filled ? T.store.stroke : T.canvas}
                             stroke={T.store.stroke}
                             strokeWidth={1}
                         />
@@ -139,14 +151,14 @@ export default function Scaling() {
                     const busy = Math.max(0, Math.min(CONCURRENCY, q - i * CONCURRENCY));
                     return (
                         <motion.g key={i} animate={{ opacity: live ? 1 : 0.17 }} transition={{ duration: 0.22 }}>
-                            <rect x={x} y={y} width={202} height={60} rx={5} fill={live ? T.tier.fill : '#fff'} stroke={live ? T.tier.stroke : T.rule} strokeWidth={1.2} />
+                            <rect x={x} y={y} width={202} height={60} rx={5} fill={live ? T.tier.fill : T.canvas} stroke={live ? T.tier.stroke : T.rule} strokeWidth={1.2} />
                             <text x={x + 10} y={y + 19} style={{ fontFamily: MONO, fontSize: 10.8, fill: T.tier.text }}>worker-{i + 1}</text>
                             <text x={x + 10} y={y + 52} style={{ fontFamily: MONO, fontSize: 10.8, fill: T.tier.text, opacity: 0.75 }}>
                                 1 Chromium, limit 1200 Mi
                             </text>
                             <rect
                                 x={x + 92} y={y + 26} width={100} height={20} rx={3}
-                                fill={live && busy > 0 ? T.tier.stroke : '#fff'}
+                                fill={live && busy > 0 ? T.tier.stroke : T.canvas}
                                 stroke={T.tier.stroke} strokeWidth={0.9} opacity={live ? 1 : 0.5}
                             />
                         </motion.g>

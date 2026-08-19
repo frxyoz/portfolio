@@ -17,10 +17,17 @@
 export const ACCENT_TEXT = '#8a6508';
 /** Alias of {@link ACCENT_TEXT} for call sites that read better unqualified. */
 export const ACCENT = ACCENT_TEXT;
-/** Gold for ornament: rules, dots, borders, the signature trace. Never text. */
+/** Gold for ornament: rules, dots, borders, the signature trace. Never text.
+ *
+ *  3.25:1 on white — it clears the 3:1 non-text bar and fails the 4.5:1 text
+ *  bar. Import it as `ACCENT_ORNAMENT`, not aliased to `ACCENT`: every contrast
+ *  failure this site has had came from a hover handler assigning the alias to
+ *  `color`, which reads as correct at the call site and is not. */
 export const ACCENT_ORNAMENT = '#b8860b';
 /** Pressed/hover state for accent-filled buttons. */
 export const ACCENT_DEEP = '#6d5006';
+/** Lift for a gold-filled button under the pointer. 7.3:1 against {@link INK}. */
+export const ACCENT_LIFT = '#d4a017';
 
 /* ── Ink ─────────────────────────────────────────────────────────────────── */
 
@@ -37,14 +44,33 @@ export const BODY_MUTED = '#4a4540';
  *  white. A token that only passes on the lightest background is a token that
  *  fails somewhere on the page. */
 export const MUTED = '#6f6862';
+/** Text on a control that is switched off. Exempt from 1.4.3, but 3.1:1 rather
+ *  than the 2.2:1 it was, so "unavailable" still reads as a word and not a
+ *  smudge. */
+export const DISABLED_TEXT = '#8e877f';
 
 /* ── Surfaces ────────────────────────────────────────────────────────────── */
 
 export const CANVAS = '#ffffff';
 /** Warm off-white for alternating sections. */
 export const CANVAS_ALT = '#fafaf7';
+/** The deepest warm ground on the site — the contact section. Every ratio in
+ *  that section is measured against this, not against white. */
+export const CANVAS_WARM = '#f5f0e8';
 /** Text selection highlight. */
 export const SELECTION = '#f5e6a3';
+
+/* ── Status ──────────────────────────────────────────────────────────────── */
+
+/** Something failed and the visitor has to act. 6.3:1 on {@link CANVAS_WARM}. */
+export const DANGER = '#a32b1e';
+
+/* ── Rules ───────────────────────────────────────────────────────────────── */
+
+/** Hairline divider on a light ground. Structure, never a glyph. */
+export const RULE = '#e0ddd8';
+/** The same hairline where it has to survive against a control's own fill. */
+export const RULE_STRONG = '#d3cec7';
 
 /* ── Motion ──────────────────────────────────────────────────────────────── */
 

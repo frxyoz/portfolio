@@ -21,9 +21,6 @@ export default function AboutSection() {
 
         {/* Section header */}
         <Reveal style={{ marginBottom: 72 }}>
-          <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 12 }}>
-            01
-          </p>
           <motion.h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: INK, lineHeight: 1, rotateX: tilt, transformPerspective: 800 }}>
             Background
           </motion.h2>
@@ -68,7 +65,7 @@ function TimelineItem({ item, index, isLast }: { item: TimelineEntry; index: num
         boxShadow: `0 0 0 3px ${CANVAS_ALT}, 0 0 0 4px ${ACCENT}55`,
       }} />
 
-      <p style={{ fontFamily: BODY, fontSize: '0.72rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 6 }}>
+      <p style={{ fontFamily: BODY, fontSize: '0.78rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 6 }}>
         {item.period}
       </p>
       <h3 style={{ fontFamily: DISPLAY, fontSize: '1.65rem', fontWeight: 500, color: INK, marginBottom: 4 }}>
@@ -99,7 +96,9 @@ function TimelineItem({ item, index, isLast }: { item: TimelineEntry; index: num
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={item.logo}
-            alt={item.org}
+            /* Decorative: the org name is already the link immediately to its
+               left, so alt text here reads the same word twice in a row. */
+            alt=""
             width={64}
             height={64}
             loading="lazy"
@@ -114,9 +113,11 @@ function TimelineItem({ item, index, isLast }: { item: TimelineEntry; index: num
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {item.tags.map(t => (
           <span key={t} style={{
-            fontFamily: 'monospace', fontSize: '0.68rem', letterSpacing: '0.06em',
+            /* 0.78rem, not 0.68: these render at 10.9px, and they are the words
+               a recruiter is actually scanning the timeline for. */
+            fontFamily: 'monospace', fontSize: '0.78rem', letterSpacing: '0.06em',
             color: ACCENT_TEXT, background: `${ACCENT}10`, border: `1px solid ${ACCENT}33`,
-            padding: '3px 10px', borderRadius: 2,
+            padding: '4px 10px', borderRadius: 2,
           }}>
             {t}
           </span>

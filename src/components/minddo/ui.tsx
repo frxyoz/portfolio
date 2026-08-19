@@ -19,6 +19,7 @@ export const T = {
     ruleStrong: '#cbd2db',
     surface: '#f7f8fa',
     surfaceAlt: '#fcfcfd',
+    canvas: '#ffffff',
     /* 5.3:1 on white. Matches src/design/tokens.ts ACCENT_TEXT — one gold. */
     accent: '#8a6508',
     accentSoft: '#f6efdc',
@@ -28,10 +29,18 @@ export const T = {
     store: { fill: '#eaf3ff', stroke: '#3b6ea5', text: '#123a5e' },
     extern: { fill: '#f3eaff', stroke: '#7a55b5', text: '#3b2065' },
     bad: { fill: '#ffe6e4', stroke: '#c0392b', text: '#7a1d13' },
+    /* Ground for a warning callout: the same red, pulled back to a tint. */
+    badSurface: '#fff8f7',
     good: { fill: '#e6f6ea', stroke: '#2e7d46', text: '#14512a' },
 } as const;
 
 export type Tone = 'tier' | 'store' | 'extern' | 'bad' | 'good';
+
+/** Present to assistive technology, absent to the eye. */
+export const SR_ONLY: CSSProperties = {
+    position: 'absolute', width: 1, height: 1, padding: 0, margin: -1,
+    overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0,
+};
 
 export const FONT = 'var(--font-body, "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif)';
 export const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
@@ -94,11 +103,11 @@ export function Note({ label, tone = 'accent', children }: { label: string; tone
     return (
         <div style={{
             border: `1px solid ${c.stroke}44`,
-            background: tone === 'warn' ? '#fff8f7' : T.surfaceAlt,
+            background: tone === 'warn' ? T.badSurface : T.surfaceAlt,
             padding: '14px 16px', margin: '18px 0', borderRadius: 4,
         }}>
             <div style={{
-                fontFamily: FONT, fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.1em',
+                fontFamily: FONT, fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.09em',
                 textTransform: 'uppercase', color: c.stroke, marginBottom: 7,
             }}>
                 {label}
@@ -110,15 +119,36 @@ export function Note({ label, tone = 'accent', children }: { label: string; tone
 
 /* ── Table ───────────────────────────────────────────────────────────────── */
 
-export function Table({ head, rows, widths }: { head: string[]; rows: ReactNode[][]; widths?: string[] }) {
+export function Table({ head, rows, widths, label }: {
+    head: string[];
+    rows: ReactNode[][];
+    widths?: string[];
+    /** Names the table for a screen reader and for the scroll region around it.
+     *  Not rendered — the prose above every table already introduces it. */
+    label?: string;
+}) {
+    const name = label ?? `${head[0]} table`;
     return (
-        <div style={{ overflowX: 'auto', border: `1px solid ${T.rule}`, borderRadius: 5, margin: '18px 0' }}>
+        /* The table is 560px at minimum, so on a phone it always scrolls
+           sideways. A div that scrolls but cannot be focused is unreachable
+           without a pointer: `tabindex="0"` puts the far columns back within
+           reach of the arrow keys, and the role plus name explain what the
+           visitor has just landed in. */
+        <div
+            className="scroll-region"
+            tabIndex={0}
+            role="region"
+            aria-label={name}
+            style={{ overflowX: 'auto', border: `1px solid ${T.rule}`, borderRadius: 5, margin: '18px 0' }}
+        >
             <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 560, fontFamily: FONT }}>
+                <caption style={SR_ONLY}>{name}</caption>
                 <thead>
                     <tr>
                         {head.map((h, i) => (
                             <th
                                 key={h}
+                                scope="col"
                                 style={{
                                     textAlign: 'left', padding: '10px 14px', background: T.surface,
                                     borderBottom: `1px solid ${T.rule}`, width: widths?.[i],
@@ -151,6 +181,31 @@ export function Table({ head, rows, widths }: { head: string[]; rows: ReactNode[
                 </tbody>
             </table>
         </div>
+    );
+}
+
+/* ── Icons ───────────────────────────────────────────────────────────────── */
+
+/* Drawn rather than borrowed from the character set: ✕ and ⤢ render at whatever
+   weight the body face happens to give them, which is never the weight of the
+   diagram line work beside them. These are 1.4px, the same as the strokes in
+   the figures. */
+
+function ExpandIcon() {
+    return (
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden focusable="false">
+            <path d="M7.2 1h3.8v3.8M11 1 7.1 4.9M4.8 11H1V7.2M1 11l3.9-3.9"
+                stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    );
+}
+
+function CloseIcon() {
+    return (
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden focusable="false">
+            <path d="M1.6 1.6l8.8 8.8M10.4 1.6l-8.8 8.8"
+                stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
     );
 }
 
@@ -206,7 +261,7 @@ export function Figure({
     }, [full]);
 
     const frame = (
-        <div style={{ border: `1px solid ${T.rule}`, borderRadius: 6, background: '#fff', overflow: 'hidden' }}>
+        <div style={{ border: `1px solid ${T.rule}`, borderRadius: 6, background: T.canvas, overflow: 'hidden' }}>
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
                 padding: '10px 14px', borderBottom: `1px solid ${T.rule}`, background: T.surface,
@@ -221,17 +276,28 @@ export function Figure({
                     onClick={() => setFull(v => !v)}
                     style={{
                         fontFamily: FONT, fontSize: '0.72rem', fontWeight: 500, color: T.muted,
-                        background: '#fff', border: `1px solid ${T.ruleStrong}`, borderRadius: 4,
-                        padding: '4px 10px', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
+                        background: T.canvas, border: `1px solid ${T.ruleStrong}`, borderRadius: 4,
+                        padding: '6px 10px', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
+                        display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 30,
                     }}
                 >
-                    {full ? 'Close  ✕' : 'Expand  ⤢'}
+                    {full ? 'Close' : 'Expand'}
+                    {full ? <CloseIcon /> : <ExpandIcon />}
                 </button>
             </div>
 
             {controls && <div style={{ padding: '14px 16px 0' }}>{controls}</div>}
 
-            <div style={{ overflowX: 'auto' }}>
+            {/* Same reasoning as Table: the diagram is `minWidth` wide by
+                construction, so below that it scrolls and has to be focusable
+                for anyone without a pointer. */}
+            <div
+                className="scroll-region"
+                tabIndex={0}
+                role="region"
+                aria-label={`${title} diagram`}
+                style={{ overflowX: 'auto' }}
+            >
                 <div style={{ minWidth: full ? undefined : minWidth, padding: 16 }}>{children}</div>
             </div>
 
@@ -389,7 +455,7 @@ export function Video({ label, title, src, caption, style }: {
 }) {
     return (
         <figure className="minddo-bleed" style={{ marginTop: 22, marginBottom: 26, ...style }}>
-            <div style={{ border: `1px solid ${T.rule}`, borderRadius: 6, background: '#fff', overflow: 'hidden' }}>
+            <div style={{ border: `1px solid ${T.rule}`, borderRadius: 6, background: T.canvas, overflow: 'hidden' }}>
                 <div style={{
                     display: 'flex', alignItems: 'baseline', gap: 10,
                     padding: '10px 14px', borderBottom: `1px solid ${T.rule}`, background: T.surface,

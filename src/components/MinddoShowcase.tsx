@@ -29,28 +29,72 @@ const SECTIONS = [
     { id: 'aws', n: '11', label: 'On AWS' },
 ];
 
+/** Viewport at which the contents rail appears. Mirrors the `min-width: 1120px`
+ *  rule at the bottom of this file; below it the rail is `display: none`, so
+ *  none of the work here is worth doing. */
+const RAIL_AT = 1120;
+
 function useActiveSection() {
     const [active, setActive] = useState(SECTIONS[0].id);
+
     useEffect(() => {
-        // Position based rather than IntersectionObserver: the last section is short,
-        // so an observer leaves the rail stuck on the previous entry at the page bottom.
-        const pick = () => {
-            const y = window.scrollY + 140;
-            let current = SECTIONS[0].id;
-            for (const s of SECTIONS) {
-                const el = document.getElementById(s.id);
-                if (el && el.offsetTop <= y) current = s.id;
-            }
-            setActive(current);
+        const mq = window.matchMedia(`(min-width: ${RAIL_AT}px)`);
+        let detach: (() => void) | null = null;
+
+        function attach() {
+            // Position based rather than IntersectionObserver: the last section is short,
+            // so an observer leaves the rail stuck on the previous entry at the page bottom.
+            //
+            // The offsets are measured once and cached. Reading `offsetTop` forces the
+            // browser to flush layout, and doing that for ten sections inside a scroll
+            // handler costs a measurable slice of every frame to learn numbers that only
+            // change when the page reflows. Scroll is then pure arithmetic, and rAF keeps
+            // it to one state update per frame no matter how often the event fires.
+            let offsets: { id: string; top: number }[] = [];
+            let queued = false;
+
+            const measure = () => {
+                offsets = SECTIONS
+                    .map(s => ({ id: s.id, el: document.getElementById(s.id) }))
+                    .filter((s): s is { id: string; el: HTMLElement } => !!s.el)
+                    .map(s => ({ id: s.id, top: s.el.offsetTop }));
+            };
+
+            const pick = () => {
+                const y = window.scrollY + 140;
+                let current = SECTIONS[0].id;
+                for (const s of offsets) if (s.top <= y) current = s.id;
+                setActive(current);
+            };
+
+            const onScroll = () => {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(() => { queued = false; pick(); });
+            };
+
+            const onResize = () => { measure(); pick(); };
+
+            measure();
+            pick();
+            window.addEventListener('scroll', onScroll, { passive: true });
+            window.addEventListener('resize', onResize);
+            return () => {
+                window.removeEventListener('scroll', onScroll);
+                window.removeEventListener('resize', onResize);
+            };
+        }
+
+        const sync = () => {
+            if (mq.matches && !detach) detach = attach();
+            else if (!mq.matches && detach) { detach(); detach = null; }
         };
-        pick();
-        window.addEventListener('scroll', pick, { passive: true });
-        window.addEventListener('resize', pick);
-        return () => {
-            window.removeEventListener('scroll', pick);
-            window.removeEventListener('resize', pick);
-        };
+
+        sync();
+        mq.addEventListener('change', sync);
+        return () => { mq.removeEventListener('change', sync); detach?.(); };
     }, []);
+
     return active;
 }
 
@@ -64,7 +108,7 @@ export default function MinddoShowcase() {
     }, []);
 
     return (
-        <div style={{ background: '#fff', color: T.body, fontFamily: FONT }}>
+        <div style={{ background: T.canvas, color: T.body, fontFamily: FONT }}>
             {/* Top bar */}
             <header style={{
                 position: 'sticky', top: 0, zIndex: 300, background: 'rgba(255,255,255,0.96)',
@@ -72,7 +116,17 @@ export default function MinddoShowcase() {
                 height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '0 clamp(16px, 4vw, 40px)', gap: 16,
             }}>
-                <Link href="/#projects" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: '0.8rem', color: T.muted }}>
+                <Link
+                    href="/#projects"
+                    /* 44px, negative-margined back to the header edge: these two are
+                       the only navigation off this page and they were the height of
+                       their own lettering. */
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 8,
+                        fontSize: '0.8rem', color: T.muted,
+                        minHeight: 44, padding: '0 10px', marginLeft: -10,
+                    }}
+                >
                     <span aria-hidden>←</span> Projects
                 </Link>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0 }}>
@@ -81,7 +135,16 @@ export default function MinddoShowcase() {
                         engineering case study
                     </span>
                 </div>
-                <Link href="/#contact" style={{ fontSize: '0.78rem', color: T.accent, whiteSpace: 'nowrap' }}>Contact</Link>
+                <Link
+                    href="/#contact"
+                    style={{
+                        display: 'inline-flex', alignItems: 'center',
+                        fontSize: '0.78rem', color: T.accent, whiteSpace: 'nowrap',
+                        minHeight: 44, padding: '0 10px', marginRight: -10,
+                    }}
+                >
+                    Contact
+                </Link>
             </header>
 
             {/* Hero */}
@@ -129,9 +192,9 @@ export default function MinddoShowcase() {
             }}
                 className="minddo-grid"
             >
-                <nav className="minddo-toc" style={{ display: 'none' }}>
+                <nav aria-label="Contents" className="minddo-toc" style={{ display: 'none' }}>
                     <div style={{ position: 'sticky', top: 78, paddingTop: 36 }}>
-                        <p style={{ fontFamily: MONO, fontSize: '0.68rem', color: T.faint, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
+                        <p style={{ fontFamily: MONO, fontSize: '0.75rem', color: T.faint, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
                             Contents
                         </p>
                         <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 2, borderLeft: `1px solid ${T.rule}` }}>
@@ -142,7 +205,8 @@ export default function MinddoShowcase() {
                                         <a
                                             href={`#${s.id}`}
                                             style={{
-                                                display: 'flex', gap: 9, padding: '5px 0 5px 12px',
+                                                display: 'flex', alignItems: 'center', gap: 9,
+                                                minHeight: 28, padding: '5px 0 5px 12px',
                                                 marginLeft: -1, borderLeft: `2px solid ${on ? T.accent : 'transparent'}`,
                                                 fontSize: '0.79rem', color: on ? T.ink : T.muted, fontWeight: on ? 600 : 400,
                                             }}
@@ -157,7 +221,7 @@ export default function MinddoShowcase() {
                     </div>
                 </nav>
 
-                <main style={{ minWidth: 0, paddingTop: 36 }}>
+                <main id="main" style={{ minWidth: 0, paddingTop: 36 }}>
                     {/* 01 output */}
                     <section id="output" style={{ marginBottom: 56 }}>
                         <H2 id="output-h" index="01">What it produces</H2>
@@ -280,7 +344,7 @@ export default function MinddoShowcase() {
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
                                         {([['The hole', f.problem, T.bad.stroke], ['The fix', f.fix, T.good.stroke]] as const).map(([k, v, c]) => (
                                             <div key={k} style={{ padding: '12px 14px', borderTop: `2px solid ${c}22` }}>
-                                                <div style={{ fontSize: '0.66rem', fontWeight: 600, letterSpacing: '0.09em', textTransform: 'uppercase', color: c, marginBottom: 6 }}>{k}</div>
+                                                <div style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: c, marginBottom: 6 }}>{k}</div>
                                                 <p style={{ fontSize: '0.85rem', lineHeight: 1.62, color: T.body }}>{v}</p>
                                             </div>
                                         ))}
@@ -345,7 +409,7 @@ export default function MinddoShowcase() {
                             margin: '16px 0 18px',
                         }}>
                             {awsLoad.map(m => (
-                                <div key={m.label} style={{ background: '#fff', padding: '14px 16px' }}>
+                                <div key={m.label} style={{ background: T.canvas, padding: '14px 16px' }}>
                                     <div style={{ fontFamily: MONO, fontSize: '1.15rem', fontWeight: 600, color: T.ink, letterSpacing: '-0.02em' }}>{m.value}</div>
                                     <div style={{ fontSize: '0.76rem', fontWeight: 600, color: T.body, margin: '5px 0 3px' }}>{m.label}</div>
                                     <div style={{ fontSize: '0.73rem', color: T.muted, lineHeight: 1.5 }}>{m.note}</div>
@@ -487,7 +551,7 @@ export default function MinddoShowcase() {
                             <Link
                                 href="/#contact"
                                 style={{
-                                    fontSize: '0.8rem', fontWeight: 500, color: '#fff', background: T.ink,
+                                    fontSize: '0.8rem', fontWeight: 500, color: T.canvas, background: T.ink,
                                     border: `1px solid ${T.ink}`, borderRadius: 4, padding: '9px 16px',
                                 }}
                             >

@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <OverlayProvider>
       <NavBar />
-      <main>
+      <main id="main">
         <HeroSection />
         <AboutSection />
         <ProjectsSection />

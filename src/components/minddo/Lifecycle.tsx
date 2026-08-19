@@ -80,8 +80,8 @@ export default function Lifecycle() {
                             onClick={() => setPhase(on ? null : p.id)}
                             style={{
                                 fontFamily: FONT, fontSize: '0.75rem', fontWeight: 500,
-                                color: on ? '#fff' : T.body,
-                                background: on ? T.ink : '#fff',
+                                color: on ? T.canvas : T.body,
+                                background: on ? T.ink : T.canvas,
                                 border: `1px solid ${on ? T.ink : T.ruleStrong}`,
                                 borderRadius: 4, padding: '5px 11px', cursor: 'pointer',
                             }}
@@ -120,7 +120,9 @@ Three messages were bugs first: late acks (10), the re-validated redirect chain 
             minWidth={1200}
             caption="Hover a message for the reasoning. Phase buttons dim the rest." controls={controls} panel={panel}
         >
-            <svg viewBox={`0 0 1200 ${height}`} style={{ width: '100%', display: 'block' }}>
+            <svg viewBox={`0 0 1200 ${height}`}
+                role="img"
+                aria-label="Request lifecycle across four lanes — client, API, broker and worker — tracing one submission from POST through queueing, polling and completion." style={{ width: '100%', display: 'block' }}>
                 <Arrowheads />
 
                 {LANES.map(l => (

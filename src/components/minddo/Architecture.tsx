@@ -364,7 +364,9 @@ export default function Architecture() {
             caption="Hover a component to isolate its connections. Click to pin."
             panel={panel}
         >
-            <svg viewBox={`0 0 1420 ${HEIGHT}`} style={{ width: '100%', display: 'block' }} onClick={() => setPinned(null)}>
+            <svg viewBox={`0 0 1420 ${HEIGHT}`}
+                role="img"
+                aria-label="System architecture: the browser and API tier, the Redis broker, the Celery worker pool, and the Postgres and S3 stores, with the request and job paths drawn between them." style={{ width: '100%', display: 'block' }} onClick={() => setPinned(null)}>
                 <Arrowheads />
 
                 {GROUPS.map(g => (

@@ -62,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <link rel="preload" as="image" href="/subject.webp" fetchPriority="high" />
             </head>
             <body>
+                <a className="skip-link" href="#main">Skip to content</a>
                 <LoadingScreen />
                 <Cursor />
                 {children}

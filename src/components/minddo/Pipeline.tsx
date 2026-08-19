@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { T, FONT, MONO, Arrowheads, Figure } from './ui';
 
 type Id = 'capture' | 'demo' | 'qr' | 'ai' | 'flyer' | 'video' | 'persist';
@@ -99,6 +99,7 @@ function path(pos: Record<Id, [number, number]>, [a, b]: [Id, Id]) {
 }
 
 export default function Pipeline() {
+    const reduced = useReducedMotion();
     const [mode, setMode] = useState<'seq' | 'par'>('seq');
     const [hover, setHover] = useState<Id | null>(null);
     const pos = mode === 'seq' ? SEQ : PAR;
@@ -115,7 +116,7 @@ export default function Pipeline() {
                             onClick={() => setMode(m)}
                             style={{
                                 fontFamily: FONT, fontSize: '0.75rem', fontWeight: 500,
-                                color: on ? '#fff' : T.body, background: on ? T.ink : '#fff',
+                                color: on ? T.canvas : T.body, background: on ? T.ink : T.canvas,
                                 border: `1px solid ${on ? T.ink : T.ruleStrong}`, borderRadius: 4,
                                 padding: '5px 11px', cursor: 'pointer',
                             }}
@@ -174,7 +175,9 @@ export default function Pipeline() {
                 </>
             } controls={controls} panel={panel}
         >
-            <svg viewBox="0 0 1120 296" style={{ width: '100%', display: 'block' }}>
+            <svg viewBox="0 0 1120 296"
+                role="img"
+                aria-label="The generation pipeline as a chain of stages from URL capture through screenshotting, the Claude call, narration, video assembly and flyer render, shown both as built in sequence and as it could run in parallel." style={{ width: '100%', display: 'block' }}>
                 <Arrowheads />
 
                 {edges.map(([a, b]) => {
@@ -204,7 +207,13 @@ export default function Pipeline() {
                             key={s.id}
                             initial={false}
                             animate={{ x, y, opacity: dim ? 0.4 : 1 }}
-                            transition={{ type: 'spring', stiffness: 210, damping: 26 }}
+                            /* Switching between the as-built and parallel layouts moves
+                               every node at once. Reduced motion cuts the travel to a
+                               near-instant reposition and keeps the opacity change,
+                               which is what says which stages are involved. */
+                            transition={reduced
+                                ? { duration: 0.01 }
+                                : { type: 'spring', stiffness: 210, damping: 26 }}
                             onMouseEnter={() => setHover(s.id)}
                             onMouseLeave={() => setHover(null)}
                             style={{ cursor: 'pointer' }}

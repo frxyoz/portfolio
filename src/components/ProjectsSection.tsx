@@ -1,15 +1,19 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { projects } from '@/data/projects';
 import type { Project } from '@/types';
 import { useOverlay } from '@/contexts/OverlayContext';
 import Reveal from './Reveal';
 import { useScrollTilt } from '@/hooks/useScrollTilt';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { ACCENT_TEXT, ACCENT_ORNAMENT as ACCENT, DISPLAY, BODY, BODY_TEXT, BODY_MUTED, MUTED, ACCENT_DEEP } from '@/design/tokens';
+import {
+    ACCENT_TEXT, ACCENT_ORNAMENT as ACCENT, ACCENT_DEEP,
+    DISPLAY, BODY, BODY_TEXT, BODY_MUTED, MUTED, INK,
+    CANVAS, CANVAS_ALT, RULE, RULE_STRONG, DISABLED_TEXT,
+} from '@/design/tokens';
 
 // Projects with an `href` get their own route, so they never enter the overlay carousel.
 const OVERLAY_PROJECTS = projects.filter(p => !p.href);
@@ -196,40 +200,64 @@ function ArrowIcon({ dir = 'right', size = 16 }: { dir?: 'left' | 'right'; size?
 // ─── Poster card ──────────────────────────────────────────────────────────────
 function ProjectCard({ project, index, onOpen, isMobile }: { project: Project; index: number; onOpen: (p: Project) => void; isMobile: boolean }) {
     const [hovered, setHovered] = useState(false);
-    const router = useRouter();
+    const reduced = useReducedMotion();
     const pal = PALETTES[project.id] ?? PALETTES.noteform;
     const TILTS = [-2, 1.6, -1.3, 2];
     const tilt = TILTS[index % TILTS.length];
-    // Mobile: cards stay flat — tilt and lift only on desktop hover
-    const tf = isMobile ? 'none' : (hovered ? 'rotate(0deg) translateY(-12px) scale(1.025)' : `rotate(${tilt}deg)`);
+    /* Mobile: cards stay flat — tilt and lift only on desktop hover.
+       Reduced motion keeps the resting tilt, because that is a static property
+       of the card and not movement, and drops the 12px rise on hover. The
+       shadow still deepens, so the card is still visibly the one under the
+       pointer. */
+    const tf = isMobile
+        ? 'none'
+        : hovered && !reduced
+            ? 'rotate(0deg) translateY(-12px) scale(1.025)'
+            : `rotate(${tilt}deg)`;
 
-    return (
-        <Reveal delay={(index % 3) * 0.08}>
-            <div
-                onMouseEnter={isMobile ? undefined : () => setHovered(true)}
-                onMouseLeave={isMobile ? undefined : () => setHovered(false)}
-                onClick={() => (project.href ? router.push(project.href) : onOpen(project))}
-                style={{
-                    position: 'relative',
-                    display: 'flex', flexDirection: 'column',
-                    borderRadius: 3, overflow: 'hidden',
-                    background: pal.bg, color: pal.ink,
-                    boxShadow: isMobile
-                        ? '0 8px 20px rgba(40,30,15,.1), 0 2px 6px rgba(40,30,15,.06)'
-                        : hovered
-                            ? '0 34px 66px rgba(40,30,15,.26), 0 8px 18px rgba(40,30,15,.12)'
-                            : '0 16px 38px rgba(40,30,15,.15), 0 3px 9px rgba(40,30,15,.07)',
-                    transform: tf,
-                    transition: 'transform .55s cubic-bezier(.22,1,.36,1), box-shadow .45s ease',
-                    willChange: 'transform',
-                    zIndex: hovered ? 5 : 1,
-                    cursor: 'pointer',
-                }}
-            >
+    /* The whole card is the control, so it has to *be* one. A div with onClick
+       took the entire projects section — the site's core content — away from
+       anyone without a mouse. A card that routes is an anchor; a card that opens
+       the overlay is a button. Focus mirrors hover so tabbing through lights the
+       same lift the pointer does. */
+    const interaction = {
+        onMouseEnter: isMobile ? undefined : () => setHovered(true),
+        onMouseLeave: isMobile ? undefined : () => setHovered(false),
+        onFocus: isMobile ? undefined : () => setHovered(true),
+        onBlur: isMobile ? undefined : () => setHovered(false),
+    };
+
+    const surface: React.CSSProperties = {
+        position: 'relative',
+        display: 'flex', flexDirection: 'column',
+        /* Reset the control's own chrome — the card supplies all of it. */
+        appearance: 'none', border: 'none', padding: 0, margin: 0,
+        font: 'inherit', textAlign: 'left', width: '100%',
+        borderRadius: 3, overflow: 'hidden',
+        background: pal.bg, color: pal.ink,
+        boxShadow: isMobile
+            ? '0 8px 20px rgba(40,30,15,.1), 0 2px 6px rgba(40,30,15,.06)'
+            : hovered
+                ? '0 34px 66px rgba(40,30,15,.26), 0 8px 18px rgba(40,30,15,.12)'
+                : '0 16px 38px rgba(40,30,15,.15), 0 3px 9px rgba(40,30,15,.07)',
+        transform: tf,
+        transition: reduced
+            ? 'box-shadow .2s linear'
+            : 'transform .55s cubic-bezier(.22,1,.36,1), box-shadow .45s ease',
+        /* Only while the card is actually the one moving. Left on at rest this
+           is four permanent compositor layers bought for a hover that may never
+           arrive. */
+        willChange: hovered ? 'transform' : undefined,
+        zIndex: hovered ? 5 : 1,
+        cursor: 'pointer',
+    };
+
+    const body = (
+        <>
                 {/* Decorative tab */}
                 <div style={{
                     position: 'absolute', left: '50%', top: 0,
-                    width: 2, height: 15, background: '#bcae9655',
+                    width: 2, height: 15, background: `${RULE_STRONG}aa`,
                     transform: 'translateX(-50%)', zIndex: 3,
                 }} />
 
@@ -249,31 +277,42 @@ function ProjectCard({ project, index, onOpen, isMobile }: { project: Project; i
 
                 {/* Metadata */}
                 <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '2px 22px 24px' }}>
-                    <span style={{ fontFamily: BODY, fontSize: '0.55rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: pal.accentText, marginBottom: 7 }}>
+                    <span style={{ fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: pal.accentText, marginBottom: 8, lineHeight: 1.4 }}>
                         {project.subtitle}
                     </span>
-                    <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 500, lineHeight: 0.92, fontSize: '2.05rem', letterSpacing: '-0.01em', color: pal.ink }}>
+                    <h3 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 500, lineHeight: 0.92, fontSize: '2.05rem', letterSpacing: '-0.01em', color: pal.ink }}>
                         {project.name}
-                    </span>
+                    </h3>
                     {project.award && (
-                        <span style={{ fontFamily: BODY, fontSize: '0.55rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: pal.accentText, marginTop: 6, lineHeight: 1.4 }}>
+                        <span style={{ fontFamily: BODY, fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: pal.accentText, marginTop: 8, lineHeight: 1.45 }}>
                             {project.award}
                         </span>
                     )}
                     <div style={{ height: 1, width: 32, background: pal.accent, marginTop: 15, opacity: 0.5 }} />
-                    <span style={{ fontFamily: BODY, fontSize: '0.8rem', lineHeight: 1.55, marginTop: 13, color: pal.ink, opacity: 0.84 }}>
+                    <span style={{ fontFamily: BODY, fontSize: '0.83rem', lineHeight: 1.6, marginTop: 14, color: pal.ink, opacity: 0.86 }}>
                         {project.desc}
                     </span>
                     <span style={{
                         alignSelf: 'flex-start', marginTop: 'auto', paddingTop: 20,
-                        fontFamily: BODY, fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase',
-                        display: 'inline-flex', alignItems: 'center', gap: 7, color: pal.accentText,
+                        fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase',
+                        display: 'inline-flex', alignItems: 'center', gap: 8, color: pal.accentText,
                     }}>
-                        {project.href ? 'Read Case Study' : 'View Details'}{' '}
-                        <span style={{ display: 'inline-block', transition: 'transform .35s ease', transform: hovered ? 'translateX(5px)' : 'none' }}>→</span>
+                        {project.href ? 'Read Case Study' : 'View Details'}
+                        <span style={{ display: 'inline-flex', transition: 'transform .35s ease', transform: hovered ? 'translateX(5px)' : 'none' }}>
+                            <ArrowIcon size={12} />
+                        </span>
                     </span>
                 </div>
-            </div>
+        </>
+    );
+
+    return (
+        <Reveal delay={(index % 3) * 0.08}>
+            {project.href ? (
+                <Link href={project.href} {...interaction} style={surface}>{body}</Link>
+            ) : (
+                <button type="button" onClick={() => onOpen(project)} {...interaction} style={surface}>{body}</button>
+            )}
         </Reveal>
     );
 }
@@ -291,6 +330,7 @@ function ProjectDetail({
     isMobile: boolean;
 }) {
     const scrollRef = useRef<HTMLDivElement>(null);
+    const reduced = useReducedMotion();
 
     useEffect(() => {
         document.body.classList.add('overlay-open');
@@ -343,13 +383,18 @@ function ProjectDetail({
             role="dialog"
             aria-modal="true"
             aria-label={`${project.name} project detail`}
-            initial={{ y: 40, opacity: 0 }}
+            /* The rise goes under reduced motion, the cross-fade stays: a
+               full-screen surface appearing with no transition at all reads as a
+               page navigation rather than a layer opening over this one. */
+            initial={{ y: reduced ? 0 : 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -24, opacity: 0 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ y: reduced ? 0 : -24, opacity: 0 }}
+            transition={reduced
+                ? { duration: 0.2, ease: 'linear' }
+                : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             style={{
                 position: 'fixed', inset: 0, zIndex: 400,
-                background: '#fff', overflowY: 'auto',
+                background: CANVAS, overflowY: 'auto',
             }}
         >
             {/* Sticky header */}
@@ -363,19 +408,24 @@ function ProjectDetail({
                 <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
                     <button
                         onClick={onClose}
-                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#1a1a1a'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#888'; }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = INK; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = MUTED; }}
                         style={{
-                            background: 'none', border: 'none', cursor: 'pointer', color: '#888',
+                            background: 'none', border: 'none', cursor: 'pointer', color: MUTED,
                             display: 'flex', alignItems: 'center', gap: 8,
-                            fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase', padding: 0,
+                            fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase',
+                            /* The only way out of the dialog, so it gets a real target
+                               rather than the height of its own lettering. Negative
+                               left margin keeps the label optically flush with the
+                               header edge while the padding grows the hit area. */
+                            minHeight: 44, padding: '0 10px', marginLeft: -10,
                             transition: 'color 0.2s',
                         }}
                     >
                         <ArrowIcon dir="left" size={14} /> Back
                     </button>
-                    <div style={{ width: 1, height: 18, background: '#e0ddd8' }} />
-                    <span style={{ fontFamily: BODY, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#aaa' }}>
+                    <div style={{ width: 1, height: 18, background: RULE }} />
+                    <span style={{ fontFamily: BODY, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED }}>
                         {currentIndex + 1} / {OVERLAY_PROJECTS.length}
                     </span>
                 </div>
@@ -389,16 +439,17 @@ function ProjectDetail({
                             key={dir}
                             onClick={handler}
                             disabled={!enabled}
+                            aria-label={dir === 'left' ? 'Previous project' : 'Next project'}
                             onMouseEnter={e => { if (enabled) { (e.currentTarget as HTMLButtonElement).style.background = `${ACCENT}11`; (e.currentTarget as HTMLButtonElement).style.borderColor = ACCENT; } }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.borderColor = enabled ? `${ACCENT}44` : '#eee'; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.borderColor = enabled ? `${ACCENT}44` : RULE_STRONG; }}
                             style={{
                                 background: 'none',
-                                border: `1px solid ${enabled ? ACCENT + '44' : '#eee'}`,
-                                color: enabled ? ACCENT : '#ccc',
-                                width: 36, height: 36,
+                                border: `1px solid ${enabled ? ACCENT + '44' : RULE_STRONG}`,
+                                color: enabled ? ACCENT_TEXT : DISABLED_TEXT,
+                                width: isMobile ? 44 : 36, height: isMobile ? 44 : 36,
                                 cursor: enabled ? 'pointer' : 'default',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'all 0.2s',
+                                transition: 'background 0.2s ease, border-color 0.2s ease',
                             }}
                         >
                             <ArrowIcon dir={dir} size={14} />
@@ -409,7 +460,7 @@ function ProjectDetail({
 
             {/* Hero area */}
             <div style={{
-                background: 'linear-gradient(160deg, #fafaf7 0%, #fff 60%)',
+                background: `linear-gradient(160deg, ${CANVAS_ALT} 0%, ${CANVAS} 60%)`,
                 borderBottom: `1px solid ${ACCENT}18`,
                 padding: isMobile ? '40px 20px 32px' : '72px 48px 60px',
             }}>
@@ -419,10 +470,10 @@ function ProjectDetail({
                             <p style={{ fontFamily: BODY, fontSize: '0.7rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 12 }}>
                                 {project.year}
                             </p>
-                            <h1 style={{ fontFamily: DISPLAY, fontSize: 'clamp(3rem, 7vw, 5.5rem)', fontWeight: 300, color: '#1a1a1a', lineHeight: 0.9, marginBottom: 8 }}>
+                            <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(3rem, 7vw, 5.5rem)', fontWeight: 300, color: INK, lineHeight: 0.9, marginBottom: 8 }}>
                                 {project.name}
-                            </h1>
-                            <p style={{ fontFamily: DISPLAY, fontSize: 'clamp(1rem, 2vw, 1.4rem)', fontStyle: 'italic', fontWeight: 300, color: '#6b6558', marginBottom: 28, lineHeight: 1.3 }}>
+                            </h2>
+                            <p style={{ fontFamily: DISPLAY, fontSize: 'clamp(1rem, 2vw, 1.4rem)', fontStyle: 'italic', fontWeight: 300, color: MUTED, marginBottom: 28, lineHeight: 1.3 }}>
                                 {project.subtitle}
                             </p>
                             <div style={{ width: 40, height: 1, background: ACCENT, marginBottom: 28 }} />
@@ -446,9 +497,9 @@ function ProjectDetail({
                                         letterSpacing: '0.12em', textTransform: 'uppercase',
                                         /* White on the ornamental gold is 3.26:1. The text-safe gold
                                            takes it to 5.3:1 and looks the same at this size. */
-                                        color: '#fff', background: ACCENT_TEXT, border: `1px solid ${ACCENT_TEXT}`,
+                                        color: CANVAS, background: ACCENT_TEXT, border: `1px solid ${ACCENT_TEXT}`,
                                         padding: '12px 24px', display: 'inline-flex', alignItems: 'center', gap: 8,
-                                        transition: 'all 0.2s',
+                                        transition: 'background 0.2s ease',
                                     }}
                                 >
                                     <GitHubIcon size={15} /> GitHub
@@ -456,15 +507,15 @@ function ProjectDetail({
                             </div>
                         </div>
 
-                        {/* Demo / screenshot */}
+                        {/* Demo / screenshot. Every project that reaches the overlay
+                            has one or the other — the ones that do not route to their
+                            own page instead — so there is no empty state to draw. */}
                         <div style={{
                             width: isMobile ? '100%' : 340, flexShrink: isMobile ? 1 : 0,
                             border: `1px solid ${ACCENT}33`,
-                            background: (project.demoVideo || project.mockImage) ? 'transparent' : `repeating-linear-gradient(45deg, ${ACCENT}06 0px, ${ACCENT}06 1px, transparent 1px, transparent 12px)`,
                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                             gap: 10, position: 'relative', overflow: 'hidden',
                         }}>
-                            <div style={{ position: 'absolute', inset: 0, background: (project.demoVideo || project.mockImage) ? 'transparent' : `radial-gradient(ellipse at 60% 40%, ${ACCENT}08, transparent 70%)`, pointerEvents: 'none' }} />
                             {project.demoVideo && (
                                 <iframe
                                     src={project.demoVideo}
@@ -487,11 +538,6 @@ function ProjectDetail({
                                     style={{ width: '100%', height: 'auto', display: 'block' }}
                                 />
                             )}
-                            {!project.demoVideo && !project.mockImage && (
-                                <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', letterSpacing: '0.1em', textAlign: 'center', color: '#c0b89a', padding: '0 24px', lineHeight: 1.7, position: 'relative', zIndex: 1 }}>
-                                    [ screenshot ]<br />{project.mockLabel}
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -502,14 +548,17 @@ function ProjectDetail({
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 40 : 64, alignItems: 'start' }}>
                     {/* Technical breakdown */}
                     <div>
-                        <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 32 }}>
+                        <p style={{ fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 32 }}>
                             Technical Breakdown
                         </p>
                         {project.details.map((d, i) => (
-                            <div key={i} style={{ marginBottom: 40, paddingLeft: 20, borderLeft: `2px solid ${i === 0 ? ACCENT : ACCENT + '44'}` }}>
-                                <h4 style={{ fontFamily: DISPLAY, fontSize: '1.35rem', fontWeight: 500, color: '#1a1a1a', marginBottom: 10 }}>
+                            /* 1px, like every other rule on the site. A 2px coloured
+                               left edge is a callout costume; the hairline is the
+                               language this page already speaks. */
+                            <div key={d.heading} style={{ marginBottom: 40, paddingLeft: 20, borderLeft: `1px solid ${i === 0 ? ACCENT : ACCENT + '44'}` }}>
+                                <h3 style={{ fontFamily: DISPLAY, fontSize: '1.35rem', fontWeight: 500, color: INK, marginBottom: 10 }}>
                                     {d.heading}
-                                </h4>
+                                </h3>
                                 <p style={{ fontFamily: BODY, fontSize: '0.88rem', color: BODY_MUTED, lineHeight: 1.75 }}>
                                     {d.body}
                                 </p>
@@ -519,14 +568,14 @@ function ProjectDetail({
 
                     {/* Tech stack */}
                     <div>
-                        <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 32 }}>
+                        <p style={{ fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 32 }}>
                             Tech Stack
                         </p>
                         {project.stack.map((s, i) => (
                             <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: `1px solid ${ACCENT}14` }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT, flexShrink: 0 }} />
-                                    <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', fontWeight: 600, color: '#1a1a1a', letterSpacing: '0.03em' }}>{s.name}</span>
+                                    <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', fontWeight: 600, color: INK, letterSpacing: '0.03em' }}>{s.name}</span>
                                 </div>
                                 <span style={{ fontFamily: BODY, fontSize: '0.78rem', color: MUTED, textAlign: 'right', maxWidth: 160 }}>{s.role}</span>
                             </div>
@@ -538,20 +587,20 @@ function ProjectDetail({
                 <div style={{ marginTop: 80, paddingTop: 40, borderTop: `1px solid ${ACCENT}18`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     {prevProject ? (
                         <button onClick={onPrev} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', padding: 0 }}>
-                            <div style={{ color: '#aaa' }}><ArrowIcon dir="left" size={18} /></div>
+                            <div style={{ color: ACCENT_TEXT }}><ArrowIcon dir="left" size={18} /></div>
                             <div>
-                                <p style={{ fontFamily: BODY, fontSize: '0.65rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#aaa', marginBottom: 3 }}>Previous</p>
-                                <p style={{ fontFamily: DISPLAY, fontSize: '1.3rem', fontWeight: 500, color: '#1a1a1a' }}>{prevProject.name}</p>
+                                <p style={{ fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED, marginBottom: 3 }}>Previous</p>
+                                <p style={{ fontFamily: DISPLAY, fontSize: '1.3rem', fontWeight: 500, color: INK }}>{prevProject.name}</p>
                             </div>
                         </button>
                     ) : <div />}
                     {nextProject ? (
                         <button onClick={onNext} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'right', padding: 0 }}>
                             <div>
-                                <p style={{ fontFamily: BODY, fontSize: '0.65rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#aaa', marginBottom: 3 }}>Next</p>
-                                <p style={{ fontFamily: DISPLAY, fontSize: '1.3rem', fontWeight: 500, color: '#1a1a1a' }}>{nextProject.name}</p>
+                                <p style={{ fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED, marginBottom: 3 }}>Next</p>
+                                <p style={{ fontFamily: DISPLAY, fontSize: '1.3rem', fontWeight: 500, color: INK }}>{nextProject.name}</p>
                             </div>
-                            <div style={{ color: '#aaa' }}><ArrowIcon dir="right" size={18} /></div>
+                            <div style={{ color: ACCENT_TEXT }}><ArrowIcon dir="right" size={18} /></div>
                         </button>
                     ) : <div />}
                 </div>
@@ -589,15 +638,12 @@ export default function ProjectsSection() {
     }, [overlayOpen]);
 
     return (
-        <section id="projects" style={{ background: '#ffffff', padding: isMobile ? '80px 24px' : '120px 48px' }}>
+        <section id="projects" style={{ background: CANVAS, padding: isMobile ? '80px 24px' : '120px 48px' }}>
             <div style={{ maxWidth: 1160, margin: '0 auto' }}>
 
                 {/* Section header */}
                 <Reveal style={{ marginBottom: 8 }}>
-                    <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 12 }}>
-                        02
-                    </p>
-                    <motion.h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: '#1a1a1a', lineHeight: 1, rotateX: tilt, transformPerspective: 800 }}>
+                    <motion.h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: INK, lineHeight: 1, rotateX: tilt, transformPerspective: 800 }}>
                         Projects
                     </motion.h2>
                     <div style={{ width: 40, height: 1, background: ACCENT, marginTop: 16 }} />

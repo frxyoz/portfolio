@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useReducedMotion } from 'framer-motion';
 import { ACCENT_ORNAMENT as ACCENT } from '@/design/tokens';
 
 const POINTER_FINE = '(pointer: fine)';
@@ -24,6 +24,7 @@ function usePointerFine() {
 
 export default function Cursor() {
   const fine = usePointerFine();
+  const reduced = useReducedMotion();
   const [hovered, setHovered] = useState(false);
 
   const mx = useMotionValue(-200);
@@ -41,7 +42,8 @@ export default function Cursor() {
      the class here — after this component has actually mounted — means a JS
      failure or a slow hydration leaves the visitor with a real pointer rather
      than none at all. Reduced motion keeps the cursor but drops the lagging
-     ring, which is the part that moves independently of the hand. */
+     ring, which is the part that moves independently of the hand — see the
+     `reduced` guard on the ring below. */
   useEffect(() => {
     if (!fine) return;
     document.body.classList.add('cursor-ready');
@@ -81,12 +83,15 @@ export default function Cursor() {
           translateX: '-50%', translateY: '-50%',
           x: dotX, y: dotY,
         }}
-        animate={{ scale: hovered ? 3 : 1, opacity: hovered ? 0.5 : 1 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
+        animate={{ scale: hovered ? (reduced ? 4 : 3) : 1, opacity: hovered ? 0.5 : 1 }}
+        transition={reduced ? { duration: 0.12, ease: 'linear' } : { duration: 0.2, ease: 'easeOut' }}
       />
 
-      {/* Ghost ring — spring lag */}
-      <motion.div
+      {/* Ghost ring — spring lag. Dropped entirely under reduced motion: it is
+          the one element on the page that moves on its own timing while the
+          visitor is moving, which is exactly what the setting asks for less of.
+          The dot stays, because without it the system cursor is already gone. */}
+      {!reduced && <motion.div
         aria-hidden
         className="oz-cursor"
         style={{
@@ -99,7 +104,7 @@ export default function Cursor() {
         }}
         animate={{ scale: hovered ? 1.6 : 1, opacity: hovered ? 0.35 : 0.55 }}
         transition={{ duration: 0.25, ease: 'easeOut' }}
-      />
+      />}
     </>
   );
 }

@@ -126,7 +126,7 @@ export default function SsrfGuard() {
                             onClick={() => run(p)}
                             style={{
                                 display: 'flex', alignItems: 'baseline', gap: 10, textAlign: 'left',
-                                background: on ? T.surface : '#fff',
+                                background: on ? T.surface : T.canvas,
                                 border: `1px solid ${on ? T.ink : T.rule}`, borderRadius: 4,
                                 padding: '7px 11px', cursor: 'pointer', width: '100%',
                             }}
@@ -185,7 +185,9 @@ export default function SsrfGuard() {
             ]}
             caption="Pick a URL to trace it. These are the real outcomes; the checks run twice, at the API boundary and per navigation." controls={controls} panel={panel}
         >
-            <svg viewBox="0 0 920 786" style={{ width: '100%', display: 'block' }}>
+            <svg viewBox="0 0 920 786"
+                role="img"
+                aria-label="The SSRF guard as a decision tree: scheme check, destination address check against private ranges, and the same two checks repeated on every redirect hop, with the blocked and allowed exits marked." style={{ width: '100%', display: 'block' }}>
                 <Arrowheads />
 
                 {EDGES.map((e, i) => {
@@ -207,7 +209,7 @@ export default function SsrfGuard() {
                 })}
 
                 {NODES.map(n => {
-                    const tone = n.tone === 'plain' ? { fill: '#fff', stroke: T.ruleStrong, text: T.ink } : T[n.tone];
+                    const tone = n.tone === 'plain' ? { fill: T.canvas, stroke: T.ruleStrong, text: T.ink } : T[n.tone];
                     const on = litNode(n.id);
                     const current = probe && walked[walked.length - 1] === n.id;
                     return (

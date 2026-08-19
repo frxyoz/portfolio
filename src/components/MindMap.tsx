@@ -316,6 +316,18 @@ function PosterGeo({ hobby, accent, bg, c2, c3, ink }: { hobby: string; accent: 
     const elRef = useRef<HTMLDivElement>(null);
     const geoRef = useRef<GeoRef | null>(null);
 
+    /* Read through a ref rather than state: the render loop below is set up once
+       and must not be torn down and rebuilt — that would drop the WebGL context —
+       just because the visitor changed a system setting mid-session. */
+    const reducedRef = useRef(false);
+    useEffect(() => {
+        const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const sync = () => { reducedRef.current = mq.matches; };
+        sync();
+        mq.addEventListener('change', sync);
+        return () => mq.removeEventListener('change', sync);
+    }, []);
+
     // Setup renderer + loop once per mount
     useEffect(() => {
         const el = elRef.current;
@@ -360,12 +372,18 @@ function PosterGeo({ hobby, accent, bg, c2, c3, ink }: { hobby: string; accent: 
             if (state.stopped) return;
             state.raf = requestAnimationFrame(loop);
             const t = (performance.now() - t0) / 1000;
-            const tx = ptr.y * 0.26 + Math.sin(t * 0.6) * 0.05;
-            const ty = ptr.x * 0.42 + Math.sin(t * 0.45) * 0.06;
+            /* Two sources of movement here: the scene answering the pointer, and
+               an idle drift that runs whether or not anyone is moving. Reduced
+               motion keeps the first — it is a direct response to the hand, and
+               without it the scene stops being explorable — and drops the drift
+               and the bob, which move on their own timing. */
+            const idle = reducedRef.current ? 0 : 1;
+            const tx = ptr.y * 0.26 + Math.sin(t * 0.6) * 0.05 * idle;
+            const ty = ptr.x * 0.42 + Math.sin(t * 0.45) * 0.06 * idle;
             rot.x += (tx - rot.x) * 0.07;
             rot.y += (-ty - rot.y) * 0.07;
             group.rotation.x = rot.x; group.rotation.y = rot.y;
-            group.position.y = Math.sin(t * 0.7) * 2.0;
+            group.position.y = Math.sin(t * 0.7) * 2.0 * idle;
 
             // Scatter exit — old shapes tumble toward camera and vanish
             for (let i = state.exiting.length - 1; i >= 0; i--) {

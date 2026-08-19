@@ -6,14 +6,21 @@ import { profile } from '@/data/profile';
 import Reveal from './Reveal';
 import { useScrollTilt } from '@/hooks/useScrollTilt';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { ACCENT_TEXT, ACCENT_ORNAMENT as ACCENT, ACCENT_DEEP, DISPLAY, BODY, MUTED, INK } from '@/design/tokens';
+import {
+    ACCENT_TEXT, ACCENT_ORNAMENT, ACCENT_DEEP, ACCENT_LIFT,
+    DISPLAY, BODY, MUTED, INK, CANVAS_WARM, DANGER,
+} from '@/design/tokens';
+
+/* This section sits on its own warm ground, so every ratio below is measured
+   against CANVAS_WARM rather than white. */
+const SURFACE = CANVAS_WARM;
 
 
 /* 16px, not 0.9rem: Safari auto-zooms into any input below 16px on focus and
    never zooms back, which strands the visitor mid-form on a phone. */
 const inputStyle: React.CSSProperties = {
     fontFamily: BODY, fontSize: '1rem', color: INK,
-    background: 'rgba(255,255,255,0.72)', border: `1px solid ${ACCENT}28`, padding: '14px 18px',
+    background: 'rgba(255,255,255,0.72)', border: `1px solid ${ACCENT_ORNAMENT}28`, padding: '14px 18px',
     width: '100%', minHeight: 48, transition: 'border-color 0.2s ease',
 };
 
@@ -57,23 +64,18 @@ export default function ContactSection() {
     };
 
     return (
-        <section id="contact" style={{ background: '#f5f0e8', padding: isMobile ? '80px 24px' : '120px 48px' }}>
+        <section id="contact" style={{ background: SURFACE, padding: isMobile ? '80px 24px' : '120px 48px' }}>
             <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
 
                 {/* Section header */}
                 <Reveal>
-                    <p style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 12 }}>
-                        03
-                    </p>
-                </Reveal>
-                <Reveal delay={0.04}>
-                    <motion.h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: '#1a1a1a', lineHeight: 1, marginBottom: 16, rotateX: tilt, transformPerspective: 800 }}>
+                    <motion.h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: INK, lineHeight: 1, marginBottom: 16, rotateX: tilt, transformPerspective: 800 }}>
                         Get in Touch
                     </motion.h2>
                 </Reveal>
-                <Reveal delay={0.08} style={{ width: 40, height: 1, background: ACCENT, margin: '0 auto 20px' }} />
+                <Reveal delay={0.08} style={{ width: 40, height: 1, background: ACCENT_ORNAMENT, margin: '0 auto 20px' }} />
                 <Reveal delay={0.12}>
-                    <p style={{ fontFamily: BODY, fontSize: '0.9rem', color: '#6b6558', lineHeight: 1.7, marginBottom: 48 }}>
+                    <p style={{ fontFamily: BODY, fontSize: '0.9rem', color: MUTED, lineHeight: 1.7, marginBottom: 48 }}>
                         Open to internships, collaborations, or questions about any of the projects above.
                     </p>
                 </Reveal>
@@ -87,7 +89,7 @@ export default function ContactSection() {
                             target={s.href.startsWith('mailto') ? undefined : '_blank'}
                             rel="noopener noreferrer"
                             onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = ACCENT_DEEP; }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = ACCENT; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = ACCENT_TEXT; }}
                             style={{
                                 fontFamily: BODY, fontSize: '0.75rem', fontWeight: 500,
                                 letterSpacing: '0.14em', textTransform: 'uppercase',
@@ -98,12 +100,24 @@ export default function ContactSection() {
                                 display: 'inline-flex', alignItems: 'center', minHeight: 44,
                             }}
                         >
-                            <span style={{ borderBottom: `1px solid ${ACCENT}55`, paddingBottom: 3 }}>
+                            <span style={{ borderBottom: `1px solid ${ACCENT_ORNAMENT}55`, paddingBottom: 3 }}>
                                 {s.label}
                             </span>
                         </a>
                     ))}
                 </Reveal>
+
+                {/* Mounted from the start and never unmounted. A live region that
+                    arrives at the same moment as its own text is frequently missed:
+                    the announcement depends on the region already existing when the
+                    content changes. The visible states below stay exactly as they
+                    are; this is the copy that gets spoken. */}
+                <p aria-live="polite" style={srOnly}>
+                    {sending ? 'Sending your message.'
+                        : submitted ? 'Message sent. I’ll be in touch soon.'
+                            : error ? 'The message did not send. Try again, or email olriczeng@gmail.com directly.'
+                                : ''}
+                </p>
 
                 {/* Contact form */}
                 <Reveal delay={0.2}>
@@ -117,8 +131,8 @@ export default function ContactSection() {
                                     autoComplete="name"
                                     value={form.name} onChange={handleChange} required
                                     style={inputStyle}
-                                    onFocus={e => { e.target.style.borderColor = ACCENT; }}
-                                    onBlur={e => { e.target.style.borderColor = `${ACCENT}33`; }}
+                                    onFocus={e => { e.target.style.borderColor = ACCENT_ORNAMENT; }}
+                                    onBlur={e => { e.target.style.borderColor = `${ACCENT_ORNAMENT}28`; }}
                                 />
                                 <label htmlFor="contact-email" style={srOnly}>Your email address</label>
                                 <input
@@ -127,8 +141,8 @@ export default function ContactSection() {
                                     autoComplete="email"
                                     value={form.email} onChange={handleChange} required
                                     style={inputStyle}
-                                    onFocus={e => { e.target.style.borderColor = ACCENT; }}
-                                    onBlur={e => { e.target.style.borderColor = `${ACCENT}33`; }}
+                                    onFocus={e => { e.target.style.borderColor = ACCENT_ORNAMENT; }}
+                                    onBlur={e => { e.target.style.borderColor = `${ACCENT_ORNAMENT}28`; }}
                                 />
                             </div>
                             <label htmlFor="contact-message" style={srOnly}>Your message</label>
@@ -137,19 +151,20 @@ export default function ContactSection() {
                                 name="message" placeholder="Message" rows={5}
                                 value={form.message} onChange={handleChange} required
                                 style={{ ...inputStyle, resize: 'vertical' }}
-                                onFocus={e => { e.target.style.borderColor = ACCENT; }}
-                                onBlur={e => { e.target.style.borderColor = `${ACCENT}33`; }}
+                                onFocus={e => { e.target.style.borderColor = ACCENT_ORNAMENT; }}
+                                onBlur={e => { e.target.style.borderColor = `${ACCENT_ORNAMENT}28`; }}
                             />
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignSelf: 'flex-start' }}>
                                 <button
                                     type="submit"
                                     disabled={sending}
-                                    onMouseEnter={e => { if (!sending) (e.currentTarget as HTMLButtonElement).style.background = '#d4a017'; }}
-                                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = sending ? `${ACCENT}99` : ACCENT; }}
+                                    aria-busy={sending}
+                                    onMouseEnter={e => { if (!sending) (e.currentTarget as HTMLButtonElement).style.background = ACCENT_LIFT; }}
+                                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = sending ? `${ACCENT_ORNAMENT}99` : ACCENT_ORNAMENT; }}
                                     style={{
                                         fontFamily: BODY, fontSize: '0.78rem', fontWeight: 500,
                                         letterSpacing: '0.14em', textTransform: 'uppercase',
-                                        color: '#1a1a1a', background: sending ? `${ACCENT}99` : ACCENT, border: 'none',
+                                        color: INK, background: sending ? `${ACCENT_ORNAMENT}99` : ACCENT_ORNAMENT, border: 'none',
                                         padding: '16px 40px', cursor: sending ? 'default' : 'pointer',
                                         transition: 'background 0.2s',
                                     }}
@@ -157,18 +172,18 @@ export default function ContactSection() {
                                     {sending ? 'Sending…' : 'Send Message'}
                                 </button>
                                 {error && (
-                                    <p style={{ fontFamily: BODY, fontSize: '0.8rem', color: '#c0392b' }}>
-                                        Something went wrong — please try again.
+                                    <p style={{ fontFamily: BODY, fontSize: '0.8rem', color: DANGER }}>
+                                        The message did not send. Try again, or email olriczeng@gmail.com directly.
                                     </p>
                                 )}
                             </div>
                         </form>
                     ) : (
-                        <div style={{ padding: '40px', border: `1px solid ${ACCENT}44`, textAlign: 'center' }}>
+                        <div style={{ padding: '40px', border: `1px solid ${ACCENT_ORNAMENT}44`, textAlign: 'center' }}>
                             <p style={{ fontFamily: DISPLAY, fontSize: '1.6rem', fontWeight: 400, color: ACCENT_TEXT, fontStyle: 'italic' }}>
                                 Thank you, {form.name}.
                             </p>
-                            <p style={{ fontFamily: BODY, fontSize: '0.85rem', color: '#a09890', marginTop: 8 }}>
+                            <p style={{ fontFamily: BODY, fontSize: '0.85rem', color: MUTED, marginTop: 8 }}>
                                 I&apos;ll be in touch soon.
                             </p>
                         </div>
@@ -176,12 +191,12 @@ export default function ContactSection() {
                 </Reveal>
 
                 {/* Footer */}
-                <div style={{ marginTop: 96, paddingTop: 32, borderTop: `1px solid ${ACCENT}28`, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'center' : 'center', gap: isMobile ? 8 : 0, textAlign: 'center' }}>
+                <footer style={{ marginTop: 96, paddingTop: 32, borderTop: `1px solid ${ACCENT_ORNAMENT}28`, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'center' : 'center', gap: isMobile ? 8 : 0, textAlign: 'center' }}>
                     <span style={{ fontFamily: DISPLAY, fontSize: '1.1rem', fontStyle: 'italic', color: ACCENT_TEXT }}>Olric Zeng</span>
-                    <span style={{ fontFamily: BODY, fontSize: '0.68rem', letterSpacing: '0.12em', color: MUTED, textTransform: 'uppercase' }}>
+                    <span style={{ fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.1em', color: MUTED, textTransform: 'uppercase' }}>
                         © {new Date().getFullYear()} · olriczeng@gmail.com
                     </span>
-                </div>
+                </footer>
             </div>
         </section>
     );

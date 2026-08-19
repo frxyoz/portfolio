@@ -97,7 +97,9 @@ export default function AwsPlan() {
             ]}
             caption="This is what is running. The 20-job load test in section 09 ran against this cluster; the 102.7 s single-job baseline is still a docker compose number." panel={panel}
         >
-            <svg viewBox="0 0 920 350" style={{ width: '100%', display: 'block' }} onClick={() => setPinned(null)}>
+            <svg viewBox="0 0 920 350"
+                role="img"
+                aria-label="AWS topology in a single region: the EC2 instance running k3s with the API and worker pods, alongside the managed Postgres and S3, and what sits inside versus outside the VPC." style={{ width: '100%', display: 'block' }} onClick={() => setPinned(null)}>
                 <Arrowheads />
 
                 <rect x={196} y={72} width={716} height={264} rx={8} fill="none" stroke={T.ruleStrong} strokeWidth={1.3} strokeDasharray="5 4" />

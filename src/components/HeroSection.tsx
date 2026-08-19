@@ -5,7 +5,10 @@ import { motion, useScroll, useTransform, useMotionValue, useReducedMotion } fro
 import { profile } from '@/data/profile';
 import MagneticButton from './MagneticButton';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { ACCENT_TEXT, ACCENT_ORNAMENT as ACCENT, DISPLAY, BODY, BODY_TEXT, MUTED, ACCENT_DEEP } from '@/design/tokens';
+import {
+    ACCENT_TEXT, ACCENT_ORNAMENT as ACCENT, ACCENT_DEEP,
+    DISPLAY, BODY, BODY_TEXT, MUTED, INK, INK_SOFT, CANVAS,
+} from '@/design/tokens';
 
 /* MindMap pulls in three.js — roughly 550 KB of the home page's JavaScript for
    an overlay behind a click. React.lazy rather than next/dynamic: next/dynamic
@@ -65,6 +68,11 @@ function FixedPhoto({
     const [hov, setHov] = useState(false);
     const [hintReady, setHintReady] = useState(false);
     const [hintFor, setHintFor] = useState(mindMapOpen);
+    /* The portrait recedes on scroll the same way the hero content does, so it
+       drops the same things when motion is reduced: the 14px blur and the
+       scale, both of which read as the viewport moving underneath you. The
+       fade stays — it is what tells you the hero is handing over. */
+    const reduced = useReducedMotion();
 
     // Reset the reveal during render rather than in a layout effect: the label swaps
     // in the same commit as the prop, so there is still no frame with the wrong text.
@@ -90,10 +98,12 @@ function FixedPhoto({
 
     const photoOpacity = useTransform(
         [scrollFade, boost] as const, ([f, b]: number[]) => Math.max(f, b));
-    const blurFilter = useTransform(
+    const blurFilterRaw = useTransform(
         [scrollBlur, boost] as const, ([bl, b]: number[]) => b > 0.5 ? 'none' : `blur(${bl}px)`);
-    const photoScale = useTransform(
+    const photoScaleRaw = useTransform(
         [scrollScale, boost] as const, ([sc, b]: number[]) => b > 0.5 ? 1 : sc);
+    const blurFilter = reduced ? 'none' : blurFilterRaw;
+    const photoScale = reduced ? 1 : photoScaleRaw;
 
     const visible = heroInView || mindMapOpen;
 
@@ -121,19 +131,27 @@ function FixedPhoto({
                 scale: photoScale,
                 filter: blurFilter,
             }}>
-                {/* Inner: hover micro-interactions */}
-                <motion.div
+                {/* Inner: the portrait is the mind-map trigger, so it is a button —
+                    a div with onClick left the whole interaction to the mouse and
+                    gave a screen reader nothing to announce. Focus mirrors hover. */}
+                <motion.button
+                    type="button"
+                    aria-expanded={mindMapOpen}
+                    aria-label={mindMapOpen ? 'Close the mind map and return to the page' : 'Open the mind map about Olric'}
                     style={{
                         position: 'relative',
                         display: 'inline-block',
                         cursor: 'pointer',
+                        background: 'none', border: 'none', padding: 0,
                         pointerEvents: visible ? 'all' : 'none',
-                        scale: hov ? 1.012 : 1,
-                        y: hov ? -4 : 0,
+                        scale: hov && !reduced ? 1.012 : 1,
+                        y: hov && !reduced ? -4 : 0,
                     }}
                     transition={{ scale: { duration: 0.45, ease: [0.22, 1, 0.36, 1] }, y: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } }}
                     onMouseEnter={() => { setHov(true); onWarm(); }}
                     onMouseLeave={() => setHov(false)}
+                    onFocus={() => { setHov(true); onWarm(); }}
+                    onBlur={() => setHov(false)}
                     onClick={() => mindMapOpen ? onClose() : onOpen()}
                 >
                     {/* 3-sided frame — hero mode only */}
@@ -141,28 +159,31 @@ function FixedPhoto({
                         <>
                             <div style={{
                                 position: 'absolute',
-                                top: hov ? -14 : -6,
-                                left: hov ? -14 : -6,
-                                right: hov ? -14 : -6,
+                                top: hov && !reduced ? -14 : -6,
+                                left: hov && !reduced ? -14 : -6,
+                                right: hov && !reduced ? -14 : -6,
                                 bottom: 0,
-                                borderTop: `${hov ? 2.5 : 1.5}px solid ${ACCENT}`,
-                                borderLeft: `${hov ? 2.5 : 1.5}px solid ${ACCENT}`,
-                                borderRight: `${hov ? 2.5 : 1.5}px solid ${ACCENT}`,
-                                opacity: hov ? 0.72 : 0.32,
-                                transition: 'all 0.45s cubic-bezier(.22,1,.36,1)',
+                                /* Fixed 2px rather than 1.5→2.5 on hover. Border width is a
+                                   layout property, and the frame gets its strengthening
+                                   from opacity instead — which composites. */
+                                borderTop: `2px solid ${ACCENT}`,
+                                borderLeft: `2px solid ${ACCENT}`,
+                                borderRight: `2px solid ${ACCENT}`,
+                                opacity: hov ? 0.82 : 0.28,
+                                transition: reduced ? 'opacity 0.25s linear' : 'top 0.45s var(--ease-out), left 0.45s var(--ease-out), right 0.45s var(--ease-out), opacity 0.45s var(--ease-out)',
                                 pointerEvents: 'none',
                             }} />
                             <div style={{
                                 position: 'absolute',
-                                top: hov ? -24 : -11,
-                                left: hov ? -24 : -11,
-                                right: hov ? -24 : -11,
+                                top: hov && !reduced ? -24 : -11,
+                                left: hov && !reduced ? -24 : -11,
+                                right: hov && !reduced ? -24 : -11,
                                 bottom: 0,
                                 borderTop: `1px solid ${ACCENT}`,
                                 borderLeft: `1px solid ${ACCENT}`,
                                 borderRight: `1px solid ${ACCENT}`,
                                 opacity: hov ? 0.2 : 0.08,
-                                transition: 'all 0.55s cubic-bezier(.22,1,.36,1) 0.04s',
+                                transition: reduced ? 'opacity 0.25s linear' : 'top 0.55s var(--ease-out) .04s, left 0.55s var(--ease-out) .04s, right 0.55s var(--ease-out) .04s, opacity 0.55s var(--ease-out) .04s',
                                 pointerEvents: 'none',
                             }} />
                         </>
@@ -171,7 +192,7 @@ function FixedPhoto({
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src="/subject.webp"
-                        alt="Olric Zeng"
+                        alt=""
                         width={863}
                         height={1400}
                         fetchPriority="high"
@@ -225,7 +246,7 @@ function FixedPhoto({
                             </svg>
                         </motion.div>
                     </div>
-                </motion.div>
+                </motion.button>
             </motion.div>
         </div>
     );
@@ -255,7 +276,7 @@ export default function HeroSection() {
     useEffect(() => {
         const t = setTimeout(warmMindMap, 4000);
         return () => clearTimeout(t);
-    }, []);
+    }, [warmMindMap]);
 
     useEffect(() => {
         if (isMobile && aboutTextRef.current) {
@@ -334,7 +355,7 @@ export default function HeroSection() {
                     id="hero"
                     style={{
                         height: '100vh',
-                        background: '#ffffff',
+                        background: CANVAS,
                         display: 'grid',
                         gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
                         position: 'sticky', top: 0,
@@ -391,7 +412,7 @@ export default function HeroSection() {
                                 margin: 0,
                                 marginBottom: isMobile ? 24 : 36,
                             }}>
-                                <span style={{ color: '#7a7672', display: 'block' }}>Olric</span>
+                                <span style={{ color: INK_SOFT, display: 'block' }}>Olric</span>
                                 <span style={{ fontStyle: 'italic', color: ACCENT_TEXT, display: 'block' }}>Zeng</span>
                             </h1>
                         </div>
@@ -443,7 +464,7 @@ export default function HeroSection() {
                                         style={{
                                             background: 'none', border: 'none', cursor: 'pointer',
                                             display: 'flex', alignItems: 'center', gap: 5, padding: 0,
-                                            fontFamily: BODY, fontSize: '0.65rem', letterSpacing: '0.12em',
+                                            fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.1em',
                                             textTransform: 'uppercase', color: ACCENT_TEXT,
                                         }}
                                     >
@@ -481,7 +502,7 @@ export default function HeroSection() {
                                             position: 'absolute',
                                             bottom: 0, left: 0, right: 0,
                                             height: 52,
-                                            background: 'linear-gradient(to bottom, rgba(255,255,255,0), #ffffff)',
+                                            background: `linear-gradient(to bottom, rgba(255,255,255,0), ${CANVAS})`,
                                             pointerEvents: 'none',
                                         }}
                                     />
@@ -510,8 +531,12 @@ export default function HeroSection() {
                                            you have to choose between a tight rule and an even hit area. */
                                         display: 'inline-flex', alignItems: 'center', minHeight: 44,
                                     }}
+                                    /* Hover lands on the text-safe gold, not the ornament:
+                                       #b8860b is 3.25:1 on white and a hover state is not
+                                       exempt from 1.4.3. The rule under it is not text, so
+                                       it keeps the ornament. */
                                     onMouseEnter={e => {
-                                        (e.currentTarget as HTMLAnchorElement).style.color = ACCENT;
+                                        (e.currentTarget as HTMLAnchorElement).style.color = ACCENT_TEXT;
                                         (e.currentTarget as HTMLAnchorElement).style.borderBottomColor = ACCENT;
                                     }}
                                     onMouseLeave={e => {
@@ -525,7 +550,7 @@ export default function HeroSection() {
                                 </a>
                             ))}
 
-                            <span aria-hidden="true" style={{ color: `${ACCENT}44`, fontSize: '0.5rem' }}>│</span>
+                            <span aria-hidden="true" style={{ width: 1, height: 16, background: `${ACCENT}55`, flexShrink: 0 }} />
 
                             <MagneticButton>
                                 <a
@@ -534,10 +559,12 @@ export default function HeroSection() {
                                     rel="noopener noreferrer"
                                     style={{
                                         fontFamily: BODY, fontSize: '0.78rem', letterSpacing: '0.1em',
-                                        textTransform: 'uppercase', color: '#1a1a1a',
+                                        textTransform: 'uppercase', color: INK,
                                         background: ACCENT, border: `1px solid ${ACCENT}`,
-                                        padding: '8px 20px', cursor: 'pointer',
-                                        textDecoration: 'none', display: 'inline-block',
+                                        /* 44px: the primary CTA sat at 37 on a phone, under
+                                           the floor the social links beside it already meet. */
+                                        padding: '0 22px', minHeight: 44, cursor: 'pointer',
+                                        textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
                                         transition: 'background 0.2s, border-color 0.2s',
                                     }}
                                     onMouseEnter={e => {
