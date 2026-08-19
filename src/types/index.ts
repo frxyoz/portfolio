@@ -35,8 +35,8 @@ export interface TimelineEntry {
     org: string;
     orgUrl?: string;
     logo?: string;
-    desc: string;
-    tags: string[];
+    desc?: string;
+    tags?: string[];
 }
 
 export interface SocialLink {

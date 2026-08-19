@@ -108,11 +108,13 @@ function TimelineItem({ item, index, isLast }: { item: TimelineEntry; index: num
           {item.period}
         </span>
       </div>
-      <p style={{ fontFamily: BODY, fontSize: '0.9rem', color: BODY_MUTED, lineHeight: 1.7, maxWidth: 620, marginBottom: 16 }}>
-        {item.desc}
-      </p>
+      {item.desc && (
+        <p style={{ fontFamily: BODY, fontSize: '0.9rem', color: BODY_MUTED, lineHeight: 1.7, maxWidth: 620, marginBottom: 16 }}>
+          {item.desc}
+        </p>
+      )}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {item.tags.map(t => (
+        {item.tags?.map(t => (
           <span key={t} style={{
             /* 0.78rem, not 0.68: these render at 10.9px, and they are the words
                a recruiter is actually scanning the timeline for. */

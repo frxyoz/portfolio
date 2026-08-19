@@ -1,16 +1,21 @@
 import type { ProfileData } from '@/types';
 
 export const profile: ProfileData = {
-    tagline: 'I\'m Olric, a Computer Science student at Cornell. I work on both sides of the stack — REST APIs, data models and infrastructure on the backend, React and Flutter on the frontend. Most of my time goes into side projects that push me into something I haven\'t used before, and I currently build web tools for non-profits at Hack4Impact.',
+    tagline: 'Hi! I\'m Olric, a Computer Science student at Cornell. I\'m interested in fullstack development, infrastructure engineering and machine learning. I am really passionate about creating software solutions that make a difference. Most of my time goes into side projects that push me into something I haven\'t used before, and I currently build web tools for non-profits at Hack4Impact.',
     timeline: [
+        {
+            period: 'Jun. 2026 – Aug. 2026',
+            title: 'Software Engineering Intern',
+            org: 'SiteFit AI',
+            orgUrl: 'https://www.linkedin.com/in/sitefit-ai-48b2183b9',
+            logo: '/sitefit.webp',
+        },
         {
             period: '2025 — present',
             title: 'Software Developer',
             org: 'Hack4Impact',
             orgUrl: 'https://www.cornellh4i.org/',
             logo: '/hack.webp',
-            desc: 'Build web tools for non-profit clients on a team of developers, designers and product managers, from requirements through deployment.',
-            tags: ['TypeScript', 'React', 'Supabase', 'Node.js'],
         },
         {
             period: '2025 — present',
@@ -18,8 +23,6 @@ export const profile: ProfileData = {
             org: 'Cornell University',
             orgUrl: 'https://www.cs.cornell.edu/',
             logo: '/cornell.webp',
-            desc: 'Courses: Data Structures & OOP, Mathematical Foundations, Functional Programming, Introduction to Computing (Python), Backend Development, Linear Algebra.',
-            tags: ['Python', 'OCaml', 'Java'],
         },
         {
             period: '2024',
@@ -27,8 +30,6 @@ export const profile: ProfileData = {
             org: 'Coding Mind',
             orgUrl: 'https://codingmind.com/',
             logo: '/codingmind.webp',
-            desc: 'Built an AI-powered nutrition mobile app with Flutter, Firebase, and Flask, classifying 100K+ food items with ML-based detection.',
-            tags: ['Flutter', 'Firebase', 'Flask', 'Python'],
         },
     ],
     socialLinks: [
