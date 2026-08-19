@@ -565,7 +565,7 @@ function Poster({ d, layout, onJump }: { d: CardData; layout: typeof CARD_LAYOUT
             {/* Meta */}
             <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', padding: '0 28px 26px' }}>
                 <span style={{
-                    fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 500,
+                    fontFamily: DISPLAY, fontWeight: 500,
                     lineHeight: 0.92, letterSpacing: '-.01em', color: titleColor,
                     fontSize: layout.ts,
                     ...(layout.big ? { marginTop: '-26px' } : {}),
@@ -832,7 +832,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                         OZ
                     </button>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 500, fontSize: mobile ? '1.12rem' : '1.45rem', lineHeight: 1, color: '#1f1c19' }}>More About Me</div>
+                        <div style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: mobile ? '1.12rem' : '1.45rem', lineHeight: 1, color: '#1f1c19' }}>More About Me</div>
                         {!mobile && (
                             <div style={{ fontFamily: BODY, fontSize: '.52rem', letterSpacing: '.26em', textTransform: 'uppercase', color: accent, opacity: 0.85, marginTop: 5, transition: 'color .5s' }}>A Collection of Interests</div>
                         )}
@@ -861,7 +861,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                             color: accent, zIndex: 6, transition: 'color .5s', pointerEvents: 'none',
                         }}>
                             Now viewing{' '}
-                            <em style={{ fontFamily: DISPLAY, fontStyle: 'italic', letterSpacing: '.04em', textTransform: 'none', fontSize: '.84rem', opacity: 0.8 }}>
+                            <em style={{ fontFamily: DISPLAY, letterSpacing: '.04em', textTransform: 'none', fontSize: '.84rem', opacity: 0.8 }}>
                                 {H.main.title}
                             </em>
                             {' · '}{H.idx}
@@ -905,7 +905,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
 
                     {/* Desktop: index label */}
                     {!mobile && (
-                        <span style={{ position: 'absolute', left: 18, top: 'calc(50% + 96px)', fontFamily: DISPLAY, fontStyle: 'italic', fontSize: '1.3rem', color: accent, opacity: 0.7, zIndex: 8, transition: 'color .5s', pointerEvents: 'none' }}>
+                        <span style={{ position: 'absolute', left: 18, top: 'calc(50% + 96px)', fontFamily: DISPLAY, fontSize: '1.3rem', color: accent, opacity: 0.7, zIndex: 8, transition: 'color .5s', pointerEvents: 'none' }}>
                             {H.idx} / 04
                         </span>
                     )}
@@ -976,7 +976,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                                                 boxShadow: '0 2px 5px rgba(40,30,15,.22)',
                                             }} />
                                     ))}
-                                    <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: '1.05rem', color: accent, marginLeft: 5, opacity: 0.8, transition: 'color .5s' }}>
+                                    <span style={{ fontFamily: DISPLAY, fontSize: '1.05rem', color: accent, marginLeft: 5, opacity: 0.8, transition: 'color .5s' }}>
                                         {H.idx} · 04
                                     </span>
                                 </div>

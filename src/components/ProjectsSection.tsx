@@ -1,321 +1,229 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { projects } from '@/data/projects';
 import type { Project } from '@/types';
-import { useOverlay } from '@/contexts/OverlayContext';
 import Reveal from './Reveal';
-import { useScrollTilt } from '@/hooks/useScrollTilt';
+import FlapText from './concourse/FlapText';
+import Pictogram from './concourse/Pictogram';
+import { useOverlay } from '@/contexts/OverlayContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import {
-    ACCENT_TEXT, ACCENT_ORNAMENT as ACCENT, ACCENT_DEEP,
-    DISPLAY, BODY, BODY_TEXT, BODY_MUTED, MUTED, INK,
-    CANVAS, CANVAS_ALT, RULE, RULE_STRONG, DISABLED_TEXT,
-} from '@/design/tokens';
+    SIGNAL, SIGNAL_INK_SOFT, ENAMEL, STEEL, STEEL_SOFT,
+    BOARD, BOARD_INK, BOARD_INK_SOFT, SIGN_WHITE, SIGN_INK, SIGN_INK_SOFT,
+    CHALK, RED, RULE_DARK, RULE, DISABLED_TEXT,
+    SIGN, EASE_OUT, TYPE,} from '@/design/tokens';
 
-// Projects with an `href` get their own route, so they never enter the overlay carousel.
-const OVERLAY_PROJECTS = projects.filter(p => !p.href);
+const VISITED_KEY = 'oz-visited';
 
+/** The projects that open in the sheet rather than routing to their own page. */
+const SHEET_PROJECTS = projects.filter(p => !p.href);
 
-// Per-project color palettes
-/* `accent` drives the poster artwork; `accentText` is the same hue darkened
-   until it clears AA on that card's own background, for the label, subtitle
-   and call to action. Two roles, because one value cannot serve both. */
-const PALETTES: Record<string, { accent: string; accentText: string; bg: string; c3: string; ink: string }> = {
-    luminary: { accent: '#7c5cbf', accentText: '#6e4bb8', bg: '#ede8f7', c3: '#a78fd6', ink: '#2a1f42' },
-    boroughs: { accent: '#3c6e57', accentText: '#3b6b55', bg: '#e7efe6', c3: '#d49a2b', ink: '#20302a' },
-    noteform: { accent: '#2a2a2a', accentText: '#2a2a2a', bg: '#f0f0f0', c3: '#888888', ink: '#111111' },
-    minddo:   { accent: '#b8860b', accentText: '#835f08', bg: '#f7f2e6', c3: '#c9a44c', ink: '#33280f' },
-};
+/** Gate numbers. The hero board sends the whole section here as one destination
+ *  — "Gates 01–04" on platform 02 — and these are the gates it means. A platform
+ *  serves several gates, which is why the two numberings can coexist without
+ *  either becoming a bare ordinal. */
+const gateNo = (p: Project) => String(projects.indexOf(p) + 1).padStart(2, '0');
 
-// ─── SVG poster artwork — one motif per project id ────────────────────────────
-function ProjectArt({ id, pal }: { id: string; pal: typeof PALETTES.luminary }) {
-    const { accent, bg, c3 } = pal;
-    const TAU = Math.PI * 2;
-    const svgStyle: React.CSSProperties = { width: '100%', height: '100%', display: 'block', overflow: 'visible' };
-    const orbitStyle: React.CSSProperties = { transformBox: 'fill-box', transformOrigin: 'center', animation: 'orbit 18s linear infinite' };
-    const floatStyle: React.CSSProperties = { transformBox: 'fill-box', transformOrigin: 'center', animation: 'floaty 4.6s ease-in-out infinite' };
+// ─── One platform panel ──────────────────────────────────────────────────────
+function PlatformPanel({
+    project, index, visited, onOpen, isMobile,
+}: {
+    project: Project;
+    index: number;
+    visited: boolean;
+    onOpen: (p: Project) => void;
+    isMobile: boolean;
+}) {
+    const [lit, setLit] = useState(false);
+    /* Bumped on entry rather than toggled, so the row re-flaps when the pointer
+       arrives and stays landed when it leaves. */
+    const [flap, setFlap] = useState(0);
 
-    switch (id) {
-        case 'luminary': // orbital rings
-            return (
-                <svg viewBox="0 0 200 200" style={svgStyle}>
-                    {[0,1,2].flatMap(j => [0,1].map(i => (
-                        <circle key={`h${i}${j}`} cx={150+i*11} cy={28+j*11} r={Math.max(0.7,2.6-0.45*(i+j))} fill={c3} opacity={0.5} />
-                    )))}
-                    <circle cx={100} cy={104} r={80} fill="none" stroke={c3} strokeWidth={1.6} strokeDasharray="2 10" opacity={0.6} />
-                    <circle cx={100} cy={104} r={58} fill="none" stroke={accent} strokeWidth={5} strokeLinecap="round"
-                        strokeDasharray={`${(TAU*58*0.7).toFixed(1)} ${(TAU*58).toFixed(1)}`} transform="rotate(-90 100 104)" />
-                    <g style={orbitStyle}>
-                        {[0,1,2,3,4,5].map(k => {
-                            const a = k * 60 * Math.PI / 180;
-                            const cx = Math.round((100 + 58 * Math.cos(a)) * 100) / 100;
-                            const cy = Math.round((104 + 58 * Math.sin(a)) * 100) / 100;
-                            return <circle key={`o${k}`} cx={cx} cy={cy} r={k%2?5:3.4} fill={k%2?accent:c3} />;
-                        })}
-                    </g>
-                    <g style={floatStyle}>
-                        <circle cx={100} cy={104} r={24} fill="none" stroke={accent} strokeWidth={1} opacity={0.4} />
-                        <circle cx={100} cy={104} r={15} fill={accent} />
-                        <circle cx={100} cy={104} r={15} fill="none" stroke={bg} strokeWidth={1.6} />
-                        <circle cx={100} cy={104} r={5.1} fill={bg} />
-                    </g>
-                </svg>
-            );
+    const enter = () => { setLit(true); setFlap(f => f + 1); };
+    const leave = () => setLit(false);
 
-        case 'boroughs': // geometric squares
-            return (
-                <svg viewBox="0 0 200 200" style={svgStyle}>
-                    {[0,1,2,3,4].flatMap(j => [0,1,2,3,4].map(i => (
-                        <circle key={`g${i}${j}`} cx={48+i*26} cy={52+j*26} r={2.4} fill={c3} opacity={0.42} />
-                    )))}
-                    {([[58,62],[112,86],[78,126]] as [number,number][]).map(([x,y], k) => (
-                        <rect key={`s${k}`} x={x} y={y} width={28} height={28} fill={k%2?accent:c3} opacity={0.88} rx={2}
-                            transform={`rotate(${k*6-6} ${x+14} ${y+14})`} />
-                    ))}
-                    <line x1={72} y1={76} x2={126} y2={100} stroke={accent} strokeWidth={1.4} strokeDasharray="2 6" opacity={0.7} />
-                    <g style={floatStyle}>
-                        <circle cx={142} cy={150} r={22} fill="none" stroke={accent} strokeWidth={1} opacity={0.4} />
-                        <circle cx={142} cy={150} r={13} fill={accent} />
-                        <circle cx={142} cy={150} r={13} fill="none" stroke={bg} strokeWidth={1.6} />
-                        <circle cx={142} cy={150} r={4.42} fill={bg} />
-                    </g>
-                </svg>
-            );
+    const ink = lit ? STEEL : BOARD_INK;
+    const inkSoft = lit ? SIGNAL_INK_SOFT : BOARD_INK_SOFT;
 
-        case 'minddo': { // isometric pipeline stack — ingest, queue, workers
-            const W = 50, H = 25, T = 11;                       // plate half-width, half-height, thickness
-            const plate = (cy: number) => ({
-                top:   `${100 - W},${cy} ${100},${cy - H} ${100 + W},${cy} ${100},${cy + H}`,
-                left:  `${100 - W},${cy} ${100},${cy + H} ${100},${cy + H + T} ${100 - W},${cy + T}`,
-                right: `${100 + W},${cy} ${100},${cy + H} ${100},${cy + H + T} ${100 + W},${cy + T}`,
-            });
-            // Isometric grid coords: (i, j) in [-1,1]² covers the plate, (0,0) is its centre.
-            const iso = (cy: number, i: number, j: number): [number, number] =>
-                [100 + (i - j) * W / 2, cy + (i + j) * H / 2];
-            // Box standing on the plate: base centred on (x, y), body rising by `t`.
-            const box = ([x, y]: [number, number], w: number, t: number) => {
-                const h = w / 2;
-                return {
-                    top:   `${x - w},${y - t} ${x},${y - t - h} ${x + w},${y - t} ${x},${y - t + h}`,
-                    left:  `${x - w},${y - t} ${x},${y - t + h} ${x},${y + h} ${x - w},${y}`,
-                    right: `${x + w},${y - t} ${x},${y - t + h} ${x},${y + h} ${x + w},${y}`,
-                };
-            };
-            const TIERS = [52, 104, 156];
-            // Ordered back-to-front so overlapping boxes paint correctly.
-            const submitted = box(iso(TIERS[0], 0, 0), 10, 11);
-            const queued    = [-0.62, 0, 0.62].map(i => box(iso(TIERS[1], i, 0), 8, 9));
-            const workers   = ([[-0.55, 0.18], [0, 0], [0.55, -0.18]] as [number, number][])
-                .map(([i, j]) => box(iso(TIERS[2], i, j), 11, 13));
-
-            return (
-                <svg viewBox="0 0 200 200" style={svgStyle}>
-                    {[0,1,2].flatMap(j => [0,1].map(i => (
-                        <circle key={`h${i}${j}`} cx={20+i*11} cy={30+j*11} r={Math.max(0.7,2.6-0.45*(i+j))} fill={c3} opacity={0.5} />
-                    )))}
-
-                    {/* spine linking the three tiers — only visible in the gaps between plates */}
-                    <line x1={100} y1={44} x2={100} y2={176} stroke={accent} strokeWidth={1.4} strokeDasharray="2 7" opacity={0.55} />
-
-                    {TIERS.map((cy, k) => {
-                        const pl = plate(cy);
-                        const on = k === 0 ? [submitted] : k === 1 ? queued : workers;
-                        return (
-                            <g key={`t${k}`}>
-                                <polygon points={pl.left}  fill={accent} opacity={0.9} />
-                                <polygon points={pl.right} fill={c3}     opacity={0.75} />
-                                <polygon points={pl.top}   fill={bg} stroke={accent} strokeWidth={1.4} strokeLinejoin="round" />
-                                {on.map((o, n) => (
-                                    <g key={`b${k}${n}`} opacity={k === 1 && n > 0 ? 0.78 : 1}>
-                                        <polygon points={o.left}  fill={accent} />
-                                        <polygon points={o.right} fill={c3} />
-                                        <polygon points={o.top}   fill={bg} stroke={accent} strokeWidth={1.1} strokeLinejoin="round" />
-                                    </g>
-                                ))}
-                            </g>
-                        );
-                    })}
-
-                    {/* the submitted URL, orbiting above the ingest tier */}
-                    <g style={orbitStyle}>
-                        <ellipse cx={100} cy={22} rx={40} ry={16} fill="none" stroke={c3} strokeWidth={1.2} strokeDasharray="2 9" opacity={0.65} />
-                    </g>
-                    <g style={floatStyle}>
-                        <circle cx={100} cy={22} r={16} fill="none" stroke={accent} strokeWidth={1} opacity={0.4} />
-                        <circle cx={100} cy={22} r={10} fill={accent} />
-                        <circle cx={100} cy={22} r={10} fill="none" stroke={bg} strokeWidth={1.6} />
-                        <circle cx={100} cy={22} r={3.4} fill={bg} />
-                    </g>
-                </svg>
-            );
-        }
-
-        default: // noteform — piano keyboard
-            return (
-                <svg viewBox="0 0 200 200" style={svgStyle}>
-                    {[0,1,2,3,4,5,6].map(k => (
-                        <rect key={`wk${k}`} x={26+k*22} y={102} width={20} height={82} fill="#f8f8f6" stroke="#1a1a1a" strokeWidth={1.4} rx={2} />
-                    ))}
-                    {[0,1,3,4,5].map((k,j) => (
-                        <rect key={`bk${j}`} x={38+k*22} y={102} width={14} height={52} fill="#111" rx={2} />
-                    ))}
-                    <line x1={24} y1={184} x2={182} y2={184} stroke={accent} strokeWidth={1.6} opacity={0.6} />
-                    <g style={floatStyle}>
-                        <path d="M 100 78 L 100 48" stroke={accent} strokeWidth={2.4} strokeLinecap="round" />
-                        <ellipse cx={100} cy={78} rx={7} ry={7} fill={accent} />
-                        <path d="M 100 48 C 106 46 112 50 110 58" fill="none" stroke={accent} strokeWidth={2.4} strokeLinecap="round" />
-                        <circle cx={110} cy={64} r={5} fill={accent} />
-                    </g>
-                    {[0,1,2].flatMap(j => [0,1].map(i => (
-                        <circle key={`h${i}${j}`} cx={152+i*9} cy={38+j*9} r={Math.max(0.7,2.2-0.38*(i+j))} fill={c3} opacity={0.5} />
-                    )))}
-                </svg>
-            );
-    }
-}
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
-function GitHubIcon({ size = 18 }: { size?: number }) {
-    return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
-        </svg>
-    );
-}
-
-function ArrowIcon({ dir = 'right', size = 16 }: { dir?: 'left' | 'right'; size?: number }) {
-    return (
-        <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            {dir === 'right'
-                ? <><line x1="2" y1="8" x2="14" y2="8" /><polyline points="9,3 14,8 9,13" /></>
-                : <><line x1="14" y1="8" x2="2" y2="8" /><polyline points="7,3 2,8 7,13" /></>
-            }
-        </svg>
-    );
-}
-
-// ─── Poster card ──────────────────────────────────────────────────────────────
-function ProjectCard({ project, index, onOpen, isMobile }: { project: Project; index: number; onOpen: (p: Project) => void; isMobile: boolean }) {
-    const [hovered, setHovered] = useState(false);
-    const reduced = useReducedMotion();
-    const pal = PALETTES[project.id] ?? PALETTES.noteform;
-    const TILTS = [-2, 1.6, -1.3, 2];
-    const tilt = TILTS[index % TILTS.length];
-    /* Mobile: cards stay flat — tilt and lift only on desktop hover.
-       Reduced motion keeps the resting tilt, because that is a static property
-       of the card and not movement, and drops the 12px rise on hover. The
-       shadow still deepens, so the card is still visibly the one under the
-       pointer. */
-    const tf = isMobile
-        ? 'none'
-        : hovered && !reduced
-            ? 'rotate(0deg) translateY(-12px) scale(1.025)'
-            : `rotate(${tilt}deg)`;
-
-    /* The whole card is the control, so it has to *be* one. A div with onClick
-       took the entire projects section — the site's core content — away from
-       anyone without a mouse. A card that routes is an anchor; a card that opens
-       the overlay is a button. Focus mirrors hover so tabbing through lights the
-       same lift the pointer does. */
-    const interaction = {
-        onMouseEnter: isMobile ? undefined : () => setHovered(true),
-        onMouseLeave: isMobile ? undefined : () => setHovered(false),
-        onFocus: isMobile ? undefined : () => setHovered(true),
-        onBlur: isMobile ? undefined : () => setHovered(false),
+    const shell: React.CSSProperties = {
+        display: 'block', width: '100%', textAlign: 'left',
+        background: lit ? SIGNAL : 'transparent',
+        border: 'none',
+        borderTop: `1px solid ${lit ? SIGNAL : RULE_DARK}`,
+        padding: isMobile ? '24px 18px 26px' : '32px 28px 34px',
+        cursor: 'pointer',
+        fontFamily: SIGN,
+        color: ink,
+        transition: `background 0.22s ${EASE_OUT}, color 0.22s ${EASE_OUT}, border-color 0.22s ${EASE_OUT}`,
     };
 
-    const surface: React.CSSProperties = {
-        position: 'relative',
-        display: 'flex', flexDirection: 'column',
-        /* Reset the control's own chrome — the card supplies all of it. */
-        appearance: 'none', border: 'none', padding: 0, margin: 0,
-        font: 'inherit', textAlign: 'left', width: '100%',
-        borderRadius: 3, overflow: 'hidden',
-        background: pal.bg, color: pal.ink,
-        boxShadow: isMobile
-            ? '0 8px 20px rgba(40,30,15,.1), 0 2px 6px rgba(40,30,15,.06)'
-            : hovered
-                ? '0 34px 66px rgba(40,30,15,.26), 0 8px 18px rgba(40,30,15,.12)'
-                : '0 16px 38px rgba(40,30,15,.15), 0 3px 9px rgba(40,30,15,.07)',
-        transform: tf,
-        transition: reduced
-            ? 'box-shadow .2s linear'
-            : 'transform .55s cubic-bezier(.22,1,.36,1), box-shadow .45s ease',
-        /* Only while the card is actually the one moving. Left on at rest this
-           is four permanent compositor layers bought for a hover that may never
-           arrive. */
-        willChange: hovered ? 'transform' : undefined,
-        zIndex: hovered ? 5 : 1,
-        cursor: 'pointer',
+    const handlers = {
+        onMouseEnter: enter, onMouseLeave: leave,
+        onFocus: enter, onBlur: leave,
     };
 
     const body = (
-        <>
-                {/* Decorative tab */}
-                <div style={{
-                    position: 'absolute', left: '50%', top: 0,
-                    width: 2, height: 15, background: `${RULE_STRONG}aa`,
-                    transform: 'translateX(-50%)', zIndex: 3,
-                }} />
-
-                {/* Year badge */}
+        <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'clamp(88px, 8vw, 132px) minmax(0, 1fr) auto',
+            gap: isMobile ? 16 : 32,
+            alignItems: 'start',
+        }}>
+            {/* The gate number, at the scale a gate number is painted, with its
+                own plate above it so it reads as a wayfinding number and not as
+                an item count. The hero board's platform 02 sends you here for
+                "4 gates"; these are the gates it meant. */}
+            <span style={{ display: 'block' }}>
                 <span style={{
-                    position: 'absolute', right: 15, top: 13, zIndex: 2,
-                    fontFamily: DISPLAY, fontStyle: 'italic', fontSize: '1.05rem',
-                    color: pal.accentText,
+                    display: 'block',
+                    fontSize: TYPE.MICRO, fontWeight: 700, fontStretch: '88%',
+                    letterSpacing: '0.2em', textTransform: 'uppercase',
+                    color: lit ? SIGNAL_INK_SOFT : BOARD_INK_SOFT,
+                    marginBottom: 7,
+                    transition: `color 0.22s ${EASE_OUT}`,
                 }}>
-                    {project.year}
+                    Gate
+                </span>
+                <span style={{
+                    display: 'block',
+                    fontSize: isMobile ? TYPE.SUBHEAD : 'clamp(3rem, 5.4vw, 4.6rem)',
+                    fontWeight: 800, fontStretch: '112%', lineHeight: 0.8,
+                    letterSpacing: '-0.04em',
+                    color: lit ? STEEL : SIGNAL,
+                    transition: `color 0.22s ${EASE_OUT}`,
+                }}>
+                    {gateNo(project)}
+                </span>
+            </span>
+
+            <div style={{ minWidth: 0 }}>
+                <span style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap', marginBottom: 6 }}>
+                    <FlapText
+                        key={flap}
+                        text={project.name.replace('.ai Showcase', '.AI')}
+                        variant="bare"
+                        stagger={1}
+                        style={{
+                            fontSize: isMobile ? TYPE.SUBHEAD : 'clamp(1.8rem, 3vw, 2.6rem)',
+                            fontWeight: 800, fontStretch: '104%',
+                            letterSpacing: '-0.025em', lineHeight: 1,
+                            color: ink,
+                        }}
+                    />
+                    <span style={{
+                        fontSize: TYPE.META, fontWeight: 700, letterSpacing: '0.12em',
+                        color: inkSoft, whiteSpace: 'nowrap',
+                    }}>
+                        {project.year}
+                    </span>
                 </span>
 
-                {/* Artwork */}
-                <div style={{ position: 'relative', aspectRatio: '1/1', padding: 32 }}>
-                    <ProjectArt id={project.id} pal={pal} />
-                </div>
+                <p style={{
+                    fontSize: isMobile ? TYPE.META : TYPE.META, fontWeight: 700,
+                    fontStretch: '88%', letterSpacing: '0.15em', textTransform: 'uppercase',
+                    color: lit ? STEEL : SIGNAL,
+                    marginBottom: 12,
+                    transition: `color 0.22s ${EASE_OUT}`,
+                }}>
+                    {project.subtitle}
+                </p>
 
-                {/* Metadata */}
-                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '2px 22px 24px' }}>
-                    <h3 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 500, lineHeight: 0.92, fontSize: '2.05rem', letterSpacing: '-0.01em', color: pal.ink }}>
-                        {project.name}
-                    </h3>
-                    {project.award && (
-                        <span style={{ fontFamily: BODY, fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: pal.accentText, marginTop: 8, lineHeight: 1.45 }}>
-                            {project.award}
+                <p style={{
+                    fontSize: isMobile ? TYPE.COPY : TYPE.BODY, lineHeight: 1.6,
+                    color: lit ? STEEL : BOARD_INK, maxWidth: '62ch',
+                    marginBottom: 16,
+                }}>
+                    {project.desc}
+                </p>
+
+                <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {(project.id === 'minddo'
+                        ? ['AWS', 'k3s', 'KEDA', 'Postgres', 'Celery']
+                        : project.stack.map(s => s.name)
+                    ).map(name => (
+                        <span key={name} style={{
+                            fontSize: TYPE.LABEL, fontWeight: 700, fontStretch: '88%',
+                            letterSpacing: '0.12em', textTransform: 'uppercase',
+                            color: lit ? SIGNAL : STEEL,
+                            background: lit ? STEEL : CHALK,
+                            padding: '5px 10px',
+                            transition: `background 0.22s ${EASE_OUT}, color 0.22s ${EASE_OUT}`,
+                        }}>
+                            {name}
+                        </span>
+                    ))}
+                </span>
+            </div>
+
+            {/* Seen mark and gate. */}
+            <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'row' : 'column',
+                alignItems: isMobile ? 'center' : 'flex-end',
+                justifyContent: isMobile ? 'space-between' : 'flex-start',
+                gap: isMobile ? 12 : 20,
+                width: isMobile ? '100%' : undefined,
+            }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    {visited && (
+                        <span
+                            title="You have opened this one"
+                            style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 5,
+                                fontSize: TYPE.MICRO, fontWeight: 700, fontStretch: '88%',
+                                letterSpacing: '0.16em', textTransform: 'uppercase',
+                                color: inkSoft,
+                            }}
+                        >
+                            <Pictogram name="check" size={9} />
+                            Seen
                         </span>
                     )}
-                    <div style={{ height: 1, width: 32, background: pal.accent, marginTop: 15, opacity: 0.5 }} />
-                    <span style={{ fontFamily: BODY, fontSize: '0.83rem', lineHeight: 1.6, marginTop: 14, color: pal.ink, opacity: 0.86 }}>
-                        {project.desc}
-                    </span>
-                    <span style={{
-                        alignSelf: 'flex-start', marginTop: 'auto', paddingTop: 20,
-                        fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase',
-                        display: 'inline-flex', alignItems: 'center', gap: 8, color: pal.accentText,
-                    }}>
-                        {project.href ? 'Read Case Study' : 'View Details'}
-                        <span style={{ display: 'inline-flex', transition: 'transform .35s ease', transform: hovered ? 'translateX(5px)' : 'none' }}>
-                            <ArrowIcon size={12} />
-                        </span>
-                    </span>
-                </div>
-        </>
+                </span>
+
+                <span
+                    className="oz-gate"
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 10,
+                        background: lit ? STEEL : 'transparent',
+                        border: `2px solid ${lit ? STEEL : SIGNAL}`,
+                        color: lit ? SIGNAL : SIGNAL,
+                        padding: '0 16px', minHeight: 44,
+                        fontSize: TYPE.LABEL, fontWeight: 800, fontStretch: '88%',
+                        letterSpacing: '0.18em', textTransform: 'uppercase',
+                        whiteSpace: 'nowrap',
+                        transition: `background 0.22s ${EASE_OUT}, border-color 0.22s ${EASE_OUT}, color 0.22s ${EASE_OUT}`,
+                    }}
+                >
+                    {project.href ? 'Case Study' : 'Open'}
+                    <Pictogram name="arrow-right" size={13} />
+                </span>
+            </div>
+        </div>
     );
 
     return (
-        <Reveal delay={(index % 3) * 0.08}>
+        <Reveal delay={Math.min(index, 3) * 0.06}>
             {project.href ? (
-                <Link href={project.href} {...interaction} style={surface}>{body}</Link>
+                <Link href={project.href} style={shell} {...handlers}
+                    aria-label={`${project.name} — read the case study`}>
+                    {body}
+                </Link>
             ) : (
-                <button type="button" onClick={() => onOpen(project)} {...interaction} style={surface}>{body}</button>
+                <button type="button" onClick={() => onOpen(project)} style={shell} {...handlers}
+                    aria-label={`${project.name} — open the project`}>
+                    {body}
+                </button>
             )}
         </Reveal>
     );
 }
 
-// ─── Project detail overlay ───────────────────────────────────────────────────
-function ProjectDetail({
+// ─── The platform sheet ──────────────────────────────────────────────────────
+function PlatformSheet({
     project, onClose, onPrev, onNext, prevProject, nextProject, isMobile,
 }: {
     project: Project;
@@ -372,7 +280,36 @@ function ProjectDetail({
         return () => window.removeEventListener('keydown', fn);
     }, [project.id, nextProject, prevProject, onClose, onNext, onPrev]);
 
-    const currentIndex = OVERLAY_PROJECTS.findIndex(p => p.id === project.id);
+    const currentIndex = SHEET_PROJECTS.findIndex(p => p.id === project.id);
+
+    const gate = (dir: 'left' | 'right', handler: () => void, enabled: boolean) => (
+        <button
+            onClick={handler}
+            disabled={!enabled}
+            aria-label={dir === 'left' ? 'Previous project' : 'Next project'}
+            style={{
+                background: 'none',
+                border: `2px solid ${enabled ? SIGNAL : STEEL_SOFT}`,
+                color: enabled ? SIGNAL : DISABLED_TEXT,
+                width: 44, height: 44,
+                cursor: enabled ? 'pointer' : 'default',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: `background 0.2s ${EASE_OUT}, color 0.2s ${EASE_OUT}`,
+            }}
+            onMouseEnter={e => {
+                if (!enabled) return;
+                e.currentTarget.style.background = SIGNAL;
+                e.currentTarget.style.color = STEEL;
+            }}
+            onMouseLeave={e => {
+                if (!enabled) return;
+                e.currentTarget.style.background = 'none';
+                e.currentTarget.style.color = SIGNAL;
+            }}
+        >
+            <Pictogram name={dir === 'left' ? 'arrow-left' : 'arrow-right'} size={16} />
+        </button>
+    );
 
     return (
         <motion.div
@@ -383,133 +320,157 @@ function ProjectDetail({
             /* The rise goes under reduced motion, the cross-fade stays: a
                full-screen surface appearing with no transition at all reads as a
                page navigation rather than a layer opening over this one. */
-            initial={{ y: reduced ? 0 : 40, opacity: 0 }}
+            initial={{ y: reduced ? 0 : 48, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: reduced ? 0 : -24, opacity: 0 }}
+            exit={{ y: reduced ? 0 : -28, opacity: 0 }}
             transition={reduced
                 ? { duration: 0.2, ease: 'linear' }
                 : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             style={{
                 position: 'fixed', inset: 0, zIndex: 400,
-                background: CANVAS, overflowY: 'auto',
+                background: BOARD, overflowY: 'auto', fontFamily: SIGN,
             }}
         >
-            {/* Sticky header */}
+            {/* The sheet's own rail. */}
             <div style={{
                 position: 'sticky', top: 0, zIndex: 10,
-                background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(16px)',
-                borderBottom: `1px solid ${ACCENT}22`,
-                padding: isMobile ? '0 16px' : '0 48px', height: 68,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                background: STEEL, borderBottom: `1px solid ${STEEL_SOFT}`,
+                padding: isMobile ? '0 12px 0 0' : '0 28px 0 0', height: 60,
+                display: 'flex', alignItems: 'stretch', justifyContent: 'space-between',
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                    <button
-                        onClick={onClose}
-                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = INK; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = MUTED; }}
-                        style={{
-                            background: 'none', border: 'none', cursor: 'pointer', color: MUTED,
-                            display: 'flex', alignItems: 'center', gap: 8,
-                            fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase',
-                            /* The only way out of the dialog, so it gets a real target
-                               rather than the height of its own lettering. Negative
-                               left margin keeps the label optically flush with the
-                               header edge while the padding grows the hit area. */
-                            minHeight: 44, padding: '0 10px', marginLeft: -10,
-                            transition: 'color 0.2s',
-                        }}
-                    >
-                        <ArrowIcon dir="left" size={14} /> Back
-                    </button>
-                    <div style={{ width: 1, height: 18, background: RULE }} />
-                    <span style={{ fontFamily: BODY, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED }}>
-                        {currentIndex + 1} / {OVERLAY_PROJECTS.length}
-                    </span>
+                <button
+                    onClick={onClose}
+                    style={{
+                        background: SIGNAL, color: STEEL, border: 'none', cursor: 'pointer',
+                        padding: isMobile ? '0 16px' : '0 22px',
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        fontFamily: SIGN, fontSize: TYPE.LABEL, fontWeight: 800, fontStretch: '88%',
+                        letterSpacing: '0.18em', textTransform: 'uppercase',
+                        transition: `background 0.18s ${EASE_OUT}`,
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = SIGN_WHITE; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = SIGNAL; }}
+                >
+                    <Pictogram name="arrow-left" size={14} />
+                    Back
+                </button>
+
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 20,
+                    color: BOARD_INK_SOFT, fontSize: TYPE.LABEL, fontWeight: 700,
+                    fontStretch: '88%', letterSpacing: '0.18em', textTransform: 'uppercase',
+                }}>
+                    Gate {gateNo(project)}
+                    <span aria-hidden="true" style={{ width: 1, height: 14, background: STEEL_SOFT }} />
+                    {currentIndex + 1} / {SHEET_PROJECTS.length}
                 </div>
 
-                <div style={{ display: 'flex', gap: 8 }}>
-                    {[
-                        { handler: onPrev, dir: 'left' as const, enabled: !!prevProject },
-                        { handler: onNext, dir: 'right' as const, enabled: !!nextProject },
-                    ].map(({ handler, dir, enabled }) => (
-                        <button
-                            key={dir}
-                            onClick={handler}
-                            disabled={!enabled}
-                            aria-label={dir === 'left' ? 'Previous project' : 'Next project'}
-                            onMouseEnter={e => { if (enabled) { (e.currentTarget as HTMLButtonElement).style.background = `${ACCENT}11`; (e.currentTarget as HTMLButtonElement).style.borderColor = ACCENT; } }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; (e.currentTarget as HTMLButtonElement).style.borderColor = enabled ? `${ACCENT}44` : RULE_STRONG; }}
-                            style={{
-                                background: 'none',
-                                border: `1px solid ${enabled ? ACCENT + '44' : RULE_STRONG}`,
-                                color: enabled ? ACCENT_TEXT : DISABLED_TEXT,
-                                width: isMobile ? 44 : 36, height: isMobile ? 44 : 36,
-                                cursor: enabled ? 'pointer' : 'default',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'background 0.2s ease, border-color 0.2s ease',
-                            }}
-                        >
-                            <ArrowIcon dir={dir} size={14} />
-                        </button>
-                    ))}
+                <div style={{ flex: 1 }} />
+
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    {gate('left', onPrev, !!prevProject)}
+                    {gate('right', onNext, !!nextProject)}
                 </div>
             </div>
 
-            {/* Hero area */}
+            {/* The sheet's head: a signal panel, as on the platform itself. */}
             <div style={{
-                background: `linear-gradient(160deg, ${CANVAS_ALT} 0%, ${CANVAS} 60%)`,
-                borderBottom: `1px solid ${ACCENT}18`,
-                padding: isMobile ? '40px 20px 32px' : '72px 48px 60px',
+                background: SIGNAL,
+                padding: isMobile ? '28px 20px 32px' : '52px 48px 56px',
             }}>
-                <div style={{ maxWidth: 960, margin: '0 auto' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap' }}>
-                        <div style={{ flex: 1, minWidth: 280 }}>
-                            <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(3rem, 7vw, 5.5rem)', fontWeight: 300, color: INK, lineHeight: 0.9, marginBottom: 8 }}>
-                                {project.name}
-                            </h2>
-                            <p style={{ fontFamily: DISPLAY, fontSize: 'clamp(1rem, 2vw, 1.4rem)', fontStyle: 'italic', fontWeight: 300, color: MUTED, marginBottom: 28, lineHeight: 1.3 }}>
-                                {project.subtitle}, {project.year}
-                            </p>
-                            <div style={{ width: 40, height: 1, background: ACCENT, marginBottom: 28 }} />
-                            <p style={{ fontFamily: BODY, fontSize: '1rem', color: BODY_TEXT, lineHeight: 1.8, maxWidth: 560, marginBottom: 32 }}>
-                                {project.overview}
-                            </p>
-                            {project.award && (
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, padding: '10px 18px', marginBottom: 32 }}>
-                                    <span style={{ fontFamily: BODY, fontSize: '0.8rem', fontWeight: 500, color: ACCENT_TEXT, lineHeight: 1.4 }}>{project.award}</span>
-                                </div>
-                            )}
-                            <div style={{ display: 'flex', gap: 12 }}>
-                                <a
-                                    href={project.githubUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = ACCENT_DEEP; }}
-                                    onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = ACCENT; }}
-                                    style={{
-                                        fontFamily: BODY, fontSize: '0.78rem', fontWeight: 500,
-                                        letterSpacing: '0.12em', textTransform: 'uppercase',
-                                        /* White on the ornamental gold is 3.26:1. The text-safe gold
-                                           takes it to 5.3:1 and looks the same at this size. */
-                                        color: CANVAS, background: ACCENT_TEXT, border: `1px solid ${ACCENT_TEXT}`,
-                                        padding: '12px 24px', display: 'inline-flex', alignItems: 'center', gap: 8,
-                                        transition: 'background 0.2s ease',
-                                    }}
-                                >
-                                    <GitHubIcon size={15} /> GitHub
-                                </a>
-                            </div>
-                        </div>
+                <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+                    <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 9,
+                        background: STEEL, color: SIGNAL,
+                        padding: '6px 12px', marginBottom: 20,
+                        fontSize: TYPE.LABEL, fontWeight: 800, fontStretch: '88%',
+                        letterSpacing: '0.18em', textTransform: 'uppercase',
+                    }}>
+                        Gate {gateNo(project)} · {project.year}
+                    </span>
 
-                        {/* Demo / screenshot. Every project that reaches the overlay
-                            has one or the other — the ones that do not route to their
-                            own page instead — so there is no empty state to draw. */}
-                        <div style={{
-                            width: isMobile ? '100%' : 340, flexShrink: isMobile ? 1 : 0,
-                            border: `1px solid ${ACCENT}33`,
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                            gap: 10, position: 'relative', overflow: 'hidden',
+                    <h2 style={{
+                        fontSize: isMobile ? 'clamp(2.2rem, 11vw, 3.2rem)' : 'clamp(3rem, 6.4vw, 5.4rem)',
+                        fontWeight: 800, fontStretch: '112%',
+                        letterSpacing: '-0.035em', lineHeight: 0.86, color: STEEL,
+                        marginBottom: 12,
+                    }}>
+                        {project.name}
+                    </h2>
+
+                    <p style={{
+                        fontSize: isMobile ? TYPE.META : TYPE.COPY, fontWeight: 700,
+                        fontStretch: '88%', letterSpacing: '0.16em', textTransform: 'uppercase',
+                        color: SIGNAL_INK_SOFT, marginBottom: 26,
+                    }}>
+                        {project.subtitle}
+                    </p>
+
+                    <p style={{
+                        fontSize: isMobile ? TYPE.BODY : TYPE.LEDE, lineHeight: 1.6,
+                        color: STEEL, maxWidth: '58ch',
+                    }}>
+                        {project.overview}
+                    </p>
+
+                    {project.award && (
+                        <p style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 10,
+                            background: RED, color: SIGN_WHITE,
+                            padding: '11px 16px', marginTop: 26,
+                            fontSize: TYPE.CONTROL, fontWeight: 700, lineHeight: 1.35,
                         }}>
+                            <Pictogram name="check" size={13} />
+                            {project.award}
+                        </p>
+                    )}
+
+                    {project.githubUrl && (
+                        <div style={{ marginTop: 26 }}>
+                            <a
+                                href={project.githubUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 10,
+                                    background: STEEL, color: SIGNAL,
+                                    padding: '0 22px', minHeight: 48,
+                                    fontSize: TYPE.CONTROL, fontWeight: 800, fontStretch: '88%',
+                                    letterSpacing: '0.18em', textTransform: 'uppercase',
+                                    transition: `background 0.2s ${EASE_OUT}, color 0.2s ${EASE_OUT}`,
+                                }}
+                                onMouseEnter={e => {
+                                    e.currentTarget.style.background = SIGN_WHITE;
+                                    e.currentTarget.style.color = STEEL;
+                                }}
+                                onMouseLeave={e => {
+                                    e.currentTarget.style.background = STEEL;
+                                    e.currentTarget.style.color = SIGNAL;
+                                }}
+                            >
+                                <Pictogram name="github" size={15} />
+                                Source
+                            </a>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* The demo, framed in steel the way a platform screen is. */}
+            {(project.demoVideo || project.mockImage) && (
+                <div style={{
+                    background: STEEL,
+                    padding: isMobile ? '20px 20px' : '40px 48px',
+                }}>
+                    <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+                        <p style={{
+                            fontSize: TYPE.LABEL, fontWeight: 800, fontStretch: '88%',
+                            letterSpacing: '0.2em', textTransform: 'uppercase',
+                            color: SIGNAL, marginBottom: 14,
+                        }}>
+                            {project.mockLabel}
+                        </p>
+                        <div style={{ border: `2px solid ${STEEL_SOFT}`, background: BOARD }}>
                             {project.demoVideo && (
                                 <iframe
                                     src={project.demoVideo}
@@ -520,7 +481,7 @@ function ProjectDetail({
                                     allowFullScreen
                                 />
                             )}
-                            {project.mockImage && (
+                            {project.mockImage && !project.demoVideo && (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     src={project.mockImage}
@@ -535,89 +496,145 @@ function ProjectDetail({
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
-            {/* Body */}
-            <div style={{ maxWidth: 960, margin: '0 auto', padding: isMobile ? '40px 20px' : '72px 48px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 40 : 64, alignItems: 'start' }}>
-                    {/* Technical breakdown */}
+            {/* The body, on the light sign ground so the long read is a read. */}
+            <div style={{
+                background: SIGN_WHITE,
+                padding: isMobile ? '40px 20px 56px' : '72px 48px 96px',
+            }}>
+                <div style={{
+                    maxWidth: 1080, margin: '0 auto',
+                    display: 'grid',
+                    gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.35fr) minmax(0, 1fr)',
+                    gap: isMobile ? 44 : 72,
+                    alignItems: 'start',
+                }}>
                     <div>
-                        <h3 style={{ fontFamily: BODY, fontSize: '0.75rem', fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 32 }}>
-                            Technical Breakdown
+                        <h3 style={{
+                            fontSize: TYPE.LABEL, fontWeight: 800, fontStretch: '88%',
+                            letterSpacing: '0.2em', textTransform: 'uppercase',
+                            color: ENAMEL, marginBottom: 26,
+                            paddingBottom: 12, borderBottom: `3px solid ${ENAMEL}`,
+                        }}>
+                            How it was built
                         </h3>
-                        {project.details.map((d, i) => (
-                            /* 1px, like every other rule on the site. A 2px coloured
-                               left edge is a callout costume; the hairline is the
-                               language this page already speaks. */
-                            <div key={d.heading} style={{ marginBottom: 40, paddingLeft: 20, borderLeft: `1px solid ${i === 0 ? ACCENT : ACCENT + '44'}` }}>
-                                <h4 style={{ fontFamily: DISPLAY, fontSize: '1.35rem', fontWeight: 500, color: INK, marginBottom: 10 }}>
+                        {project.details.map(d => (
+                            <div key={d.heading} style={{ marginBottom: 32 }}>
+                                <h4 style={{
+                                    fontSize: TYPE.TITLE, fontWeight: 700, fontStretch: '96%',
+                                    letterSpacing: '-0.015em', color: SIGN_INK, marginBottom: 8,
+                                }}>
                                     {d.heading}
                                 </h4>
-                                <p style={{ fontFamily: BODY, fontSize: '0.88rem', color: BODY_MUTED, lineHeight: 1.75 }}>
+                                <p style={{ fontSize: TYPE.COPY, color: SIGN_INK_SOFT, lineHeight: 1.7, maxWidth: '66ch' }}>
                                     {d.body}
                                 </p>
                             </div>
                         ))}
                     </div>
 
-                    {/* Tech stack */}
                     <div>
-                        <h3 style={{ fontFamily: BODY, fontSize: '0.75rem', fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 32 }}>
-                            Tech Stack
+                        <h3 style={{
+                            fontSize: TYPE.LABEL, fontWeight: 800, fontStretch: '88%',
+                            letterSpacing: '0.2em', textTransform: 'uppercase',
+                            color: ENAMEL, marginBottom: 26,
+                            paddingBottom: 12, borderBottom: `3px solid ${ENAMEL}`,
+                        }}>
+                            Stack
                         </h3>
-                        {project.stack.map((s, i) => (
-                            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: `1px solid ${ACCENT}14` }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT, flexShrink: 0 }} />
-                                    <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', fontWeight: 600, color: INK, letterSpacing: '0.03em' }}>{s.name}</span>
-                                </div>
-                                <span style={{ fontFamily: BODY, fontSize: '0.78rem', color: MUTED, textAlign: 'right', maxWidth: 160 }}>{s.role}</span>
+                        {project.stack.map(s => (
+                            <div key={s.name} style={{
+                                display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+                                gap: 16, padding: '13px 0', borderBottom: `1px solid ${RULE}`,
+                            }}>
+                                <span style={{
+                                    fontSize: TYPE.META, fontWeight: 700, fontStretch: '88%',
+                                    letterSpacing: '0.05em', color: SIGN_INK, whiteSpace: 'nowrap',
+                                }}>
+                                    {s.name}
+                                </span>
+                                <span style={{ fontSize: TYPE.META, color: SIGN_INK_SOFT, textAlign: 'right' }}>
+                                    {s.role}
+                                </span>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* Prev / next footer */}
-                <div style={{ marginTop: 80, paddingTop: 40, borderTop: `1px solid ${ACCENT}18`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {/* Onward travel. */}
+                <div style={{
+                    maxWidth: 1080, margin: '72px auto 0',
+                    paddingTop: 28, borderTop: `3px solid ${STEEL}`,
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20,
+                }}>
                     {prevProject ? (
-                        <button onClick={onPrev} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', padding: 0 }}>
-                            <div style={{ color: ACCENT_TEXT }}><ArrowIcon dir="left" size={18} /></div>
-                            <div>
-                                <p style={{ fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED, marginBottom: 3 }}>Previous</p>
-                                <p style={{ fontFamily: DISPLAY, fontSize: '1.3rem', fontWeight: 500, color: INK }}>{prevProject.name}</p>
-                            </div>
+                        <button onClick={onPrev} style={onwardStyle}>
+                            <Pictogram name="arrow-left" size={16} color={ENAMEL} />
+                            <span>
+                                <span style={onwardKicker}>Previous</span>
+                                <span style={onwardName}>{prevProject.name}</span>
+                            </span>
                         </button>
-                    ) : <div />}
+                    ) : <span />}
                     {nextProject ? (
-                        <button onClick={onNext} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'right', padding: 0 }}>
-                            <div>
-                                <p style={{ fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED, marginBottom: 3 }}>Next</p>
-                                <p style={{ fontFamily: DISPLAY, fontSize: '1.3rem', fontWeight: 500, color: INK }}>{nextProject.name}</p>
-                            </div>
-                            <div style={{ color: ACCENT_TEXT }}><ArrowIcon dir="right" size={18} /></div>
+                        <button onClick={onNext} style={{ ...onwardStyle, textAlign: 'right' }}>
+                            <span>
+                                <span style={onwardKicker}>Next</span>
+                                <span style={onwardName}>{nextProject.name}</span>
+                            </span>
+                            <Pictogram name="arrow-right" size={16} color={ENAMEL} />
                         </button>
-                    ) : <div />}
+                    ) : <span />}
                 </div>
             </div>
         </motion.div>
     );
 }
 
-// ─── Projects section ─────────────────────────────────────────────────────────
+const onwardStyle: React.CSSProperties = {
+    background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0',
+    display: 'flex', alignItems: 'center', gap: 14, fontFamily: SIGN, minHeight: 44,
+};
+const onwardKicker: React.CSSProperties = {
+    display: 'block', fontSize: TYPE.MICRO, fontWeight: 700, fontStretch: '88%',
+    letterSpacing: '0.18em', textTransform: 'uppercase', color: SIGN_INK_SOFT, marginBottom: 3,
+};
+const onwardName: React.CSSProperties = {
+    display: 'block', fontSize: TYPE.TITLE, fontWeight: 700, fontStretch: '96%',
+    letterSpacing: '-0.015em', color: SIGN_INK,
+};
+
+// ─── Section ─────────────────────────────────────────────────────────────────
 export default function ProjectsSection() {
-    const tilt = useScrollTilt();
     const isMobile = useIsMobile();
     const [activeProject, setActiveProject] = useState<Project | null>(null);
+    /* Which platforms this visitor has already walked to. The record is held for
+       the session rather than the page load, so a reload — or a trip out to the
+       case study and back — does not forget where they have been. */
+    const [visited, setVisited] = useState<Set<string>>(new Set());
+
+    useEffect(() => {
+        try {
+            const saved = sessionStorage.getItem(VISITED_KEY);
+            if (saved) setVisited(new Set(JSON.parse(saved) as string[]));
+        } catch { /* private browsing — the ticks are simply per page load */ }
+    }, []);
     const { openOverlay, closeOverlay, overlayOpen } = useOverlay();
 
-    const currentIndex = activeProject ? OVERLAY_PROJECTS.findIndex(p => p.id === activeProject.id) : -1;
-    const prevProject = currentIndex > 0 ? OVERLAY_PROJECTS[currentIndex - 1] : null;
-    const nextProject = currentIndex > -1 && currentIndex < OVERLAY_PROJECTS.length - 1 ? OVERLAY_PROJECTS[currentIndex + 1] : null;
+    const currentIndex = activeProject ? SHEET_PROJECTS.findIndex(p => p.id === activeProject.id) : -1;
+    const prevProject = currentIndex > 0 ? SHEET_PROJECTS[currentIndex - 1] : null;
+    const nextProject = currentIndex > -1 && currentIndex < SHEET_PROJECTS.length - 1 ? SHEET_PROJECTS[currentIndex + 1] : null;
 
-    const handleOpen = (project: Project) => {
+    const handleOpen = useCallback((project: Project) => {
         setActiveProject(project);
+        setVisited(v => {
+            const next = new Set(v).add(project.id);
+            try { sessionStorage.setItem(VISITED_KEY, JSON.stringify([...next])); } catch { /* ignore */ }
+            return next;
+        });
         openOverlay();
-    };
+    }, [openOverlay]);
 
     const handleClose = () => {
         setActiveProject(null);
@@ -625,41 +642,57 @@ export default function ProjectsSection() {
     };
 
     useEffect(() => {
-        if (!overlayOpen && activeProject) {
-            setActiveProject(null);
-        }
+        if (!overlayOpen && activeProject) setActiveProject(null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [overlayOpen]);
 
     return (
-        <section id="projects" style={{ background: CANVAS, padding: isMobile ? '80px 24px' : '120px 48px' }}>
-            <div style={{ maxWidth: 1160, margin: '0 auto' }}>
-
-                {/* Section header */}
-                <Reveal style={{ marginBottom: 8 }}>
-                    <motion.h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 300, color: INK, lineHeight: 1, rotateX: tilt, transformPerspective: 800 }}>
+        <section
+            id="projects"
+            style={{
+                background: BOARD,
+                padding: isMobile ? '72px 0 80px' : '120px 0 132px',
+                fontFamily: SIGN,
+            }}
+        >
+            <div style={{ maxWidth: 1180, margin: '0 auto', padding: isMobile ? '0 18px' : '0 28px' }}>
+                <Reveal>
+                    <h2 style={{
+                        fontSize: isMobile ? 'clamp(2.2rem, 11vw, 3.2rem)' : 'clamp(3rem, 6vw, 5rem)',
+                        fontWeight: 800, fontStretch: '112%',
+                        letterSpacing: '-0.03em', lineHeight: 0.9, color: SIGN_WHITE,
+                    }}>
                         Projects
-                    </motion.h2>
-                    <div style={{ width: 40, height: 1, background: ACCENT, marginTop: 16 }} />
+                    </h2>
                 </Reveal>
-
-                {/* Poster card grid — responsive via .project-grid in globals.css */}
-                <div className="project-grid">
-                    {projects.map((p, i) => (
-                        <ProjectCard key={p.id} project={p} index={i} onOpen={handleOpen} isMobile={isMobile} />
-                    ))}
-                </div>
+                <Reveal delay={0.06} style={{
+                    height: 12, background: SIGNAL, width: isMobile ? 120 : 180,
+                    margin: isMobile ? '20px 0 40px' : '28px 0 56px',
+                }} />
             </div>
 
-            {/* Full-screen detail overlay — AnimatePresence gives it a proper exit animation */}
+            <div style={{ maxWidth: 1180, margin: '0 auto', padding: isMobile ? '0 18px' : '0 28px' }}>
+                {projects.map((p, i) => (
+                    <PlatformPanel
+                        key={p.id}
+                        project={p}
+                        index={i}
+                        visited={visited.has(p.id)}
+                        onOpen={handleOpen}
+                        isMobile={isMobile}
+                    />
+                ))}
+                <div style={{ borderTop: `1px solid ${RULE_DARK}` }} />
+            </div>
+
             <AnimatePresence>
                 {activeProject && (
-                    <ProjectDetail
-                        key="overlay"
+                    <PlatformSheet
+                        key="sheet"
                         project={activeProject}
                         onClose={handleClose}
-                        onPrev={() => prevProject && setActiveProject(prevProject)}
-                        onNext={() => nextProject && setActiveProject(nextProject)}
+                        onPrev={() => prevProject && handleOpen(prevProject)}
+                        onNext={() => nextProject && handleOpen(nextProject)}
                         prevProject={prevProject}
                         nextProject={nextProject}
                         isMobile={isMobile}

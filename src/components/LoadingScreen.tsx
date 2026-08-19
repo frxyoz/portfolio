@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import { ACCENT_TEXT, ACCENT_ORNAMENT, INK_SOFT, DISPLAY, BODY, CANVAS } from '@/design/tokens';
+import FlapText from './concourse/FlapText';
+import { SIGNAL, STEEL, BOARD, SIGN, TYPE } from '@/design/tokens';
 
 /* Only the hero portrait gates the reveal — it is the one image the first
    viewport actually paints, and layout.tsx already preloads it at high priority.
@@ -14,18 +15,19 @@ const DEFERRED = [
     '/hack.webp',
     '/cornell.webp',
     '/codingmind.webp',
+    '/sitefit.webp',
     '/boroughs.webp',
     '/noteform.webp',
     '/luminary.webp',
 ];
 
-const TOTAL   = BLOCKING.length;
-const MIN_MS  = 600;
+const TOTAL = BLOCKING.length;
+const MIN_MS = 700;
 /* Hard ceiling. Without it a single stalled request holds the whole site
-   behind a white screen with no way out. */
-const MAX_MS  = 2500;
-const FADE_MS = 500;
-const SK      = 'oz-loaded';
+   behind a blank screen with no way out. */
+const MAX_MS = 2500;
+const FADE_MS = 450;
+const SK = 'oz-loaded';
 
 function warm(src: string) {
     const img = new Image();
@@ -40,10 +42,10 @@ export default function LoadingScreen() {
        the fastest version of the site. */
     const reduced = useReducedMotion();
     const [visible, setVisible] = useState(true);
-    const [fading,  setFading]  = useState(false);
-    const [loaded,  setLoaded]  = useState(0);
+    const [fading, setFading] = useState(false);
+    const [loaded, setLoaded] = useState(0);
     // Flipped one frame after mount so the bar has a value to animate away from.
-    const [crept,   setCrept]   = useState(false);
+    const [crept, setCrept] = useState(false);
 
     useEffect(() => {
         const id = requestAnimationFrame(() => setCrept(true));
@@ -56,11 +58,11 @@ export default function LoadingScreen() {
             if (sessionStorage.getItem(SK)) { setVisible(false); return; }
         } catch { /* private browsing — show screen */ }
 
-        let isMounted    = true;
-        let loadedCount  = 0;
+        let isMounted = true;
+        let loadedCount = 0;
         let minTimerDone = false;
-        let imagesDone   = false;
-        let finished     = false;
+        let imagesDone = false;
+        let finished = false;
 
         function finish() {
             if (!isMounted || finished) return;
@@ -106,49 +108,43 @@ export default function LoadingScreen() {
     const done = loaded >= TOTAL || fading;
 
     return (
+        /* The board wakes up before the terminal does: one row turning over on
+           an otherwise dead board, which is exactly what the site opens on. */
         <div
             aria-hidden="true"
             style={{
                 position: 'fixed', inset: 0, zIndex: 9999,
-                background: CANVAS,
+                background: BOARD,
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
+                gap: 26,
+                fontFamily: SIGN,
                 opacity: fading ? 0 : 1,
                 transition: `opacity ${FADE_MS}ms ease`,
                 pointerEvents: fading ? 'none' : 'all',
             }}
         >
-            {/* OZ monogram */}
-            <div style={{
-                fontFamily: DISPLAY,
-                fontSize: 'clamp(4rem, 8vw, 7rem)',
-                fontWeight: 300, fontStyle: 'italic',
-                color: INK_SOFT, letterSpacing: '-0.02em',
-                lineHeight: 1, marginBottom: 32, userSelect: 'none',
-            }}>
-                OZ
-            </div>
+            <FlapText
+                text="Olric Zeng"
+                stagger={2}
+                style={{
+                    /* One fixed step rather than a fluid clamp: the curtain shows
+                       one short string for well under a second, and a size that
+                       grows with the viewport buys nothing a reader ever notices. */
+                    fontSize: TYPE.SUBHEAD,
+                    fontWeight: 800, fontStretch: '104%',
+                    letterSpacing: '0.02em',
+                }}
+            />
 
-            {/* Progress bar — scaleX rather than width, so the fill composites
-                instead of forcing layout on every frame of the reveal. */}
-            <div style={{ width: 160, height: 1.5, background: `${ACCENT_ORNAMENT}22`, overflow: 'hidden' }}>
+            {/* The floor indicator, a signal bar seated in a steel channel. */}
+            <div style={{ width: 200, height: 6, background: STEEL, overflow: 'hidden' }}>
                 <div style={{
-                    height: '100%', background: ACCENT_ORNAMENT,
+                    height: '100%', background: SIGNAL,
                     width: '100%', transformOrigin: 'left center',
-                    transform: `scaleX(${done ? 1 : crept ? 0.72 : 0.04})`,
-                    transition: `transform ${done ? 260 : MIN_MS}ms cubic-bezier(.22, 1, .36, 1)`,
+                    transform: `scaleX(${done ? 1 : crept ? 0.7 : 0.04})`,
+                    transition: `transform ${done ? 240 : MIN_MS}ms cubic-bezier(.22, 1, .36, 1)`,
                 }} />
-            </div>
-
-            {/* Label */}
-            <div style={{
-                marginTop: 16,
-                fontFamily: BODY,
-                fontSize: '0.75rem', letterSpacing: '0.16em',
-                textTransform: 'uppercase', color: ACCENT_TEXT,
-                opacity: 0.75, userSelect: 'none',
-            }}>
-                Loading
             </div>
         </div>
     );

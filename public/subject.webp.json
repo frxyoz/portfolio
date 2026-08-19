@@ -1,0 +1,3 @@
+{
+  "prompt": "Origin: photograph of Olric Zeng, supplied by the subject, background removed before this project. Derived in this build: the cut-out shipped with a pale matte fringe from the studio white it was lifted off, invisible on a light ground and a halo on a saturated one. Re-matted with ffmpeg — alpha below 62/255 dropped to zero, 62-228 remapped to the full range, and partial-alpha pixels multiplied toward their own colour to remove the white cast (geq filter), then re-encoded to WebP q86 with alphaQuality 100 via sharp. Fringe pixels fell from 1702 to 596 at a 200px sample width with the solid silhouette unchanged. Not generated."
+}

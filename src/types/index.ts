@@ -45,6 +45,9 @@ export interface SocialLink {
 }
 
 export interface ProfileData {
+    /** The short read for the hero panel. */
+    lede: string;
+    /** The full paragraph, shown in the Background section. */
     tagline: string;
     timeline: TimelineEntry[];
     socialLinks: SocialLink[];

@@ -1,6 +1,10 @@
 import type { ProfileData } from '@/types';
 
 export const profile: ProfileData = {
+    /* The first two sentences of the tagline, verbatim. The hero panel is a
+       sign and a sign is read at walking pace; the full paragraph waits in the
+       Background section for anyone who stops. */
+    lede: 'Hi! I\'m Olric, a Computer Science student at Cornell. I\'m interested in fullstack development, infrastructure engineering and machine learning.',
     tagline: 'Hi! I\'m Olric, a Computer Science student at Cornell. I\'m interested in fullstack development, infrastructure engineering and machine learning. I am really passionate about creating software solutions that make a difference. Most of my time goes into side projects that push me into something I haven\'t used before, and I currently build web tools for non-profits at Hack4Impact.',
     timeline: [
         {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { motion, useMotionValue, useSpring, useReducedMotion } from 'framer-motion';
-import { ACCENT_ORNAMENT as ACCENT } from '@/design/tokens';
+import { SIGNAL, STEEL } from '@/design/tokens';
 
 const POINTER_FINE = '(pointer: fine)';
 
@@ -30,20 +30,19 @@ export default function Cursor() {
   const mx = useMotionValue(-200);
   const my = useMotionValue(-200);
 
-  // Dot tracks tightly
+  // The mark tracks tightly — a sign system's pointer does not float.
   const dotX = useSpring(mx, { stiffness: 2000, damping: 80, mass: 0.1 });
   const dotY = useSpring(my, { stiffness: 2000, damping: 80, mass: 0.1 });
 
-  // Ring lags with soft spring
-  const ringX = useSpring(mx, { stiffness: 90, damping: 18, mass: 0.5 });
-  const ringY = useSpring(my, { stiffness: 90, damping: 18, mass: 0.5 });
+  // The registration frame lags behind it.
+  const ringX = useSpring(mx, { stiffness: 110, damping: 20, mass: 0.5 });
+  const ringY = useSpring(my, { stiffness: 110, damping: 20, mass: 0.5 });
 
   /* globals.css hides the system cursor only under `body.cursor-ready`. Adding
      the class here — after this component has actually mounted — means a JS
      failure or a slow hydration leaves the visitor with a real pointer rather
      than none at all. Reduced motion keeps the cursor but drops the lagging
-     ring, which is the part that moves independently of the hand — see the
-     `reduced` guard on the ring below. */
+     frame, which is the part that moves independently of the hand. */
   useEffect(() => {
     if (!fine) return;
     document.body.classList.add('cursor-ready');
@@ -71,40 +70,55 @@ export default function Cursor() {
 
   return (
     <>
-      {/* Gold dot — tight follow */}
+      {/* The mark: a signal square with a steel edge, so it holds on the yellow
+          field as well as on the black board. Square, not round — nothing in
+          this system is a circle except a station on the route line. */}
       <motion.div
         aria-hidden
         className="oz-cursor"
         style={{
           position: 'fixed', top: 0, left: 0, zIndex: 9999,
-          width: 6, height: 6, borderRadius: '50%',
-          background: ACCENT,
+          width: 8, height: 8,
+          background: SIGNAL,
+          boxShadow: `0 0 0 1.5px ${STEEL}`,
           pointerEvents: 'none',
           translateX: '-50%', translateY: '-50%',
           x: dotX, y: dotY,
         }}
-        animate={{ scale: hovered ? (reduced ? 4 : 3) : 1, opacity: hovered ? 0.5 : 1 }}
-        transition={reduced ? { duration: 0.12, ease: 'linear' } : { duration: 0.2, ease: 'easeOut' }}
+        animate={{ scale: hovered ? 0.5 : 1 }}
+        transition={reduced ? { duration: 0.1, ease: 'linear' } : { duration: 0.18, ease: 'easeOut' }}
       />
 
-      {/* Ghost ring — spring lag. Dropped entirely under reduced motion: it is
-          the one element on the page that moves on its own timing while the
-          visitor is moving, which is exactly what the setting asks for less of.
-          The dot stays, because without it the system cursor is already gone. */}
-      {!reduced && <motion.div
-        aria-hidden
-        className="oz-cursor"
-        style={{
-          position: 'fixed', top: 0, left: 0, zIndex: 9998,
-          width: 30, height: 30, borderRadius: '50%',
-          border: `1px solid ${ACCENT}`,
-          pointerEvents: 'none',
-          translateX: '-50%', translateY: '-50%',
-          x: ringX, y: ringY,
-        }}
-        animate={{ scale: hovered ? 1.6 : 1, opacity: hovered ? 0.35 : 0.55 }}
-        transition={{ duration: 0.25, ease: 'easeOut' }}
-      />}
+      {/* The registration frame — the corner marks a sign shop prints to align a
+          panel. It closes in on the mark over anything interactive. Dropped
+          entirely under reduced motion: it is the one element on the page that
+          moves on its own timing while the visitor is moving. */}
+      {!reduced && (
+        <motion.svg
+          aria-hidden
+          className="oz-cursor"
+          viewBox="0 0 40 40"
+          width={40}
+          height={40}
+          style={{
+            position: 'fixed', top: 0, left: 0, zIndex: 9998,
+            pointerEvents: 'none',
+            translateX: '-50%', translateY: '-50%',
+            x: ringX, y: ringY,
+          }}
+          animate={{ scale: hovered ? 0.62 : 1, opacity: hovered ? 1 : 0.5 }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
+        >
+          {[
+            'M1 10 L1 1 L10 1',
+            'M30 1 L39 1 L39 10',
+            'M39 30 L39 39 L30 39',
+            'M10 39 L1 39 L1 30',
+          ].map(d => (
+            <path key={d} d={d} fill="none" stroke={SIGNAL} strokeWidth={2} />
+          ))}
+        </motion.svg>
+      )}
     </>
   );
 }

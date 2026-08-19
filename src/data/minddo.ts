@@ -1,6 +1,24 @@
 // Tabular content for the MindDo case study at /projects/minddo.
 // Table cells stay terse; the prose lives in MinddoShowcase and the diagrams.
 
+
+/** The case study's sections, in reading order. Lives here rather than in the
+ *  component because the home page's board counts them, and the board must not
+ *  drag the case study's component tree into the home page bundle to do it. */
+export const SECTIONS = [
+    { id: 'output', label: 'What it produces' },
+    { id: 'architecture', label: 'Architecture' },
+    { id: 'lifecycle', label: 'Request lifecycle' },
+    { id: 'pipeline', label: 'Pipeline' },
+    { id: 'scaling', label: 'Autoscaling' },
+    { id: 'data', label: 'Data model' },
+    { id: 'security', label: 'Security' },
+    { id: 'reliability', label: 'Reliability' },
+    { id: 'performance', label: 'Performance and cost' },
+    { id: 'limitations', label: 'Limitations' },
+    { id: 'aws', label: 'On AWS' },
+];
+
 export const minddo = {
     name: 'MindDo AI',
     subtitle: 'Student Project Showcase Pipeline',

@@ -12,22 +12,8 @@ import SsrfGuard from './minddo/SsrfGuard';
 import AwsPlan from './minddo/AwsPlan';
 import {
     minddo, awsLoad, artifacts, security, residualRisks,
-    reliability, sizing, cost, wins, limitations, takeaways,
+    reliability, sizing, cost, wins, limitations, takeaways, SECTIONS,
 } from '@/data/minddo';
-
-const SECTIONS = [
-    { id: 'output', label: 'What it produces' },
-    { id: 'architecture', label: 'Architecture' },
-    { id: 'lifecycle', label: 'Request lifecycle' },
-    { id: 'pipeline', label: 'Pipeline' },
-    { id: 'scaling', label: 'Autoscaling' },
-    { id: 'data', label: 'Data model' },
-    { id: 'security', label: 'Security' },
-    { id: 'reliability', label: 'Reliability' },
-    { id: 'performance', label: 'Performance and cost' },
-    { id: 'limitations', label: 'Limitations' },
-    { id: 'aws', label: 'On AWS' },
-];
 
 /** Viewport at which the contents rail appears. Mirrors the `min-width: 1120px`
  *  rule at the bottom of this file; below it the rail is `display: none`, so
