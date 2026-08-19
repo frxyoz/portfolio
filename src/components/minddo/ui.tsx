@@ -47,17 +47,16 @@ export const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
 /* ── Text primitives ─────────────────────────────────────────────────────── */
 
-export function H2({ id, index, children }: { id: string; index: string; children: ReactNode }) {
+export function H2({ id, children }: { id: string; children: ReactNode }) {
     return (
         <h2
             id={id}
             style={{
                 fontFamily: FONT, fontSize: '1.5rem', fontWeight: 600, color: T.ink,
                 letterSpacing: '-0.015em', lineHeight: 1.25, scrollMarginTop: 76,
-                display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 14,
+                marginBottom: 14,
             }}
         >
-            <span style={{ fontFamily: MONO, fontSize: '0.8rem', fontWeight: 500, color: T.accent }}>{index}</span>
             {children}
         </h2>
     );

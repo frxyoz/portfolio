@@ -6,7 +6,7 @@ import type { TimelineEntry } from '@/types';
 import { motion } from 'framer-motion';
 import { useScrollTilt } from '@/hooks/useScrollTilt';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { ACCENT_TEXT, ACCENT_ORNAMENT as ACCENT, DISPLAY, BODY, INK, BODY_MUTED, CANVAS_ALT } from '@/design/tokens';
+import { ACCENT_TEXT, ACCENT_ORNAMENT as ACCENT, DISPLAY, BODY, INK, BODY_MUTED, MUTED, CANVAS_ALT } from '@/design/tokens';
 
 
 export default function AboutSection() {
@@ -65,9 +65,6 @@ function TimelineItem({ item, index, isLast }: { item: TimelineEntry; index: num
         boxShadow: `0 0 0 3px ${CANVAS_ALT}, 0 0 0 4px ${ACCENT}55`,
       }} />
 
-      <p style={{ fontFamily: BODY, fontSize: '0.78rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 6 }}>
-        {item.period}
-      </p>
       <h3 style={{ fontFamily: DISPLAY, fontSize: '1.65rem', fontWeight: 500, color: INK, marginBottom: 4 }}>
         {item.title}
       </h3>
@@ -106,6 +103,10 @@ function TimelineItem({ item, index, isLast }: { item: TimelineEntry; index: num
             style={{ height: 22, width: 'auto', maxWidth: 72, objectFit: 'contain', display: 'block', opacity: 0.85 }}
           />
         )}
+        <span aria-hidden style={{ width: 1, height: 12, background: `${ACCENT}55`, flexShrink: 0 }} />
+        <span style={{ fontFamily: BODY, fontSize: '0.8rem', color: MUTED, whiteSpace: 'nowrap' }}>
+          {item.period}
+        </span>
       </div>
       <p style={{ fontFamily: BODY, fontSize: '0.9rem', color: BODY_MUTED, lineHeight: 1.7, maxWidth: 620, marginBottom: 16 }}>
         {item.desc}

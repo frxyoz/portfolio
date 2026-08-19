@@ -277,9 +277,6 @@ function ProjectCard({ project, index, onOpen, isMobile }: { project: Project; i
 
                 {/* Metadata */}
                 <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '2px 22px 24px' }}>
-                    <span style={{ fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: pal.accentText, marginBottom: 8, lineHeight: 1.4 }}>
-                        {project.subtitle}
-                    </span>
                     <h3 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 500, lineHeight: 0.92, fontSize: '2.05rem', letterSpacing: '-0.01em', color: pal.ink }}>
                         {project.name}
                     </h3>
@@ -467,14 +464,11 @@ function ProjectDetail({
                 <div style={{ maxWidth: 960, margin: '0 auto' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap' }}>
                         <div style={{ flex: 1, minWidth: 280 }}>
-                            <p style={{ fontFamily: BODY, fontSize: '0.7rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 12 }}>
-                                {project.year}
-                            </p>
                             <h2 style={{ fontFamily: DISPLAY, fontSize: 'clamp(3rem, 7vw, 5.5rem)', fontWeight: 300, color: INK, lineHeight: 0.9, marginBottom: 8 }}>
                                 {project.name}
                             </h2>
                             <p style={{ fontFamily: DISPLAY, fontSize: 'clamp(1rem, 2vw, 1.4rem)', fontStyle: 'italic', fontWeight: 300, color: MUTED, marginBottom: 28, lineHeight: 1.3 }}>
-                                {project.subtitle}
+                                {project.subtitle}, {project.year}
                             </p>
                             <div style={{ width: 40, height: 1, background: ACCENT, marginBottom: 28 }} />
                             <p style={{ fontFamily: BODY, fontSize: '1rem', color: BODY_TEXT, lineHeight: 1.8, maxWidth: 560, marginBottom: 32 }}>
@@ -548,17 +542,17 @@ function ProjectDetail({
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 40 : 64, alignItems: 'start' }}>
                     {/* Technical breakdown */}
                     <div>
-                        <p style={{ fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 32 }}>
+                        <h3 style={{ fontFamily: BODY, fontSize: '0.75rem', fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 32 }}>
                             Technical Breakdown
-                        </p>
+                        </h3>
                         {project.details.map((d, i) => (
                             /* 1px, like every other rule on the site. A 2px coloured
                                left edge is a callout costume; the hairline is the
                                language this page already speaks. */
                             <div key={d.heading} style={{ marginBottom: 40, paddingLeft: 20, borderLeft: `1px solid ${i === 0 ? ACCENT : ACCENT + '44'}` }}>
-                                <h3 style={{ fontFamily: DISPLAY, fontSize: '1.35rem', fontWeight: 500, color: INK, marginBottom: 10 }}>
+                                <h4 style={{ fontFamily: DISPLAY, fontSize: '1.35rem', fontWeight: 500, color: INK, marginBottom: 10 }}>
                                     {d.heading}
-                                </h3>
+                                </h4>
                                 <p style={{ fontFamily: BODY, fontSize: '0.88rem', color: BODY_MUTED, lineHeight: 1.75 }}>
                                     {d.body}
                                 </p>
@@ -568,9 +562,9 @@ function ProjectDetail({
 
                     {/* Tech stack */}
                     <div>
-                        <p style={{ fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 32 }}>
+                        <h3 style={{ fontFamily: BODY, fontSize: '0.75rem', fontWeight: 500, letterSpacing: '0.16em', textTransform: 'uppercase', color: ACCENT_TEXT, marginBottom: 32 }}>
                             Tech Stack
-                        </p>
+                        </h3>
                         {project.stack.map((s, i) => (
                             <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: `1px solid ${ACCENT}14` }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>

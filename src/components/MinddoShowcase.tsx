@@ -16,17 +16,17 @@ import {
 } from '@/data/minddo';
 
 const SECTIONS = [
-    { id: 'output', n: '01', label: 'What it produces' },
-    { id: 'architecture', n: '02', label: 'Architecture' },
-    { id: 'lifecycle', n: '03', label: 'Request lifecycle' },
-    { id: 'pipeline', n: '04', label: 'Pipeline' },
-    { id: 'scaling', n: '05', label: 'Autoscaling' },
-    { id: 'data', n: '06', label: 'Data model' },
-    { id: 'security', n: '07', label: 'Security' },
-    { id: 'reliability', n: '08', label: 'Reliability' },
-    { id: 'performance', n: '09', label: 'Performance and cost' },
-    { id: 'limitations', n: '10', label: 'Limitations' },
-    { id: 'aws', n: '11', label: 'On AWS' },
+    { id: 'output', label: 'What it produces' },
+    { id: 'architecture', label: 'Architecture' },
+    { id: 'lifecycle', label: 'Request lifecycle' },
+    { id: 'pipeline', label: 'Pipeline' },
+    { id: 'scaling', label: 'Autoscaling' },
+    { id: 'data', label: 'Data model' },
+    { id: 'security', label: 'Security' },
+    { id: 'reliability', label: 'Reliability' },
+    { id: 'performance', label: 'Performance and cost' },
+    { id: 'limitations', label: 'Limitations' },
+    { id: 'aws', label: 'On AWS' },
 ];
 
 /** Viewport at which the contents rail appears. Mirrors the `min-width: 1120px`
@@ -150,9 +150,6 @@ export default function MinddoShowcase() {
             {/* Hero */}
             <section style={{ borderBottom: `1px solid ${T.rule}`, padding: 'clamp(32px, 6vw, 56px) clamp(16px, 4vw, 40px)' }}>
                 <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-                    <p style={{ fontFamily: MONO, fontSize: '0.74rem', color: T.accent, marginBottom: 12 }}>
-                        {minddo.year} · sole engineer
-                    </p>
                     <h1 style={{ fontSize: 'clamp(1.9rem, 4.2vw, 2.7rem)', fontWeight: 600, color: T.ink, letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: 10 }}>
                         {minddo.name}
                     </h1>
@@ -166,7 +163,7 @@ export default function MinddoShowcase() {
                             </div>
 
                             <dl style={{ display: 'grid', gridTemplateColumns: 'minmax(64px, auto) 1fr', gap: '10px 20px', maxWidth: 900, margin: '26px 0 0' }}>
-                                {[['Role', minddo.role], ['Stack', minddo.stack], ['Scale', minddo.scale], ['Status', minddo.status]].map(([k, v]) => (
+                                {[['Year', minddo.year], ['Role', minddo.role], ['Stack', minddo.stack], ['Scale', minddo.scale], ['Status', minddo.status]].map(([k, v]) => (
                                     <div key={k} style={{ display: 'contents' }}>
                                         <dt style={{ fontFamily: MONO, fontSize: '0.7rem', color: T.accent, textTransform: 'uppercase', letterSpacing: '0.06em', paddingTop: 2 }}>{k}</dt>
                                         <dd style={{ fontSize: '0.86rem', color: T.body, lineHeight: 1.6 }}>{v}</dd>
@@ -204,14 +201,14 @@ export default function MinddoShowcase() {
                                     <li key={s.id}>
                                         <a
                                             href={`#${s.id}`}
+                                            aria-current={on ? 'true' : undefined}
                                             style={{
-                                                display: 'flex', alignItems: 'center', gap: 9,
-                                                minHeight: 28, padding: '5px 0 5px 12px',
+                                                display: 'flex', alignItems: 'center',
+                                                minHeight: 28, padding: '5px 0 5px 14px',
                                                 marginLeft: -1, borderLeft: `2px solid ${on ? T.accent : 'transparent'}`,
                                                 fontSize: '0.79rem', color: on ? T.ink : T.muted, fontWeight: on ? 600 : 400,
                                             }}
                                         >
-                                            <span style={{ fontFamily: MONO, fontSize: '0.7rem', color: on ? T.accent : T.faint }}>{s.n}</span>
                                             {s.label}
                                         </a>
                                     </li>
@@ -222,9 +219,9 @@ export default function MinddoShowcase() {
                 </nav>
 
                 <main id="main" style={{ minWidth: 0, paddingTop: 36 }}>
-                    {/* 01 output */}
+                    {/* output */}
                     <section id="output" style={{ marginBottom: 56 }}>
-                        <H2 id="output-h" index="01">What it produces</H2>
+                        <H2 id="output-h">What it produces</H2>
                         <P>Every submission ends up as eleven files in S3 and one row in Postgres. Here is what each file is and what makes it.</P>
                         <Table
                             head={['Artifact', 'Produced by', 'Detail']}
@@ -242,9 +239,9 @@ export default function MinddoShowcase() {
                         </Note>
                     </section>
 
-                    {/* 02 architecture */}
+                    {/* architecture */}
                     <section id="architecture" style={{ marginBottom: 56 }}>
-                        <H2 id="architecture-h" index="02">System architecture</H2>
+                        <H2 id="architecture-h">System architecture</H2>
                         <P>
                             The API barely does any work — it validates the payload, pushes a task onto the queue and
                             answers. All the expensive parts live in the worker, which launches Chromium twice and runs
@@ -270,23 +267,23 @@ export default function MinddoShowcase() {
                         />
                     </section>
 
-                    {/* 03 lifecycle */}
+                    {/* lifecycle */}
                     <section id="lifecycle" style={{ marginBottom: 56 }}>
-                        <H2 id="lifecycle-h" index="03">Request lifecycle</H2>
+                        <H2 id="lifecycle-h">Request lifecycle</H2>
                         <P>Two of the details in this diagram started out as bugs — the ack that gets held until the job actually finishes, and the asset read that falls through to S3 when the file is not on local disk.</P>
                         <Lifecycle />
                     </section>
 
-                    {/* 04 pipeline */}
+                    {/* pipeline */}
                     <section id="pipeline" style={{ marginBottom: 56 }}>
-                        <H2 id="pipeline-h" index="04">The generation pipeline</H2>
+                        <H2 id="pipeline-h">The generation pipeline</H2>
                         <P>The seven steps run one after another, but they do not all genuinely depend on each other. The gap between the order they run in and the order they would need to run in is where most of the wasted time sits.</P>
                         <Pipeline />
                     </section>
 
-                    {/* 05 scaling */}
+                    {/* scaling */}
                     <section id="scaling" style={{ marginBottom: 56 }}>
-                        <H2 id="scaling-h" index="05">Autoscaling control loop</H2>
+                        <H2 id="scaling-h">Autoscaling control loop</H2>
                         <Scaling />
                         <H3>Sizing the ceiling, three times</H3>
                         <P>
@@ -307,9 +304,9 @@ export default function MinddoShowcase() {
                         />
                     </section>
 
-                    {/* 06 data */}
+                    {/* data */}
                     <section id="data" style={{ marginBottom: 56 }}>
-                        <H2 id="data-h" index="06">Data model and storage split</H2>
+                        <H2 id="data-h">Data model and storage split</H2>
                         <P>
                             Anything large enough to be a file goes to S3, everything else lives in Postgres, and the
                             worker only uses its local disk as scratch space while a job is running. Who can read what
@@ -319,9 +316,9 @@ export default function MinddoShowcase() {
                         <DataModel />
                     </section>
 
-                    {/* 07 security */}
+                    {/* security */}
                     <section id="security" style={{ marginBottom: 56 }}>
-                        <H2 id="security-h" index="07">Security engineering</H2>
+                        <H2 id="security-h">Security engineering</H2>
                         <P>
                             I went back through the codebase four separate times looking for holes, and found one on
                             every pass. The worst is traced in the diagram below, and it falls directly out of what the
@@ -368,9 +365,9 @@ export default function MinddoShowcase() {
                         />
                     </section>
 
-                    {/* 08 reliability */}
+                    {/* reliability */}
                     <section id="reliability" style={{ marginBottom: 56 }}>
-                        <H2 id="reliability-h" index="08">Reliability engineering</H2>
+                        <H2 id="reliability-h">Reliability engineering</H2>
                         <P>None of these were added as a precaution. Each one went in after something specific broke in a way I had to go and debug.</P>
                         <Table
                             head={['Control', 'Value', 'Failure it prevents']}
@@ -391,9 +388,9 @@ export default function MinddoShowcase() {
                         </Note>
                     </section>
 
-                    {/* 09 performance */}
+                    {/* performance */}
                     <section id="performance" style={{ marginBottom: 56 }}>
-                        <H2 id="performance-h" index="09">Performance and cost</H2>
+                        <H2 id="performance-h">Performance and cost</H2>
                         <P>
                             There are two sets of numbers here and they disagree, which is the interesting part. The
                             baseline comes off docker compose with one job running alone: 102.7 s, mostly two Chromium
@@ -478,9 +475,9 @@ export default function MinddoShowcase() {
                         </Note>
                     </section>
 
-                    {/* 10 limitations */}
+                    {/* limitations */}
                     <section id="limitations" style={{ marginBottom: 56 }}>
-                        <H2 id="limitations-h" index="10">Known limitations</H2>
+                        <H2 id="limitations-h">Known limitations</H2>
                         <P>These are the things I already know are wrong with it and have not got to yet.</P>
                         <Table
                             head={['Limitation', 'Consequence', 'Fix']}
@@ -497,9 +494,9 @@ export default function MinddoShowcase() {
                         </Note>
                     </section>
 
-                    {/* 11 aws */}
+                    {/* aws */}
                     <section id="aws" style={{ marginBottom: 56 }}>
-                        <H2 id="aws-h" index="11">Running on AWS</H2>
+                        <H2 id="aws-h">Running on AWS</H2>
                         <P>
                             This went live on 16 August 2026: k3s on a single t3.large, KEDA installed with Helm, real
                             S3 in place of MinIO, and no AWS keys anywhere in the cluster because boto3 picks up the

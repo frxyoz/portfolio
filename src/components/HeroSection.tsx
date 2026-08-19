@@ -451,11 +451,8 @@ export default function HeroSection() {
                                 <div key={i} style={{ position: 'absolute', width: 18, height: 18, ...(s as React.CSSProperties) }} />
                             ))}
 
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                                <span style={{ fontFamily: BODY, fontSize: '0.75rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: ACCENT_TEXT }}>
-                                    About Me
-                                </span>
-                                {isMobile && aboutExpanded && (
+                            {isMobile && aboutExpanded && (
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}>
                                     <motion.button
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
@@ -473,8 +470,8 @@ export default function HeroSection() {
                                         </svg>
                                         Show less
                                     </motion.button>
-                                )}
-                            </div>
+                                </div>
+                            )}
                             {!isMobile ? (
                                 <p style={{
                                     fontFamily: BODY, fontSize: '1rem',
