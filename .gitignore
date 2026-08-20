@@ -46,3 +46,6 @@ next-env.d.ts
 
 # impeccable tool cache
 .impeccable/
+
+# design files
+DESIGN.md
