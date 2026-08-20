@@ -43,3 +43,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# impeccable tool cache
+.impeccable/
+
+# design files
+DESIGN.md

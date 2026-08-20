@@ -4,12 +4,15 @@
    itself needs live here; everything else is consumed from the TS module,
    because the components are inline-styled and concatenate hex alpha. */
 :root {
-  --color-accent: #8a6508;
-  --color-accent-ornament: #b8860b;
-  --color-ink: #1a1a1a;
-  --color-canvas: #ffffff;
-  --color-selection: #f5e6a3;
-  --focus-ring: #8a6508;
+  --color-signal: #ffd100;
+  --color-signal-deep: #e0b400;
+  --color-enamel: #0a2a66;
+  --color-steel: #141414;
+  --color-board: #0d0d0d;
+  --color-sign-white: #f4f3ef;
+  --color-sign-ink: #1b1b1b;
+  --focus-ring: #ffd100;
+  --focus-ring-light: #141414;
   --ease-out: cubic-bezier(.22, 1, .36, 1);
 }
 
@@ -18,44 +21,57 @@
 html { scroll-behavior: smooth; font-size: 16px; }
 
 body {
-  font-family: var(--font-body, 'DM Sans', 'Helvetica Neue', sans-serif);
-  background: var(--color-canvas);
-  color: var(--color-ink);
+  font-family: var(--font-sign, 'Archivo', 'Helvetica Neue', Arial, sans-serif);
+  background: var(--color-sign-white);
+  color: var(--color-sign-ink);
   overflow-x: clip; /* clip (not hidden) avoids creating a scroll container, keeping IntersectionObserver working on mobile Safari */
   -webkit-font-smoothing: antialiased;
 }
 
-::selection { background: var(--color-selection); color: var(--color-ink); }
+/* Sign systems set every number on a fixed advance so a column of years or
+   times stays in column. Applied at the root rather than per-call-site: on this
+   page there is no figure that wants to be proportional. */
+body { font-variant-numeric: tabular-nums; }
+
+/* The selection colour is a sign highlight, not a browser default. */
+::selection { background: var(--color-signal); color: var(--color-steel); }
+
+/* Caret takes the signal too, so a focused field reads as part of the system
+   down to the blinking bar. */
+input, textarea { caret-color: var(--color-signal-deep); }
+
+/* The browser's own placeholder grey lands near 4.4:1 on the sign panel, just
+   under the bar, and belongs to no palette. This one is the system's secondary
+   ink at 5.1:1. */
+::placeholder { color: #55534d; opacity: 1; }
 
 a { color: inherit; text-decoration: none; }
 
-/* `height` as well as `width`. Setting only the width leaves every horizontal
-   scrollbar on the site at the platform default — 16px on macOS — wearing the
-   gold thumb meant for a 4px vertical rail. On a region that overflows by a
-   dozen pixels the thumb then spans almost the whole width and reads as a solid
-   gold slab across the bottom of the element. */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(184, 134, 11, 0.25); border-radius: 2px; }
+/* The scrollbar is a rail. `height` as well as `width`: setting only the width
+   leaves every horizontal scrollbar at the platform default — 16px on macOS —
+   wearing a thumb meant for a 4px vertical rail, which on a region overflowing
+   by a dozen pixels reads as a solid slab across the bottom of the element. */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: rgba(20, 20, 20, 0.06); }
+::-webkit-scrollbar-thumb { background: var(--color-steel); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-enamel); }
 ::-webkit-scrollbar-corner { background: transparent; }
+html { scrollbar-width: thin; scrollbar-color: var(--color-steel) rgba(20, 20, 20, 0.06); }
 
 body.overlay-open { overflow: hidden; }
 
 /* Keyboard focus. The browser default is a blue ring that belongs to no design
-   system and disappears against the dark contact section; this one is drawn
-   from the palette and carries its own offset ring so it reads on any surface.
+   system; this one is the signal, squared off like everything else here.
    :focus-visible, so a mouse click never paints it. */
 :focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 3px;
-  border-radius: 2px;
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 0;
 }
-/* On dark ground the gold alone is too close to the background: pair it with a
-   light halo so the ring survives either direction. */
-.on-dark :focus-visible,
-[data-surface="dark"] :focus-visible {
-  outline-color: #e8c25f;
-  box-shadow: 0 0 0 5px rgba(0, 0, 0, .55);
+/* On the yellow field the signal ring disappears into its own ground, so that
+   region flips the ring to steel. */
+[data-surface="signal"] :focus-visible {
+  outline-color: var(--focus-ring-light);
 }
 
 /* The custom cursor replaces the system one — but only once it has actually
@@ -72,75 +88,154 @@ body.overlay-open { overflow: hidden; }
   body.cursor-ready textarea { cursor: none !important; }
 }
 
-/* Skip link. Off-screen until focused, then it lands as a real control in the
-   top-left corner — the same gold-on-white the nav uses, so it reads as part of
-   the site rather than a browser artifact. */
+/* Skip link. Off-screen until focused, then it lands as a real sign plate in
+   the top-left corner — signal on steel, the same pairing the rail uses. */
 .skip-link {
   position: fixed;
   left: 12px;
   top: -100px;
   z-index: 1000;
-  padding: 10px 18px;
-  background: var(--color-canvas);
-  color: var(--color-accent);
-  border: 1px solid var(--color-accent);
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
+  padding: 12px 20px;
+  background: var(--color-steel);
+  color: var(--color-signal);
+  font-size: 0.74rem; /* TYPE.CONTROL */
+  font-weight: 700;
+  font-stretch: 88%;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   transition: top 0.2s var(--ease-out);
 }
 .skip-link:focus { top: 12px; }
 
+/* ── The rail, and the board it heads ──────────────────────────────────────
+   Responsive rules for these two live in CSS rather than in a `isMobile ?`
+   branch, and the reason is the served bytes. `useIsMobile` is a hook: it
+   cannot answer until the client has hydrated, so a JS-branched rail ships the
+   desktop layout in the HTML and repaints it on a phone. The loading curtain
+   hides that on a first visit and hides nothing on a second. A media query is
+   already right when the document arrives. */
+
+.oz-rail { padding: 0 28px 0 0; }
+.oz-rail-brand { width: 68px; font-size: 1.14rem; }  /* TYPE.LEDE */
+.oz-rail-place { display: flex; }
+.oz-rail-link {
+  font-size: 0.74rem;  /* TYPE.CONTROL */
+  letter-spacing: 0.16em;
+  font-stretch: 88%;
+  padding: 0 16px;
+}
+.oz-rail-clock { padding-left: 20px; margin-left: 12px; gap: 8px; }
+
+@media (max-width: 767px) {
+  .oz-rail { padding: 0 10px 0 0; }
+  .oz-rail-brand { width: 48px; font-size: 1rem; }  /* TYPE.BODY */
+  .oz-rail-place { display: none; }
+  .oz-rail-link { padding: 0 6px; letter-spacing: 0.09em; }
+  .oz-rail-clock { padding-left: 8px; margin-left: 2px; gap: 6px; }
+  .oz-rail-clock svg { width: 11px; height: 11px; }
+}
+
+/* At 320 points the rail has to seat the mark, three destinations and the time.
+   The clock never yields — a board that clips its own time is a broken board —
+   so the destinations give ground, in tracking and padding before size. */
+@media (max-width: 359px) {
+  .oz-rail-link {
+    font-size: 0.66rem;  /* TYPE.LABEL */
+    letter-spacing: 0.04em;
+    font-stretch: 84%;
+    padding: 0 5px;
+  }
+}
+
+/* The board's five columns collapse to three on a phone: the service and the
+   stop count leave their own columns and ride under the destination instead.
+   Both variants are in the HTML at every width; the media query decides which
+   is painted, so nothing about this board waits for JavaScript. */
+.oz-board-head,
+.oz-board-row {
+  display: grid;
+  grid-template-columns: 6rem 15rem 1fr 9rem 3.5rem;
+  align-items: center;
+  gap: 20px;
+  padding: 0 28px;
+}
+.oz-board-row { height: 56px; }   /* ROW_H in HeroSection.tsx */
+.oz-board-head { height: 30px; letter-spacing: 0.2em; }  /* HEAD_H */
+.oz-board-narrow { display: none; }
+
+@media (max-width: 767px) {
+  .oz-board-head,
+  .oz-board-row {
+    grid-template-columns: 4.6rem 1fr 2.4rem;
+    gap: 10px;
+    padding: 0 14px;
+  }
+  .oz-board-row { height: 46px; }  /* ROW_H_SM */
+  .oz-board-head { letter-spacing: 0.12em; }
+  .oz-board-wide { display: none; }
+  .oz-board-narrow { display: block; }
+  .oz-board-platform { font-size: 0.82rem; }  /* TYPE.META */
+  .oz-board-dest { font-size: 0.82rem; }
+  .oz-board-gate svg { width: 15px; height: 15px; }
+}
+
+/* The curtain is in the server's HTML, because it has to be painted in the very
+   first frame or it is not a curtain. That leaves two visitors it should never
+   reach: the one who has already been here this session, and the one who asked
+   for less motion. Both are decided before hydration — the first by the inline
+   script in layout.tsx, the second by the media query — so neither ever sees a
+   black rectangle appear and leave. */
+html.oz-loaded .oz-curtain { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .oz-curtain { display: none; }
+}
+
 @keyframes slideUp {
-  from { transform: translateY(40px); opacity: 0; }
+  from { transform: translateY(48px); opacity: 0; }
   to   { transform: none; opacity: 1; }
 }
 
-@keyframes orbit {
-  to { transform: rotate(360deg); }
+/* Entering the corridor.
+   Platform-edge doors: two steel leaves hold shut for a beat, then run apart on
+   the site's deceleration curve. The passage behind them settles in from a hair
+   under full size, which is the only part of this that reads as walking. A
+   state change dressed as a door, not a second authored moment — the site has
+   exactly one of those, and it belongs to the signature. */
+@keyframes gateLeafLeft {
+  0%, 18% { transform: translateX(0); }
+  100%    { transform: translateX(-101%); }
+}
+@keyframes gateLeafRight {
+  0%, 18% { transform: translateX(0); }
+  100%    { transform: translateX(101%); }
+}
+/* Scale only, and deliberately no fade: the doors are inside this element, so
+   any opacity here makes them translucent and you watch the home page through
+   a shut door. A door that conceals nothing is a wipe. */
+@keyframes corridorEnter {
+  from { transform: scale(0.985); }
+  to   { transform: none; }
 }
 
-@keyframes floaty {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-5px); }
-}
-
-.project-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 28px;
-  margin-top: 60px;
-  align-items: start;
-  padding: 18px 0 6px;
-}
-
-@media (max-width: 1080px) {
-  .project-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-  }
-}
-
-@media (max-width: 640px) {
-  .project-grid {
-    grid-template-columns: 1fr;
-    gap: 26px;
-  }
+/* A status lamp on the board breathes the way a real bulb does behind glass. */
+@keyframes lamp {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
 }
 
 /* Reduced motion.
    Not a blanket `animation: none` — that would strip the feedback that tells a
-   visitor something changed. What goes is travel: the ambient drift, the orbit,
-   the scroll-driven blur and scale, the long slide-up. What stays is every
-   state change, expressed as a short cross-fade instead of movement. The
-   signature still draws; HeroSection settles it to its finished stroke rather
-   than tracing it, so the moment survives without the scroll-linked motion.
+   visitor something changed. What goes is travel: the flap cascade collapses to
+   a single settled state, the lamp stops pulsing, the long slide-up loses its
+   rise. What stays is every state change, expressed as a cross-fade.
+   The signature still draws; HeroSection settles it to its finished stroke
+   rather than tracing it, so the moment survives without the scroll linkage.
 
    The components are inline-styled and animate through framer-motion, which
    writes to `transform` directly rather than running a CSS animation — so
    `animation-duration` here reaches none of it. Each of them reads
-   `useReducedMotion` itself. This block owns only what CSS actually drives:
-   the declared keyframes, and smooth scrolling. */
+   `useReducedMotion` itself. This block owns only what CSS actually drives. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 
@@ -149,27 +244,39 @@ body.overlay-open { overflow: hidden; }
     to   { opacity: 1; }
   }
 
-  @keyframes floaty {
-    0%, 100% { transform: none; }
+  @keyframes lamp {
+    0%, 100% { opacity: 1; }
   }
 
-  @keyframes orbit {
-    to { transform: none; }
+  /* The doors part without travelling, and the corridor arrives without
+     being walked into. */
+  @keyframes gateLeafLeft {
+    0%, 40% { opacity: 1; }
+    100%    { opacity: 0; }
+  }
+  @keyframes gateLeafRight {
+    0%, 40% { opacity: 1; }
+    100%    { opacity: 0; }
+  }
+  @keyframes corridorEnter {
+    from { opacity: 0; }
+    to   { opacity: 1; }
   }
 }
 
 /* Regions that scroll sideways because their content genuinely is wider than a
-   phone — the case study's tables and diagrams. They carry `tabindex="0"` so a
-   keyboard can reach the far edge, which means they also take focus on click;
-   `:focus-visible` alone keeps the ring for the keyboard and off the mouse. */
+   phone — the case study's tables and diagrams, and the route diagram here.
+   They carry `tabindex="0"` so a keyboard can reach the far edge, which means
+   they also take focus on click; `:focus-visible` alone keeps the ring for the
+   keyboard and off the mouse. */
 .scroll-region:focus-visible {
-  outline: 2px solid var(--focus-ring);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
 /* The case study runs a neutral palette of its own, so its scroll rails take a
-   grey rather than the site's gold. Firefox gets the same treatment through the
-   standard properties, which it honours and WebKit ignores. */
+   grey rather than the site's steel. Firefox gets the same treatment through
+   the standard properties, which it honours and WebKit ignores. */
 .scroll-region {
   scrollbar-width: thin;
   scrollbar-color: rgba(18, 22, 29, 0.22) transparent;

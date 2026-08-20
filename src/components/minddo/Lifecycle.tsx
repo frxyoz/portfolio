@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { T, FONT, MONO, Arrowheads, Figure } from './ui';
+import { T, FONT, CONTROL, Arrowheads, Figure } from './ui';
+import { STEEL, SIGNAL, TYPE, TABULAR, EASE_OUT } from '@/design/tokens';
 
 const LANES = [
     { id: 'b', label: 'Browser', x: 74 },
@@ -78,19 +79,21 @@ export default function Lifecycle() {
                         <button
                             key={p.id}
                             onClick={() => setPhase(on ? null : p.id)}
+                            aria-pressed={on}
                             style={{
-                                fontFamily: FONT, fontSize: '0.75rem', fontWeight: 500,
-                                color: on ? T.canvas : T.body,
-                                background: on ? T.ink : T.canvas,
-                                border: `1px solid ${on ? T.ink : T.ruleStrong}`,
-                                borderRadius: 4, padding: '5px 11px', cursor: 'pointer',
+                                ...CONTROL,
+                                color: on ? SIGNAL : T.ink,
+                                background: on ? STEEL : 'transparent',
+                                border: `2px solid ${on ? STEEL : T.ruleStrong}`,
+                                padding: '0 13px', minHeight: 38, cursor: 'pointer',
+                                transition: `background .18s ${EASE_OUT}, color .18s ${EASE_OUT}, border-color .18s ${EASE_OUT}`,
                             }}
                         >
                             {p.label}
                         </button>
                     );
                 })}
-                <span style={{ fontFamily: FONT, fontSize: '0.75rem', color: T.muted, alignSelf: 'center' }}>
+                <span style={{ fontFamily: FONT, fontSize: TYPE.COPY, color: T.muted, alignSelf: 'center' }}>
                     {phase ? PHASES.find(p => p.id === phase)!.hint : 'All 22 messages'}
                 </span>
             </div>
@@ -99,8 +102,8 @@ export default function Lifecycle() {
     const panel = (
         <div style={{  minHeight: 62, fontFamily: FONT }}>
                 {sel?.detail ? (
-                    <p style={{ fontSize: '0.86rem', color: T.body, lineHeight: 1.62 }}>
-                        <span style={{ fontFamily: MONO, fontSize: '0.78rem', color: T.accent, marginRight: 8 }}>
+                    <p style={{ fontSize: TYPE.COPY, color: T.body, lineHeight: 1.62 }}>
+                        <span style={{ fontFamily: FONT, fontSize: TYPE.META, fontWeight: 700, fontStretch: '88%', letterSpacing: '0.06em', color: T.accent, marginRight: 9, ...TABULAR }}>
                             {String(sel.n).padStart(2, '0')}
                         </span>
                         {sel.detail}
@@ -127,7 +130,7 @@ Three messages were bugs first: late acks (10), the re-validated redirect chain 
 
                 {LANES.map(l => (
                     <g key={l.id}>
-                        <rect x={l.x - 62} y={10} width={124} height={30} rx={4} fill={T.surface} stroke={T.ruleStrong} />
+                        <rect x={l.x - 62} y={10} width={124} height={30} fill={T.surface} stroke={T.ruleStrong} />
                         <text x={l.x} y={29} textAnchor="middle" style={{ fontFamily: FONT, fontSize: 11.5, fontWeight: 600, fill: T.ink }}>
                             {l.label}
                         </text>
@@ -152,8 +155,8 @@ Three messages were bugs first: late acks (10), the re-validated redirect chain 
                             onMouseLeave={() => setHover(null)}
                             style={{ cursor: 'default', transition: 'opacity .16s' }}
                         >
-                            <rect x={16} y={y - 15} width={1170} height={GAP - 4} fill={hot ? T.accentSoft : 'transparent'} rx={3} />
-                            <text x={26} y={y + 4} style={{ fontFamily: MONO, fontSize: 11.5, fill: hot ? T.accent : T.faint }}>
+                            <rect x={16} y={y - 15} width={1170} height={GAP - 4} fill={hot ? T.accentSoft : 'transparent'} />
+                            <text x={26} y={y + 4} style={{ fontFamily: FONT, fontSize: 11.5, fontWeight: 700, fontStretch: '88%', letterSpacing: '0.06em', fontVariantNumeric: 'tabular-nums', fill: hot ? T.accent : T.faint }}>
                                 {String(s.n).padStart(2, '0')}
                             </text>
 

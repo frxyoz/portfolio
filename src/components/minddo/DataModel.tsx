@@ -113,8 +113,8 @@ export default function DataModel() {
                     const on = !active || active === e.id;
                     return (
                         <g key={e.id} {...bind(e.id, e.title)} opacity={on ? 1 : 0.28} style={{ ...bind(e.id, e.title).style, transition: 'opacity .18s' }}>
-                            <rect x={e.x} y={e.y} width={e.w} height={h} rx={5} fill="#fff" stroke={active === e.id ? T.ink : T.store.stroke} strokeWidth={active === e.id ? 2 : 1.3} />
-                            <rect x={e.x} y={e.y} width={e.w} height={HEAD_H} rx={5} fill={T.store.fill} />
+                            <rect x={e.x} y={e.y} width={e.w} height={h} fill={T.canvas} stroke={active === e.id ? T.ink : T.store.stroke} strokeWidth={active === e.id ? 2 : 1.3} />
+                            <rect x={e.x} y={e.y} width={e.w} height={HEAD_H} fill={T.store.fill} />
                             <rect x={e.x} y={e.y + HEAD_H - 6} width={e.w} height={6} fill={T.store.fill} />
                             <line x1={e.x} y1={e.y + HEAD_H} x2={e.x + e.w} y2={e.y + HEAD_H} stroke={T.store.stroke} strokeWidth={1} />
                             <text x={e.x + 12} y={e.y + 20} style={{ fontFamily: MONO, fontSize: 11.5, fontWeight: 600, fill: T.store.text }}>{e.title}</text>

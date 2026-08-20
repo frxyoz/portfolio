@@ -215,7 +215,7 @@ export default function SsrfGuard() {
                     return (
                         <g key={n.id} opacity={on ? 1 : 0.22} style={{ transition: 'opacity .2s' }}>
                             <rect
-                                x={n.x} y={n.y} width={n.w} height={n.h} rx={5}
+                                x={n.x} y={n.y} width={n.w} height={n.h}
                                 fill={tone.fill} stroke={current ? T.ink : tone.stroke} strokeWidth={current ? 2.2 : 1.3}
                             />
                             {n.lines.map((l, i) => (

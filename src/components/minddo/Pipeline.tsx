@@ -219,7 +219,7 @@ export default function Pipeline() {
                             style={{ cursor: 'pointer' }}
                         >
                             <rect
-                                width={W} height={H} rx={5}
+                                width={W} height={H}
                                 fill={mode === 'par' && independent ? T.good.fill : T.tier.fill}
                                 stroke={on ? T.ink : mode === 'par' && independent ? T.good.stroke : T.tier.stroke}
                                 strokeWidth={on ? 2 : 1.3}

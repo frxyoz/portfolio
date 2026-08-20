@@ -2,35 +2,54 @@
 
 import { useState, useEffect } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import { ACCENT_TEXT, ACCENT_ORNAMENT, INK_SOFT, DISPLAY, BODY, CANVAS } from '@/design/tokens';
+import FlapText from './concourse/FlapText';
+import { SIGNAL, STEEL, BOARD, SIGN, TYPE } from '@/design/tokens';
 
 /* Only the hero portrait gates the reveal — it is the one image the first
    viewport actually paints, and layout.tsx already preloads it at high priority.
-   Everything else warms in the background after the curtain lifts, so a slow
-   asset can delay a screenshot inside an overlay but never the site itself. */
+   It is also the one image a phone never sees: the portrait stands in the
+   desktop field only, so below the rail's breakpoint there is nothing to wait
+   for and the curtain runs on its floor alone. */
 const BLOCKING = ['/subject.webp'];
+const BLOCKING_MQ = '(min-width: 768px)';
+/** Matches the hero's srcset, so warming hits the candidate the page will ask
+ *  for rather than pulling the 863px original alongside it. */
+const BLOCKING_SRCSET = '/subject-380.webp 380w, /subject-760.webp 760w, /subject.webp 863w';
+const BLOCKING_SIZES = '380px';
 
+/* Everything the site paints somewhere other than the first viewport. Luminary
+   and Boroughs are deliberately absent: both projects carry a demo video, which
+   the sheet renders instead of the screenshot, so warming their stills spent
+   165 KB on two images no visitor has ever been shown. */
 const DEFERRED = [
     '/hack.webp',
     '/cornell.webp',
     '/codingmind.webp',
-    '/boroughs.webp',
-    '/noteform.webp',
-    '/luminary.webp',
+    '/sitefit.webp',
+    '/noteform-640.webp',
 ];
 
-const TOTAL   = BLOCKING.length;
-const MIN_MS  = 600;
+const TOTAL = BLOCKING.length;
+const MIN_MS = 700;
 /* Hard ceiling. Without it a single stalled request holds the whole site
-   behind a white screen with no way out. */
-const MAX_MS  = 2500;
-const FADE_MS = 500;
-const SK      = 'oz-loaded';
+   behind a blank screen with no way out. */
+const MAX_MS = 2500;
+const FADE_MS = 450;
+const SK = 'oz-loaded';
 
 function warm(src: string) {
     const img = new Image();
     img.decoding = 'async';
     img.src = src;
+}
+
+function warmHero(onSettled: () => void) {
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = img.onerror = onSettled;
+    img.sizes = BLOCKING_SIZES;
+    img.srcset = BLOCKING_SRCSET;
+    img.src = '/subject.webp';
 }
 
 export default function LoadingScreen() {
@@ -40,10 +59,10 @@ export default function LoadingScreen() {
        the fastest version of the site. */
     const reduced = useReducedMotion();
     const [visible, setVisible] = useState(true);
-    const [fading,  setFading]  = useState(false);
-    const [loaded,  setLoaded]  = useState(0);
+    const [fading, setFading] = useState(false);
+    const [loaded, setLoaded] = useState(0);
     // Flipped one frame after mount so the bar has a value to animate away from.
-    const [crept,   setCrept]   = useState(false);
+    const [crept, setCrept] = useState(false);
 
     useEffect(() => {
         const id = requestAnimationFrame(() => setCrept(true));
@@ -56,11 +75,11 @@ export default function LoadingScreen() {
             if (sessionStorage.getItem(SK)) { setVisible(false); return; }
         } catch { /* private browsing — show screen */ }
 
-        let isMounted    = true;
-        let loadedCount  = 0;
+        let isMounted = true;
+        let loadedCount = 0;
         let minTimerDone = false;
-        let imagesDone   = false;
-        let finished     = false;
+        let imagesDone = false;
+        let finished = false;
 
         function finish() {
             if (!isMounted || finished) return;
@@ -84,16 +103,21 @@ export default function LoadingScreen() {
         const minTimer = setTimeout(() => { minTimerDone = true; tryFinish(); }, MIN_MS);
         const maxTimer = setTimeout(finish, MAX_MS);
 
-        BLOCKING.forEach(src => {
-            const img = new Image();
-            img.onload = img.onerror = () => {
+        /* A phone gets no portrait, so it waits on nothing and the floor is the
+           whole curtain. Waiting on a desktop-only image there was a 126 KB
+           download standing between the visitor and the site. */
+        if (!window.matchMedia(BLOCKING_MQ).matches) {
+            imagesDone = true;
+            setLoaded(TOTAL);
+            tryFinish();
+        } else {
+            warmHero(() => {
                 if (!isMounted) return;
                 loadedCount++;
                 setLoaded(loadedCount);
                 if (loadedCount === TOTAL) { imagesDone = true; tryFinish(); }
-            };
-            img.src = src;
-        });
+            });
+        }
 
         return () => { isMounted = false; clearTimeout(minTimer); clearTimeout(maxTimer); };
     }, [reduced]);
@@ -106,49 +130,44 @@ export default function LoadingScreen() {
     const done = loaded >= TOTAL || fading;
 
     return (
+        /* The board wakes up before the terminal does: one row turning over on
+           an otherwise dead board, which is exactly what the site opens on. */
         <div
             aria-hidden="true"
+            className="oz-curtain"
             style={{
                 position: 'fixed', inset: 0, zIndex: 9999,
-                background: CANVAS,
+                background: BOARD,
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
+                gap: 26,
+                fontFamily: SIGN,
                 opacity: fading ? 0 : 1,
                 transition: `opacity ${FADE_MS}ms ease`,
                 pointerEvents: fading ? 'none' : 'all',
             }}
         >
-            {/* OZ monogram */}
-            <div style={{
-                fontFamily: DISPLAY,
-                fontSize: 'clamp(4rem, 8vw, 7rem)',
-                fontWeight: 300, fontStyle: 'italic',
-                color: INK_SOFT, letterSpacing: '-0.02em',
-                lineHeight: 1, marginBottom: 32, userSelect: 'none',
-            }}>
-                OZ
-            </div>
+            <FlapText
+                text="Olric Zeng"
+                stagger={2}
+                style={{
+                    /* One fixed step rather than a fluid clamp: the curtain shows
+                       one short string for well under a second, and a size that
+                       grows with the viewport buys nothing a reader ever notices. */
+                    fontSize: TYPE.SUBHEAD,
+                    fontWeight: 800, fontStretch: '104%',
+                    letterSpacing: '0.02em',
+                }}
+            />
 
-            {/* Progress bar — scaleX rather than width, so the fill composites
-                instead of forcing layout on every frame of the reveal. */}
-            <div style={{ width: 160, height: 1.5, background: `${ACCENT_ORNAMENT}22`, overflow: 'hidden' }}>
+            {/* The floor indicator, a signal bar seated in a steel channel. */}
+            <div style={{ width: 200, height: 6, background: STEEL, overflow: 'hidden' }}>
                 <div style={{
-                    height: '100%', background: ACCENT_ORNAMENT,
+                    height: '100%', background: SIGNAL,
                     width: '100%', transformOrigin: 'left center',
-                    transform: `scaleX(${done ? 1 : crept ? 0.72 : 0.04})`,
-                    transition: `transform ${done ? 260 : MIN_MS}ms cubic-bezier(.22, 1, .36, 1)`,
+                    transform: `scaleX(${done ? 1 : crept ? 0.7 : 0.04})`,
+                    transition: `transform ${done ? 240 : MIN_MS}ms cubic-bezier(.22, 1, .36, 1)`,
                 }} />
-            </div>
-
-            {/* Label */}
-            <div style={{
-                marginTop: 16,
-                fontFamily: BODY,
-                fontSize: '0.75rem', letterSpacing: '0.16em',
-                textTransform: 'uppercase', color: ACCENT_TEXT,
-                opacity: 0.75, userSelect: 'none',
-            }}>
-                Loading
             </div>
         </div>
     );
