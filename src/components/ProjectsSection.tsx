@@ -463,18 +463,20 @@ function PlatformSheet({
                     padding: isMobile ? '20px 20px' : '40px 48px',
                 }}>
                     <div style={{ maxWidth: 1080, margin: '0 auto' }}>
-                        <p style={{
-                            fontSize: TYPE.LABEL, fontWeight: 800, fontStretch: '88%',
-                            letterSpacing: '0.2em', textTransform: 'uppercase',
-                            color: SIGNAL, marginBottom: 14,
-                        }}>
-                            {project.mockLabel}
-                        </p>
+                        {project.mockLabel && (
+                            <p style={{
+                                fontSize: TYPE.LABEL, fontWeight: 800, fontStretch: '88%',
+                                letterSpacing: '0.2em', textTransform: 'uppercase',
+                                color: SIGNAL, marginBottom: 14,
+                            }}>
+                                {project.mockLabel}
+                            </p>
+                        )}
                         <div style={{ border: `2px solid ${STEEL_SOFT}`, background: BOARD }}>
                             {project.demoVideo && (
                                 <iframe
                                     src={project.demoVideo}
-                                    title={project.mockLabel}
+                                    title={project.mockLabel ?? `${project.name} demo`}
                                     style={{ width: '100%', aspectRatio: '16/9', display: 'block', border: 'none' }}
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                     referrerPolicy="strict-origin-when-cross-origin"
@@ -485,7 +487,7 @@ function PlatformSheet({
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     src={project.mockImage}
-                                    alt={project.mockLabel}
+                                    alt={project.mockLabel ?? `${project.name} screenshot`}
                                     width={project.mockSize?.[0]}
                                     height={project.mockSize?.[1]}
                                     loading="lazy"

@@ -19,7 +19,9 @@ export interface Project {
     overview: string;
     details: ProjectDetail[];
     stack: StackItem[];
-    mockLabel: string;
+    /** Caption over the demo frame. Omitted when the video speaks for itself —
+     *  a label that only restates "this is a demo" is a caption doing no work. */
+    mockLabel?: string;
     mockImage?: string;
     /** Intrinsic [width, height] of mockImage, so the overlay reserves space
      *  before the screenshot arrives instead of shifting layout under it. */
