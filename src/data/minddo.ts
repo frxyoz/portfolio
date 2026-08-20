@@ -162,8 +162,4 @@ export const takeaways: { title: string; body: string }[] = [
         title: 'Cost engineering',
         body: 'Caching on a content hash and moving off paid TTS took the unit cost from $0.043 to $0.023. The ceilings I set are not capacity estimates; they are there to limit how much a runaway loop can spend before I notice.',
     },
-    {
-        title: 'Honest measurement',
-        body: 'I threw out one benchmark number after realising it was profiling the wrong process. The load test on AWS drained twenty jobs in 18.9 minutes, but the median job took 257 s against a 102.7 s baseline, so scaling out on one node bought throughput and cost latency. The two-cent Claude bill for that run is a cache hit rate, not an efficiency, and I would not quote it as a per-showcase cost.',
-    },
 ];

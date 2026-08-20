@@ -83,7 +83,7 @@ export const POSTERS: Poster[] = [
     {
         id: 'soccer', zone: 'soccer', name: 'Soccer', art: 'soccer',
         scheme: 'steel', mount: 'panel',
-        note: 'The club, and the games that scratch the same itch.',
+        note: 'I\'ve been a fan of the sport since I was 6, and I try to play it once in a while.',
         x: 500, y: 84, w: 400, h: 404, tilt: 0,
     },
     {
@@ -94,13 +94,13 @@ export const POSTERS: Poster[] = [
            stock keeps the sheet quiet between two loud panels. */
         id: 'tottenham', zone: 'soccer', name: 'Tottenham', art: 'tottenham',
         scheme: 'paper', mount: 'flyposter',
-        note: 'A Spurs fan since 2019 — through the highs and the (many) lows.',
+        note: 'I\'ve been a Spurs fan since 2019. It has not been a relaxing few years.',
         x: 990, y: 112, w: 296, h: 380, tilt: -1.8,
     },
     {
         id: 'fifafm', zone: 'soccer', name: 'FIFA / FM', art: 'fifafm',
         scheme: 'signal', mount: 'panel',
-        note: 'Management games I lose whole days to — strategy, stats, squad-building.',
+        note: 'I love playing soccer management games like FIFA career mode and Football Manager.',
         x: 1430, y: 100, w: 344, h: 356, tilt: 0,
         interchange: ['soccer', 'gaming'],
     },
@@ -109,13 +109,13 @@ export const POSTERS: Poster[] = [
     {
         id: 'gaming', zone: 'gaming', name: 'Gaming', art: 'gaming',
         scheme: 'steel', mount: 'panel',
-        note: 'Squad-building at one end, competitive Pokémon at the other.',
+        note: 'I enjoy videos games where I can build up my team and watch them grow.',
         x: 2180, y: 84, w: 400, h: 404, tilt: 0,
     },
     {
         id: 'pokemon', zone: 'gaming', name: 'Pokémon', art: 'pokemon',
         scheme: 'paper', mount: 'flyposter',
-        note: 'Competitive player — once ran a YouTube channel on gimmicky teams.',
+        note: 'I used to play Pokémon competitively, and I still play casually. I used to run a Pokémon strategy YouTube channel:',
         x: 2660, y: 118, w: 306, h: 372, tilt: 2.2,
         link: { href: 'https://www.youtube.com/@froxyproxy', label: '@froxyproxy' },
     },
@@ -124,19 +124,19 @@ export const POSTERS: Poster[] = [
     {
         id: 'music', zone: 'music', name: 'Music', art: 'music',
         scheme: 'signal', mount: 'panel',
-        note: 'Playing it and listening to it, in roughly equal measure.',
+        note: 'I play a bit. I listen a lot more.',
         x: 3380, y: 84, w: 400, h: 404, tilt: 0,
     },
     {
         id: 'piano', zone: 'music', name: 'Piano', art: 'piano',
         scheme: 'enamel', mount: 'flyposter',
-        note: 'Twelve years in — my favorite way to unwind. Soft spot for ragtime.',
+        note: 'I\'ve been playing piano since I was 6. It\'s a way to relax and express myself.',
         x: 3860, y: 114, w: 300, h: 376, tilt: -2.4,
     },
     {
         id: 'listening', zone: 'music', name: 'Listening', art: 'listening',
         scheme: 'steel', mount: 'panel',
-        note: 'A lot of music, across every genre.',
+        note: 'Not only do I like playing music, I love listening to music of all genres!',
         x: 4290, y: 100, w: 336, h: 356, tilt: 0,
         link: { href: 'https://www.last.fm/user/olriczzz', label: 'last.fm/olriczzz' },
     },
@@ -145,19 +145,19 @@ export const POSTERS: Poster[] = [
     {
         id: 'food', zone: 'food', name: 'Food', art: 'food',
         scheme: 'paper', mount: 'panel',
-        note: 'Eating it, mostly. Cooking it, increasingly.',
+        note: 'I eat a lot of it. Lately I try to make it too.',
         x: 4840, y: 84, w: 400, h: 404, tilt: 0,
     },
     {
         id: 'noodles', zone: 'food', name: 'Noodles', art: 'noodles',
         scheme: 'signal', mount: 'flyposter',
-        note: 'Noodles above all — my one true favorite.',
+        note: 'My favorite foods are noodles!',
         x: 5320, y: 116, w: 300, h: 372, tilt: 1.6,
     },
     {
         id: 'cooking', zone: 'food', name: 'Cooking', art: 'cooking',
         scheme: 'enamel', mount: 'panel',
-        note: 'Slowly getting into cooking and baking, too.',
+        note: 'I\'ve been learning to cook and bake.',
         x: 5750, y: 100, w: 340, h: 356, tilt: 0,
     },
 ];
