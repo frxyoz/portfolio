@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
 
 import Pictogram from './concourse/Pictogram';
+import { NewTabNote } from './concourse/srOnly';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import {
     SIGNAL, STEEL, STEEL_SOFT, SIGN_WHITE, CHALK,
@@ -259,6 +260,7 @@ function Sheet({ poster, lit }: { poster: Poster; lit: boolean }) {
                                 onMouseLeave={e => { e.currentTarget.style.background = ink; e.currentTarget.style.color = pal.bg; }}
                             >
                                 {poster.link.label}
+                                <NewTabNote />
                                 <Pictogram name="arrow-up-right" size={12} />
                             </a>
                         )}
@@ -293,10 +295,23 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
        and below the height a hanging sign needs, nothing hangs at all. */
     const [ceiling, setCeiling] = useState(0);
 
+    /* The corridor declares itself a modal, so it has to behave like one: the
+       page behind it is inert to the eye and must be inert to the Tab key too.
+       Focus moves to the corridor itself rather than to the Exit gate — arrow
+       keys walk it the moment it opens, and Exit is one Tab away either side. */
+    const dialogRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         if (!open) return;
         document.body.classList.add('overlay-open');
-        return () => document.body.classList.remove('overlay-open');
+
+        const previousFocus = document.activeElement as HTMLElement | null;
+        scrollRef.current?.focus({ preventScroll: true });
+
+        return () => {
+            document.body.classList.remove('overlay-open');
+            previousFocus?.focus();
+        };
     }, [open]);
 
     /* Which bay the walker is standing in: whichever gate they most recently
@@ -375,6 +390,26 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
         if (!open) return;
         const fn = (e: KeyboardEvent) => {
             if (e.key === 'Escape') { onClose(); return; }
+
+            if (e.key === 'Tab' && dialogRef.current) {
+                const focusable = Array.from(
+                    dialogRef.current.querySelectorAll<HTMLElement>(
+                        'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                    )
+                );
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (!first) return;
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+                return;
+            }
+
             const el = scrollRef.current;
             if (!el) return;
             const behavior: ScrollBehavior = reduced ? 'auto' : 'smooth';
@@ -422,6 +457,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
 
     return (
         <div
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-label="My interests"

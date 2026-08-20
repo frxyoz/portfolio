@@ -72,7 +72,11 @@ export const SIGN_INK_SOFT = '#55534d';
 export const BOARD_INK = '#f4f3ef';
 /** Secondary type on the black board. 7.4:1 on {@link BOARD}. */
 export const BOARD_INK_SOFT = '#a3a099';
-/** A control that is switched off. Exempt from 1.4.3, still legible at 3.4:1. */
+/** A control that is switched off. Its one call site is the sheet's prev/next
+ *  gate, which sits on the {@link STEEL} rail: 3.47:1 there, and 4.79:1 if it
+ *  is ever put on {@link SIGN_WHITE}. A disabled control is exempt from 1.4.3,
+ *  and the value is set to stay legible rather than to disappear — a gate a
+ *  visitor cannot press should still say which gate it is. */
 export const DISABLED_TEXT = '#6e6b64';
 
 /* ── Status lamps — reserved by law ───────────────────────────────────────── */

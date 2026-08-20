@@ -8,6 +8,7 @@ import type { Project } from '@/types';
 import Reveal from './Reveal';
 import FlapText from './concourse/FlapText';
 import Pictogram from './concourse/Pictogram';
+import { NewTabNote } from './concourse/srOnly';
 import { useOverlay } from '@/contexts/OverlayContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import {
@@ -450,6 +451,7 @@ function PlatformSheet({
                             >
                                 <Pictogram name="github" size={15} />
                                 Source
+                                <NewTabNote />
                             </a>
                         </div>
                     )}
@@ -487,6 +489,8 @@ function PlatformSheet({
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     src={project.mockImage}
+                                    srcSet={project.mockSrcSet}
+                                    sizes="(max-width: 900px) 100vw, 760px"
                                     alt={project.mockLabel ?? `${project.name} screenshot`}
                                     width={project.mockSize?.[0]}
                                     height={project.mockSize?.[1]}

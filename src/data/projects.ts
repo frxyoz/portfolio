@@ -116,6 +116,7 @@ export const projects: Project[] = [
             { name: 'Firebase', role: 'Auth & progress storage' },
         ],
         mockImage: '/noteform.webp',
+        mockSrcSet: '/noteform-640.webp 640w, /noteform-900.webp 900w, /noteform.webp 1200w',
         mockSize: [1200, 998],
     },
 ];

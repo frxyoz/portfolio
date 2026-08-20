@@ -107,6 +107,90 @@ body.overlay-open { overflow: hidden; }
 }
 .skip-link:focus { top: 12px; }
 
+/* ── The rail, and the board it heads ──────────────────────────────────────
+   Responsive rules for these two live in CSS rather than in a `isMobile ?`
+   branch, and the reason is the served bytes. `useIsMobile` is a hook: it
+   cannot answer until the client has hydrated, so a JS-branched rail ships the
+   desktop layout in the HTML and repaints it on a phone. The loading curtain
+   hides that on a first visit and hides nothing on a second. A media query is
+   already right when the document arrives. */
+
+.oz-rail { padding: 0 28px 0 0; }
+.oz-rail-brand { width: 68px; font-size: 1.14rem; }  /* TYPE.LEDE */
+.oz-rail-place { display: flex; }
+.oz-rail-link {
+  font-size: 0.74rem;  /* TYPE.CONTROL */
+  letter-spacing: 0.16em;
+  font-stretch: 88%;
+  padding: 0 16px;
+}
+.oz-rail-clock { padding-left: 20px; margin-left: 12px; gap: 8px; }
+
+@media (max-width: 767px) {
+  .oz-rail { padding: 0 10px 0 0; }
+  .oz-rail-brand { width: 48px; font-size: 1rem; }  /* TYPE.BODY */
+  .oz-rail-place { display: none; }
+  .oz-rail-link { padding: 0 6px; letter-spacing: 0.09em; }
+  .oz-rail-clock { padding-left: 8px; margin-left: 2px; gap: 6px; }
+  .oz-rail-clock svg { width: 11px; height: 11px; }
+}
+
+/* At 320 points the rail has to seat the mark, three destinations and the time.
+   The clock never yields — a board that clips its own time is a broken board —
+   so the destinations give ground, in tracking and padding before size. */
+@media (max-width: 359px) {
+  .oz-rail-link {
+    font-size: 0.66rem;  /* TYPE.LABEL */
+    letter-spacing: 0.04em;
+    font-stretch: 84%;
+    padding: 0 5px;
+  }
+}
+
+/* The board's five columns collapse to three on a phone: the service and the
+   stop count leave their own columns and ride under the destination instead.
+   Both variants are in the HTML at every width; the media query decides which
+   is painted, so nothing about this board waits for JavaScript. */
+.oz-board-head,
+.oz-board-row {
+  display: grid;
+  grid-template-columns: 6rem 15rem 1fr 9rem 3.5rem;
+  align-items: center;
+  gap: 20px;
+  padding: 0 28px;
+}
+.oz-board-row { height: 56px; }   /* ROW_H in HeroSection.tsx */
+.oz-board-head { height: 30px; letter-spacing: 0.2em; }  /* HEAD_H */
+.oz-board-narrow { display: none; }
+
+@media (max-width: 767px) {
+  .oz-board-head,
+  .oz-board-row {
+    grid-template-columns: 4.6rem 1fr 2.4rem;
+    gap: 10px;
+    padding: 0 14px;
+  }
+  .oz-board-row { height: 46px; }  /* ROW_H_SM */
+  .oz-board-head { letter-spacing: 0.12em; }
+  .oz-board-wide { display: none; }
+  .oz-board-narrow { display: block; }
+  .oz-board-platform { font-size: 0.82rem; }  /* TYPE.META */
+  .oz-board-dest { font-size: 0.82rem; }
+  .oz-board-gate svg { width: 15px; height: 15px; }
+}
+
+/* The curtain is in the server's HTML, because it has to be painted in the very
+   first frame or it is not a curtain. That leaves two visitors it should never
+   reach: the one who has already been here this session, and the one who asked
+   for less motion. Both are decided before hydration — the first by the inline
+   script in layout.tsx, the second by the media query — so neither ever sees a
+   black rectangle appear and leave. */
+html.oz-loaded .oz-curtain { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .oz-curtain { display: none; }
+}
+
 @keyframes slideUp {
   from { transform: translateY(48px); opacity: 0; }
   to   { transform: none; opacity: 1; }

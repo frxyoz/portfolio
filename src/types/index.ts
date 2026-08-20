@@ -23,6 +23,10 @@ export interface Project {
      *  a label that only restates "this is a demo" is a caption doing no work. */
     mockLabel?: string;
     mockImage?: string;
+    /** Candidate widths for mockImage. Written out rather than derived from the
+     *  filename, because a convention that silently 404s when the variant was
+     *  never generated is worse than a field nobody filled in. */
+    mockSrcSet?: string;
     /** Intrinsic [width, height] of mockImage, so the overlay reserves space
      *  before the screenshot arrives instead of shifting layout under it. */
     mockSize?: [number, number];

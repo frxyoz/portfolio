@@ -3,7 +3,6 @@
 import { useState, useEffect, useSyncExternalStore } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { useOverlay } from '@/contexts/OverlayContext';
-import { useIsMobile } from '@/hooks/useIsMobile';
 import Pictogram from './concourse/Pictogram';
 import {
   SIGNAL, STEEL, STEEL_SOFT, BOARD_INK, BOARD_INK_SOFT, SIGN, EASE_OUT, TYPE,} from '@/design/tokens';
@@ -67,7 +66,6 @@ function Clock() {
 export default function NavBar() {
   const active = useActiveSection(['hero', 'about', 'projects', 'contact']);
   const { overlayOpen, closeOverlay } = useOverlay();
-  const isMobile = useIsMobile();
   const reduced = useReducedMotion();
 
   /* `scroll-behavior: auto` in the reduced-motion media query does not reach
@@ -100,11 +98,10 @@ export default function NavBar() {
        materialises on scroll belongs to a world where the page is the subject;
        here the rail is a fixed piece of the building, and buildings do not
        fade in. */
-    <nav aria-label="Sections" style={{
+    <nav aria-label="Sections" className="oz-rail" style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 300,
       background: STEEL,
       borderBottom: `1px solid ${STEEL_SOFT}`,
-      padding: isMobile ? '0 10px 0 0' : '0 28px 0 0',
       height: RAIL_H,
       display: 'flex', alignItems: 'stretch', justifyContent: 'space-between',
       fontFamily: SIGN,
@@ -115,11 +112,12 @@ export default function NavBar() {
       <button
         onClick={handleBrand}
         aria-label="Back to the top of the page"
+        className="oz-rail-brand"
         style={{
           background: SIGNAL, color: STEEL, border: 'none', cursor: 'pointer',
-          width: isMobile ? 48 : 68, flexShrink: 0,
+          flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: isMobile ? TYPE.BODY : TYPE.LEDE, fontWeight: 800,
+          fontWeight: 800,
           fontStretch: '112%', letterSpacing: '0.02em',
           transition: `background 0.18s ${EASE_OUT}`,
         }}
@@ -129,16 +127,15 @@ export default function NavBar() {
         OZ
       </button>
 
-      {!isMobile && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 20,
-          color: BOARD_INK_SOFT, fontSize: TYPE.LABEL, fontWeight: 600,
-          letterSpacing: '0.18em', textTransform: 'uppercase', fontStretch: '88%',
-        }}>
-          <Pictogram name="pin" size={13} color={BOARD_INK_SOFT} />
-          Fullerton, CA / Ithaca, NY
-        </div>
-      )}
+      <div className="oz-rail-place" style={{
+        alignItems: 'center', gap: 10, paddingLeft: 20,
+        color: BOARD_INK_SOFT, fontSize: TYPE.LABEL, fontWeight: 600,
+        letterSpacing: '0.18em', textTransform: 'uppercase', fontStretch: '88%',
+        whiteSpace: 'nowrap',
+      }}>
+        <Pictogram name="pin" size={13} color={BOARD_INK_SOFT} />
+        Fullerton, CA / Ithaca, NY
+      </div>
 
       <div style={{ flex: 1 }} />
 
@@ -150,15 +147,14 @@ export default function NavBar() {
               key={l.id}
               onClick={() => scrollTo(l.id)}
               aria-current={isActive ? 'true' : undefined}
+              className="oz-rail-link"
               style={{
                 fontFamily: SIGN,
-                fontSize: isMobile ? TYPE.MICRO : TYPE.CONTROL, fontWeight: 700,
-                fontStretch: isMobile ? '80%' : '88%',
-                letterSpacing: isMobile ? '0.09em' : '0.16em', textTransform: 'uppercase',
+                fontWeight: 700,
+                textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
                 color: isActive ? SIGNAL : BOARD_INK,
                 background: 'none', border: 'none', cursor: 'pointer',
-                padding: isMobile ? '0 7px' : '0 16px',
                 display: 'flex', alignItems: 'center',
                 /* The active marker is a signal bar seated on the rail's own
                    lower edge, the way a platform sign underlines the line you
@@ -176,12 +172,11 @@ export default function NavBar() {
 
         {/* The clock never yields: a board that clips its own time is a broken
             board, so this block holds its width and the links give ground. */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 8, flexShrink: 0,
-          paddingLeft: isMobile ? 8 : 20, marginLeft: isMobile ? 2 : 12,
+        <div className="oz-rail-clock" style={{
+          display: 'flex', alignItems: 'center', flexShrink: 0,
           borderLeft: `1px solid ${STEEL_SOFT}`,
         }}>
-          <Pictogram name="clock" size={isMobile ? 11 : 13} color={SIGNAL} />
+          <Pictogram name="clock" size={13} color={SIGNAL} />
           <Clock />
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { profile } from '@/data/profile';
 import Reveal from './Reveal';
 import Pictogram, { type PictogramName } from './concourse/Pictogram';
+import { NewTabNote, SR_ONLY } from './concourse/srOnly';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import {
     SIGNAL, SIGNAL_DEEP, ENAMEL, ENAMEL_INK_SOFT, STEEL, SIGN_WHITE, SIGN_INK,
@@ -27,10 +28,7 @@ const inputStyle: React.CSSProperties = {
 /* Visible to screen readers, not to the eye. The fields are designed to carry
    their names in the placeholder, but a placeholder disappears the moment
    anyone types and is not an accessible name to begin with. */
-const srOnly: React.CSSProperties = {
-    position: 'absolute', width: 1, height: 1, padding: 0, margin: -1,
-    overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0,
-};
+const srOnly = SR_ONLY;
 
 /* The desk's header band: the function reversed out of signal, running the full
    width of the plate. A service counter says what it is above the counter, not
@@ -51,6 +49,12 @@ const platformEdge: React.CSSProperties = {
     background: `repeating-linear-gradient(-45deg, ${SIGNAL} 0 14px, ${STEEL} 14px 28px)`,
 };
 
+/* The Formspree endpoint is a build-time public var. Read once here rather than
+   inside the handler: if it is missing the form can only fail, and it should
+   fail into the message that names the fallback address rather than POST to a
+   relative `/undefined` and wait for the 404. */
+const FORM_ENDPOINT = process.env.NEXT_PUBLIC_FORMSPREE_KEY;
+
 export default function ContactSection() {
     const isMobile = useIsMobile();
     const [form, setForm] = useState({ name: '', email: '', message: '' });
@@ -66,8 +70,9 @@ export default function ContactSection() {
         e.preventDefault();
         setSending(true);
         setError(false);
+        if (!FORM_ENDPOINT) { setError(true); setSending(false); return; }
         try {
-            const res = await fetch(process.env.NEXT_PUBLIC_FORMSPREE_KEY as string, {
+            const res = await fetch(FORM_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                 body: JSON.stringify(form),
@@ -176,6 +181,7 @@ export default function ContactSection() {
                                     >
                                         <Pictogram name={SOCIAL_ICON[s.label] ?? 'arrow-up-right'} size={17} />
                                         {s.label}
+                                        {!s.href.startsWith('mailto') && <NewTabNote />}
                                         <span style={{ flex: 1 }} />
                                         <Pictogram name="arrow-right" size={14} color={SIGNAL} />
                                     </a>

@@ -17,7 +17,13 @@ const archivo = Archivo({
     display: 'swap',
 });
 
+/* No `images` on either block: `opengraph-image.tsx` beside this file is the
+   card, and naming a raster here would override the route and put the site back
+   where it was — one hand-exported PNG, drifting away from the design it claims
+   to show. `metadataBase` is what lets the generated route resolve to an
+   absolute URL, which is the only kind an unfurl can fetch. */
 export const metadata: Metadata = {
+    metadataBase: new URL('https://olriczeng.com'),
     title: 'Olric Zeng',
     description: 'Portfolio of Olric Zeng — Computer Science at Cornell. Full-stack and infrastructure projects.',
     openGraph: {
@@ -25,21 +31,12 @@ export const metadata: Metadata = {
         description: 'Portfolio of Olric Zeng — Computer Science at Cornell. Full-stack and infrastructure projects.',
         url: 'https://olriczeng.com',
         siteName: 'Olric Zeng',
-        images: [
-            {
-                url: 'https://olriczeng.com/og-image.png',
-                width: 1200,
-                height: 630,
-                alt: 'Olric Zeng Portfolio',
-            },
-        ],
         type: 'website',
     },
     twitter: {
         card: 'summary_large_image',
         title: 'Olric Zeng',
         description: 'Portfolio of Olric Zeng — Computer Science at Cornell. Full-stack and infrastructure projects.',
-        images: ['https://olriczeng.com/og-image.png'],
     },
 };
 
@@ -47,7 +44,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
         <html lang="en" className={archivo.variable}>
             <head>
-                <link rel="preload" as="image" href="/subject.webp" fetchPriority="high" />
+                {/* Blocking, and deliberately so: it runs in the few hundred
+                    microseconds before the first paint and decides whether this
+                    visitor has already walked through the curtain this session.
+                    Doing it in the component instead would mean painting the
+                    curtain and then taking it away, which is a black flash on
+                    every page the visitor comes back to. */}
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: "try{if(sessionStorage.getItem('oz-loaded'))document.documentElement.classList.add('oz-loaded')}catch(e){}",
+                    }}
+                />
+                {/* The portrait stands in the desktop field only, so the preload
+                    carries the same media query the composition does — a phone
+                    was fetching a 126 KB image at high priority to paint
+                    nothing. The srcset here mirrors the img's exactly; a preload
+                    that names a different candidate downloads both. */}
+                <link
+                    rel="preload"
+                    as="image"
+                    href="/subject.webp"
+                    imageSrcSet="/subject-380.webp 380w, /subject-760.webp 760w, /subject.webp 863w"
+                    imageSizes="380px"
+                    media="(min-width: 768px)"
+                    fetchPriority="high"
+                />
             </head>
             <body>
                 {/* THESIS: A stranger with twenty seconds and eight tabs open is a traveler in a

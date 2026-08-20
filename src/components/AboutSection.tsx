@@ -4,6 +4,7 @@ import { profile } from '@/data/profile';
 import Reveal from './Reveal';
 import type { TimelineEntry } from '@/types';
 import Pictogram from './concourse/Pictogram';
+import { NewTabNote } from './concourse/srOnly';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import {
   SIGNAL, ENAMEL, ENAMEL_LIT, STEEL, SIGN_WHITE, SIGN_INK, SIGN_INK_SOFT,
@@ -175,6 +176,7 @@ function StationLabel({ item, terminus, align }: {
             }}
           >
             {item.org}
+            <NewTabNote />
           </a>
         ) : (
           <span style={{ fontSize: TYPE.META, fontWeight: 700, color: ENAMEL }}>{item.org}</span>

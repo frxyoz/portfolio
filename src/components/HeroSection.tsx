@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import { useOverlay } from '@/contexts/OverlayContext';
 import FlapText from './concourse/FlapText';
 import Pictogram, { type PictogramName } from './concourse/Pictogram';
+import { NewTabNote } from './concourse/srOnly';
 import { RAIL_H } from './NavBar';
 import {
     SIGNAL, SIGNAL_INK_SOFT, STEEL, STEEL_SOFT, BOARD, BOARD_LIT,
@@ -118,11 +119,13 @@ const DESTINATIONS: Destination[] = [
 ];
 
 // ─── The departures board ────────────────────────────────────────────────────
-function DepartureBoard({ isMobile, armed }: { isMobile: boolean; armed: boolean }) {
-    const rowH = isMobile ? ROW_H_SM : ROW_H;
+/* Every responsive decision on this board is a media query in globals.css, not
+   a branch here: the board is the first thing a visitor reads and it has to be
+   the right shape in the HTML, before any JavaScript runs. Both the wide
+   columns and the phone's stacked service line are always in the markup; CSS
+   decides which is painted. */
+function DepartureBoard({ armed }: { armed: boolean }) {
     const reduced = useReducedMotion();
-
-    const cols = isMobile ? '4.6rem 1fr 2.4rem' : '6rem 15rem 1fr 9rem 3.5rem';
 
     const goTo = (id: string) => {
         const el = document.getElementById(id);
@@ -136,23 +139,18 @@ function DepartureBoard({ isMobile, armed }: { isMobile: boolean; armed: boolean
                 a real board's headers are silkscreened, only the rows move. */}
             <div
                 aria-hidden="true"
+                className="oz-board-head"
                 style={{
-                    display: 'grid',
-                    gridTemplateColumns: cols,
-                    alignItems: 'center',
-                    height: HEAD_H,
-                    padding: isMobile ? '0 14px' : '0 28px',
-                    gap: isMobile ? 10 : 20,
                     borderBottom: `1px solid ${RULE_DARK}`,
                     color: SIGNAL,
                     fontSize: TYPE.MICRO, fontWeight: 700, fontStretch: '88%',
-                    letterSpacing: isMobile ? '0.12em' : '0.2em', textTransform: 'uppercase',
+                    textTransform: 'uppercase',
                 }}
             >
                 <span style={{ whiteSpace: 'nowrap', overflow: 'hidden' }}>Platform</span>
                 <span>Destination</span>
-                {!isMobile && <span>Service</span>}
-                {!isMobile && <span style={{ textAlign: 'right' }}>Stops</span>}
+                <span className="oz-board-wide">Service</span>
+                <span className="oz-board-wide" style={{ textAlign: 'right' }}>Stops</span>
                 <span style={{ textAlign: 'right' }} />
             </div>
 
@@ -160,9 +158,9 @@ function DepartureBoard({ isMobile, armed }: { isMobile: boolean; armed: boolean
                 const platform = String(i + 1).padStart(2, '0');
                 const row = (
                     <>
-                        <span style={{
+                        <span className="oz-board-platform" style={{
                             color: SIGNAL,
-                            fontSize: isMobile ? TYPE.META : TYPE.TITLE,
+                            fontSize: TYPE.TITLE,
                             fontWeight: 800, fontStretch: '112%', letterSpacing: '0.01em',
                         }}>
                             {platform}
@@ -174,69 +172,61 @@ function DepartureBoard({ isMobile, armed }: { isMobile: boolean; armed: boolean
                                 play={armed}
                                 startDelay={4 + i * 3}
                                 stagger={1}
+                                className="oz-board-dest"
                                 style={{
-                                    fontSize: isMobile ? TYPE.META : TYPE.BODY,
+                                    fontSize: TYPE.BODY,
                                     fontWeight: 700, fontStretch: '88%',
                                     letterSpacing: '0.04em',
                                 }}
                             />
                             {/* On a phone the service line rides under its
-                                destination rather than taking a column of its own. */}
-                            {isMobile && (
-                                <span style={{
-                                    color: BOARD_INK_SOFT, fontSize: TYPE.MICRO, fontWeight: 500,
-                                    letterSpacing: '0.04em', whiteSpace: 'nowrap',
-                                    overflow: 'hidden', textOverflow: 'ellipsis',
-                                }}>
-                                    {d.serviceShort ?? d.service} · {d.stops}
-                                </span>
-                            )}
-                        </span>
-
-                        {!isMobile && (
-                            <span style={{
-                                color: BOARD_INK_SOFT, fontSize: TYPE.CONTROL, fontWeight: 500,
-                                letterSpacing: '0.05em', whiteSpace: 'nowrap',
+                                destination rather than taking a column of its own.
+                                Hidden from the tree at every width, because the row's
+                                own aria-label already carries destination and service
+                                and this would say it a second time. */}
+                            <span aria-hidden="true" className="oz-board-narrow" style={{
+                                color: BOARD_INK_SOFT, fontSize: TYPE.MICRO, fontWeight: 500,
+                                letterSpacing: '0.04em', whiteSpace: 'nowrap',
                                 overflow: 'hidden', textOverflow: 'ellipsis',
                             }}>
-                                {d.service}
+                                {d.serviceShort ?? d.service} · {d.stops}
                             </span>
-                        )}
+                        </span>
 
-                        {!isMobile && (
-                            <span style={{
-                                color: SIGNAL, fontSize: TYPE.META, fontWeight: 700,
-                                fontStretch: '88%', letterSpacing: '0.08em',
-                                textAlign: 'right', whiteSpace: 'nowrap',
-                            }}>
-                                {d.stops}
-                            </span>
-                        )}
+                        <span className="oz-board-wide" style={{
+                            color: BOARD_INK_SOFT, fontSize: TYPE.CONTROL, fontWeight: 500,
+                            letterSpacing: '0.05em', whiteSpace: 'nowrap',
+                            overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}>
+                            {d.service}
+                        </span>
+
+                        <span className="oz-board-wide" style={{
+                            color: SIGNAL, fontSize: TYPE.META, fontWeight: 700,
+                            fontStretch: '88%', letterSpacing: '0.08em',
+                            textAlign: 'right', whiteSpace: 'nowrap',
+                        }}>
+                            {d.stops}
+                        </span>
 
                         {/* Down for a service on this concourse, out for one that
                             leaves it. A board that pointed the same way at both
                             would be telling you nothing. */}
-                        <span className="oz-gate" style={{
+                        <span className="oz-gate oz-board-gate" style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
                             color: SIGNAL,
                             transition: `transform 0.24s ${EASE_OUT}`,
                         }}>
                             <Pictogram
                                 name={d.external ? 'arrow-up-right' : 'arrow-down'}
-                                size={isMobile ? 15 : 18}
+                                size={18}
                             />
                         </span>
                     </>
                 );
 
                 const cell: React.CSSProperties = {
-                    display: 'grid',
-                    gridTemplateColumns: cols,
-                    alignItems: 'center',
-                    gap: isMobile ? 10 : 20,
                     width: '100%',
-                    height: rowH,
-                    padding: isMobile ? '0 14px' : '0 28px',
                     background: 'transparent',
                     border: 'none',
                     borderBottom: i === DESTINATIONS.length - 1 ? 'none' : `1px solid ${RULE_DARK}`,
@@ -261,12 +251,13 @@ function DepartureBoard({ isMobile, armed }: { isMobile: boolean; armed: boolean
                 };
 
                 return d.external ? (
-                    <Link key={d.id} href={d.href} style={cell} {...hover}
+                    <Link key={d.id} href={d.href} className="oz-board-row" style={cell} {...hover}
                         aria-label={`${d.label} — ${d.service}`}>
                         {row}
                     </Link>
                 ) : (
-                    <button key={d.id} type="button" onClick={() => goTo(d.id)} style={cell} {...hover}
+                    <button key={d.id} type="button" onClick={() => goTo(d.id)}
+                        className="oz-board-row" style={cell} {...hover}
                         aria-label={`${d.label} — ${d.service}`}>
                         {row}
                     </button>
@@ -328,11 +319,17 @@ function FieldPortrait({
             opacity: visible ? 1 : 0,
             transition: 'opacity 0.35s ease',
         }}>
+            {/* `will-change` here and on the panel below, and nowhere else on the
+                site: these are the only two elements running a scroll-linked
+                blur, which is the one effect expensive enough to be worth a
+                permanent layer. Dropped with the blur under reduced motion, so
+                the hint never outlives the animation it exists for. */}
             <motion.div style={{
                 display: 'inline-block',
                 opacity,
                 scale: reduced ? 1 : scaleRaw,
                 filter: reduced ? 'none' : blurRaw,
+                willChange: reduced ? undefined : 'filter, transform',
                 transformOrigin: 'bottom center',
             }}>
                 <motion.button
@@ -359,6 +356,13 @@ function FieldPortrait({
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src="/subject.webp"
+                        srcSet="/subject-380.webp 380w, /subject-760.webp 760w, /subject.webp 863w"
+                        /* The portrait's width is derived from its height, which is
+                           a viewport unit, so `sizes` cannot be exact. 380px is the
+                           width it resolves to at the 590px ceiling; the DPR term
+                           does the rest, and the 863px original is still there for
+                           a retina display with the height to use it. */
+                        sizes="380px"
                         alt=""
                         width={863}
                         height={1400}
@@ -529,7 +533,14 @@ export default function HeroSection() {
                                 : 'clamp(20px, 4vh, 56px) clamp(24px, 4vw, 64px)',
                             opacity: contentOpacity,
                             scale: reduced ? 1 : contentScaleRaw,
-                            filter: reduced ? 'none' : blurRaw,
+                            /* Blur is the most expensive filter there is, and this
+                               element is most of the first viewport. On a phone it
+                               ran across a 190vh scroll on the weakest hardware the
+                               site sees, so the phone gets the fade and the scale
+                               and not the blur — the hand-off still reads, and the
+                               frames survive. */
+                            filter: reduced || isMobile ? 'none' : blurRaw,
+                            willChange: reduced || isMobile ? undefined : 'filter, transform',
                         }}>
                             <div style={{
                                 maxWidth: isMobile ? '100%' : 'min(57vw, 820px)',
@@ -627,6 +638,7 @@ export default function HeroSection() {
                                     >
                                         <Pictogram name="doc" size={15} />
                                         Resume
+                                        <NewTabNote />
                                     </a>
 
                                     {profile.socialLinks.map(s => (
@@ -648,6 +660,7 @@ export default function HeroSection() {
                                             onMouseLeave={e => { e.currentTarget.style.boxShadow = `inset 0 -2px 0 0 ${SIGNAL_INK_SOFT}`; }}
                                         >
                                             {s.label}
+                                            {!s.href.startsWith('mailto') && <NewTabNote />}
                                         </a>
                                     ))}
                                 </div>
@@ -682,7 +695,7 @@ export default function HeroSection() {
                         position: 'relative', zIndex: 1,
                         opacity: contentOpacity,
                     }}>
-                        <DepartureBoard isMobile={isMobile} armed={entered} />
+                        <DepartureBoard armed={entered} />
                     </motion.div>
 
                     {/* ── The signature, written across the emptied board ── */}
