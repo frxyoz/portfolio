@@ -136,7 +136,7 @@ export default function NavBar() {
           letterSpacing: '0.18em', textTransform: 'uppercase', fontStretch: '88%',
         }}>
           <Pictogram name="pin" size={13} color={BOARD_INK_SOFT} />
-          Ithaca NY
+          Fullerton, CA / Ithaca, NY
         </div>
       )}
 

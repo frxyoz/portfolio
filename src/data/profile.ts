@@ -41,5 +41,5 @@ export const profile: ProfileData = {
         { label: 'LinkedIn', href: 'https://linkedin.com/in/olriczeng' },
         { label: 'Email', href: 'mailto:olriczeng@gmail.com' },
     ],
-    resumeUrl: '/resume.pdf',
+    resumeUrl: '/olriczeng_resume.pdf',
 };
