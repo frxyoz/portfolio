@@ -82,13 +82,17 @@ export const POSTERS: Poster[] = [
     /* ── 01 Soccer ─────────────────────────────────────────────────────── */
     {
         id: 'soccer', zone: 'soccer', name: 'Soccer', art: 'soccer',
-        scheme: 'enamel', mount: 'panel',
+        scheme: 'steel', mount: 'panel',
         note: 'The club, and the games that scratch the same itch.',
         x: 500, y: 84, w: 400, h: 404, tilt: 0,
     },
     {
+        /* Navy, because that is what the club is. The shirt colour and the
+           system's enamel blue turn out to be the same ink, so this costs the
+           palette nothing — and Soccer takes the black panel next door so the
+           zone does not run two navy sheets in a row. */
         id: 'tottenham', zone: 'soccer', name: 'Tottenham', art: 'tottenham',
-        scheme: 'steel', mount: 'flyposter',
+        scheme: 'enamel', mount: 'flyposter',
         note: 'A Spurs fan since 2019 — through the highs and the (many) lows.',
         x: 990, y: 112, w: 296, h: 380, tilt: -1.8,
     },

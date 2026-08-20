@@ -112,11 +112,26 @@ body.overlay-open { overflow: hidden; }
   to   { transform: none; opacity: 1; }
 }
 
-/* The interest map's overlay: a sign panel lowered into its opening. A state
-   change, not an authored moment — the site has exactly one of those. */
-@keyframes signLower {
-  from { clip-path: inset(0 0 100% 0); }
-  to   { clip-path: inset(0 0 0 0); }
+/* Entering the corridor.
+   Platform-edge doors: two steel leaves hold shut for a beat, then run apart on
+   the site's deceleration curve. The passage behind them settles in from a hair
+   under full size, which is the only part of this that reads as walking. A
+   state change dressed as a door, not a second authored moment — the site has
+   exactly one of those, and it belongs to the signature. */
+@keyframes gateLeafLeft {
+  0%, 18% { transform: translateX(0); }
+  100%    { transform: translateX(-101%); }
+}
+@keyframes gateLeafRight {
+  0%, 18% { transform: translateX(0); }
+  100%    { transform: translateX(101%); }
+}
+/* Scale only, and deliberately no fade: the doors are inside this element, so
+   any opacity here makes them translucent and you watch the home page through
+   a shut door. A door that conceals nothing is a wipe. */
+@keyframes corridorEnter {
+  from { transform: scale(0.985); }
+  to   { transform: none; }
 }
 
 /* A status lamp on the board breathes the way a real bulb does behind glass. */
@@ -149,8 +164,17 @@ body.overlay-open { overflow: hidden; }
     0%, 100% { opacity: 1; }
   }
 
-  /* The panel arrives without travelling. */
-  @keyframes signLower {
+  /* The doors part without travelling, and the corridor arrives without
+     being walked into. */
+  @keyframes gateLeafLeft {
+    0%, 40% { opacity: 1; }
+    100%    { opacity: 0; }
+  }
+  @keyframes gateLeafRight {
+    0%, 40% { opacity: 1; }
+    100%    { opacity: 0; }
+  }
+  @keyframes corridorEnter {
     from { opacity: 0; }
     to   { opacity: 1; }
   }

@@ -86,6 +86,45 @@ function ZoneGate({ zone }: { zone: Zone }) {
     );
 }
 
+/* ── Platform-edge doors ───────────────────────────────────────────────────
+   The way into a corridor is a door, and the site already owns the marking
+   that belongs on one: the −45° signal-and-steel hatch that means "the ground
+   changes here", which is exactly the claim a threshold makes. Two steel
+   leaves, a hatched edge where they meet, and a signal seam down the join.
+
+   They hold shut for a fifth of the run before parting, because a door that is
+   already opening when you first see it never reads as having been closed. */
+
+function Doors() {
+    const hatch = `repeating-linear-gradient(-45deg, ${SIGNAL} 0 14px, ${STEEL} 14px 28px)`;
+    const leaf = (side: 'left' | 'right'): React.CSSProperties => ({
+        position: 'absolute', top: 0, bottom: 0, width: '50.2%',
+        [side]: 0,
+        background: STEEL,
+        animation: `gateLeaf${side === 'left' ? 'Left' : 'Right'} .78s ${EASE_OUT} both`,
+        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        alignItems: side === 'left' ? 'flex-end' : 'flex-start',
+    });
+    return (
+        <div aria-hidden style={{
+            position: 'absolute', inset: 0, zIndex: 6,
+            pointerEvents: 'none', overflow: 'hidden',
+        }}>
+            {(['left', 'right'] as const).map(side => (
+                <div key={side} style={leaf(side)}>
+                    {/* The hatch runs down the closing edge, and a signal seam
+                        marks the join itself. */}
+                    <span style={{
+                        width: 18, height: '100%', background: hatch,
+                        borderInlineStart: side === 'right' ? `3px solid ${SIGNAL}` : undefined,
+                        borderInlineEnd: side === 'left' ? `3px solid ${SIGNAL}` : undefined,
+                    }} />
+                </div>
+            ))}
+        </div>
+    );
+}
+
 /* ── The overhead gantry ───────────────────────────────────────────────────
    A tall window buys ceiling, and bare tile above head height is the one part
    of a corridor nobody looks at. A real passage puts its directional signs up
@@ -391,7 +430,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                 background: STEEL, color: SIGN_INK, fontFamily: SIGN,
                 display: 'flex', flexDirection: 'column',
                 WebkitFontSmoothing: 'antialiased',
-                animation: `signLower .5s ${EASE_OUT} both`,
+                animation: `corridorEnter .78s ${EASE_OUT} both`,
             }}
         >
             {/* ── The rail ─────────────────────────────────────────────── */}
@@ -509,6 +548,8 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                     <Skirting />
                 </div>
             </div>
+
+            <Doors />
 
             {/* ── The strip: where you are, and how to get elsewhere ────── */}
             <div style={{

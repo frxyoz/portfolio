@@ -338,7 +338,7 @@ function FieldPortrait({
                 <motion.button
                     type="button"
                     aria-expanded={mindMapOpen}
-                    aria-label={mindMapOpen ? 'Close the mind map and return to the page' : 'Open the mind map about Olric'}
+                    aria-label={mindMapOpen ? 'Close my interests and return to the page' : 'Open my interests'}
                     style={{
                         display: 'flex', flexDirection: 'column', alignItems: 'center',
                         cursor: 'pointer', background: 'none', border: 'none', padding: 0,
@@ -386,7 +386,7 @@ function FieldPortrait({
                             whiteSpace: 'nowrap',
                             transition: `background 0.22s ${EASE_OUT}, color 0.22s ${EASE_OUT}`,
                         }}>
-                            Mind Map
+                            My Interests
                             <Pictogram name="arrow-right" size={12} />
                         </span>
                     )}
@@ -652,8 +652,8 @@ export default function HeroSection() {
                                     ))}
                                 </div>
 
-                                {/* On a phone there is no portrait to click, so the mind map
-                                gets its own plate in the panel. */}
+                                {/* On a phone there is no portrait to click, so the
+                                corridor gets its own plate in the panel. */}
                                 {isMobile && (
                                     <button
                                         onPointerDown={warmMindMap}
@@ -669,7 +669,7 @@ export default function HeroSection() {
                                             letterSpacing: '0.18em', textTransform: 'uppercase',
                                         }}
                                     >
-                                        Mind Map
+                                        My Interests
                                         <Pictogram name="arrow-right" size={13} />
                                     </button>
                                 )}

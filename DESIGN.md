@@ -513,6 +513,15 @@ height is left over becomes ceiling, hung with an overhead gantry: the
 directional sign you read while walking, before you are close enough to read the
 wall.
 
+**The way in is a door.** Two steel platform-edge leaves hold shut for a fifth
+of the run and then part on the site's deceleration curve, carrying the hatch
+that already means "the ground changes here" down their closing edges and a
+signal seam on the join. The passage behind them settles in from a hair under
+full size. The entrance carries no opacity of its own: the doors live inside
+the dialog, so a fade there makes them translucent and you watch the home page
+through a shut door, which is a wipe wearing a door costume. Under reduced
+motion the leaves cross-fade instead of travelling.
+
 **The case study's contents rail** (`/projects/minddo`). The route diagram
 again, stood on end: a 4px enamel bar with a station disc per section, the
 section being read taking a signal disc inside a steel ring. A table of
