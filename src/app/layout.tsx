@@ -42,7 +42,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en" className={archivo.variable}>
+        /* The blocking script below writes a class onto this element before
+           React ever sees it, which is a hydration mismatch by construction:
+           the server sent one className and the client finds another. The
+           mismatch is the point — the class has to be on the element before
+           first paint — so the warning is suppressed here rather than the
+           script being moved somewhere that would flash the curtain. The
+           suppression is one element deep and does not reach the tree. */
+        <html lang="en" className={archivo.variable} suppressHydrationWarning>
             <head>
                 {/* Blocking, and deliberately so: it runs in the few hundred
                     microseconds before the first paint and decides whether this

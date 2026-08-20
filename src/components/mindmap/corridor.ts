@@ -1,5 +1,6 @@
 import type { PictogramName } from '@/components/concourse/Pictogram';
 import type { SCHEMES } from './art';
+import { MARKS, type MarkKind } from './marks';
 
 /* The interests, hung along a station corridor.
  *
@@ -176,8 +177,11 @@ export const CORRIDOR_W =
    gaps between sheets — landing where the posters are not is the entire job. */
 
 export interface Tag {
-    /** Which authored mark, from `wall.tsx`. */
-    kind: 'oz' | 'wildstyle' | 'throwup' | 'scrawl' | 'handstyle' | 'blockbuster' | 'chevron';
+    /** Which authored mark, from `marks.ts`. */
+    kind: MarkKind;
+    /** Where the mark ended up. On a spec this is only the wish; the placement
+     *  pass below is what decides, and it is allowed to move a mark to keep it
+     *  off its neighbours. */
     x: number;
     y: number;
     scale: number;
@@ -233,12 +237,13 @@ export const BUFFS: Buff[] = [
     { x: 5922, y: 214, w: 300, h: 160, paint: 1, opacity: 0.9, nap: 26 },
 ];
 
-/* Layer three: the live wall. Positions are placed by hand into the gaps the
-   sheets and the zone gates leave — landing where the posters are not is the
-   entire job, and the marks that sit on a grey patch are sitting there on
-   purpose, because that is the wall's newest surface and every writer knows
-   it. Chevrons only ever point the way you are walking. */
-export const TAGS: Tag[] = [
+/* Layer three: the live wall — what each mark is, and where its writer wanted
+   it. These are wishes rather than positions: the placement pass at the foot of
+   this file is what settles the coordinates, because a corridor this long is
+   impossible to keep un-collided by hand and two marks landing on top of each
+   other is the one thing that stops reading as a wall and starts reading as a
+   mistake. Chevrons only ever point the way you are walking. */
+const WISHES: Tag[] = [
     /* 01 Soccer */
     { kind: 'blockbuster', x: 12, y: 296, scale: 0.46, tilt: -3, color: 'enamel', opacity: 0.36 },
     { kind: 'wildstyle', hand: 1, x: 48, y: 250, scale: 1.5, tilt: -6, color: 'signal', keyline: 'steel', opacity: 0.8 },
@@ -315,3 +320,157 @@ export const STICKERS: Sticker[] = [
     { pictogram: 'interchange', x: 5140, y: 48, size: 32, tilt: 8, scheme: 'steel' },
     { pictogram: 'pin', x: 6080, y: 500, size: 34, tilt: 12, scheme: 'enamel' },
 ];
+
+
+/* ── Where the marks actually land ─────────────────────────────────────────
+   A real writer works the wall in front of them: they pick a spot, and if
+   somebody's piece is already there they shift along until they find clear
+   tile. They do not paint a throw-up through a handstyle, because the result
+   is unreadable and every writer on that wall would rather be read.
+
+   So the corridor does the same. Each wish above is tried where it was asked
+   for, then at rings of increasing offset around it, and it takes the first
+   spot that is clear of every mark already up, clear of the zone gates and
+   decals that get drawn over the paint, and inside the tile — under the
+   ceiling duct, above the platform line. Among the clear spots it prefers the
+   one the sheets hide least, and it will go up smaller before it goes up on
+   top of somebody. A mark that can find no room at all never went up.
+
+   Biggest first, because the pieces that need a whole bay have nowhere else to
+   go, while a handstyle fits in any gap left over. */
+
+interface Rect { x: number; y: number; w: number; h: number }
+
+/** The band of tile a mark is allowed to land on: below the ceiling ducting,
+ *  above the platform line. */
+const MARK_TOP = 34;
+const MARK_BOTTOM = LINE_Y - 10;
+/** Clear tile kept between two marks. Closer than this and they read as one
+ *  smudge rather than as two hands. */
+const MARK_GUTTER = 16;
+/** How far a mark may be walked from where it was wanted, and how much smaller
+ *  it will go up rather than not go up at all. */
+const MARK_REACH = 360;
+const MARK_SHRINK = [1, 0.86, 0.72, 0.6];
+/** How much of a mark has to stay in the clear for it to be worth painting.
+ *  Below this the sheets have eaten it, and a writer would have moved along. */
+const MIN_SEEN = 0.45;
+
+function inflate(r: Rect, by: number): Rect {
+    return { x: r.x - by, y: r.y - by, w: r.w + by * 2, h: r.h + by * 2 };
+}
+
+function hits(a: Rect, b: Rect): boolean {
+    return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+}
+
+function shared(a: Rect, b: Rect): number {
+    const w = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+    const h = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+    return w > 0 && h > 0 ? w * h : 0;
+}
+
+/** The tile a mark actually covers: its own drawing grid, scaled, spun about
+ *  its origin by its tilt, and grown by the marker's nib and by however far
+ *  the paint ran. Anything less and the boxes lie about the paint. */
+function markBox(t: Tag): Rect {
+    const family = MARKS[t.kind];
+    const art = family[(t.hand ?? 0) % family.length];
+    const pad = (art.nib ?? 0) / 2 + 3;
+    const run = art.drips
+        ? Math.max(0, ...art.drips.map(([, dy, len]) => dy + len - art.h))
+        : 0;
+    const corners: [number, number][] = [
+        [-pad, -pad], [art.w + pad, -pad],
+        [art.w + pad, art.h + pad + run], [-pad, art.h + pad + run],
+    ];
+    const a = (t.tilt * Math.PI) / 180;
+    const cos = Math.cos(a), sin = Math.sin(a);
+    const xs: number[] = [], ys: number[] = [];
+    for (const [cx, cy] of corners) {
+        const sx = cx * t.scale, sy = cy * t.scale;
+        xs.push(t.x + sx * cos - sy * sin);
+        ys.push(t.y + sx * sin + sy * cos);
+    }
+    const x = Math.min(...xs), y = Math.min(...ys);
+    return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+}
+
+/** The rings a writer searches outward through. Wider than they are tall,
+ *  because a corridor gives you far more wall sideways than it does up. */
+const NUDGES: [number, number][] = (() => {
+    const out: [number, number][] = [[0, 0]];
+    for (let r = 16; r <= MARK_REACH; r += 16) {
+        for (let step = 0; step < 12; step++) {
+            const a = (step * Math.PI) / 6;
+            out.push([Math.round(Math.cos(a) * r * 1.7), Math.round(Math.sin(a) * r)]);
+        }
+    }
+    return out;
+})();
+
+/** What is painted over the graffiti and would cut a mark in half: the zone
+ *  gates, which are full-height enamel, and the vinyl decals. */
+const FIXTURES: Rect[] = [
+    ...ZONES.map(z => ({ x: z.x - 10, y: 0, w: 146, h: WALL_H - 40 })),
+    ...STICKERS.map(s => ({
+        x: s.x - s.size * 0.85, y: s.y - s.size * 0.85,
+        w: s.size * 1.7, h: s.size * 1.7,
+    })),
+];
+
+/** The sheets. Not obstacles — paste a poster over a piece and the piece is
+ *  simply older than the poster — but paint nobody can see was a wasted can,
+ *  so a spot in the clear beats a spot behind a sheet. */
+const SHEETS: Rect[] = POSTERS.map(p => ({ x: p.x - p.w / 2, y: p.y, w: p.w, h: p.h }));
+
+function paintWall(wishes: Tag[]): Tag[] {
+    const order = wishes
+        .map((tag, i) => {
+            const box = markBox(tag);
+            return { tag, i, size: box.w * box.h };
+        })
+        .sort((a, b) => b.size - a.size);
+
+    const taken: Rect[] = [];
+    const up: { tag: Tag; i: number }[] = [];
+
+    for (const { tag: wish, i } of order) {
+        let best: { tag: Tag; box: Rect; score: number } | null = null;
+
+        for (const shrink of MARK_SHRINK) {
+            for (const [dx, dy] of NUDGES) {
+                const tag: Tag = {
+                    ...wish,
+                    x: wish.x + dx, y: wish.y + dy,
+                    scale: wish.scale * shrink,
+                };
+                const box = markBox(tag);
+                if (box.y < MARK_TOP || box.y + box.h > MARK_BOTTOM) continue;
+                if (box.x < 8 || box.x + box.w > CORRIDOR_W - 8) continue;
+
+                const room = inflate(box, MARK_GUTTER);
+                if (FIXTURES.some(r => hits(room, r))) continue;
+                if (taken.some(r => hits(room, r))) continue;
+
+                const hidden = SHEETS.reduce((n, r) => n + shared(box, r), 0);
+                const seen = 1 - Math.min(1, hidden / (box.w * box.h));
+                if (seen < MIN_SEEN) continue;
+                const score = seen * 900 - Math.hypot(dx * 0.45, dy) - (1 - shrink) * 260;
+                if (!best || score > best.score) best = { tag, box, score };
+            }
+            /* Only go up smaller if there was no room at full size. */
+            if (best) break;
+        }
+
+        /* No clear tile anywhere within reach: this one never went up. */
+        if (!best) continue;
+        taken.push(best.box);
+        up.push({ tag: best.tag, i });
+    }
+
+    /* Back into corridor order, so the wall still reads as a walk. */
+    return up.sort((a, b) => a.i - b.i).map(m => m.tag);
+}
+
+export const TAGS: Tag[] = paintWall(WISHES);
