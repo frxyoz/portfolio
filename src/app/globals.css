@@ -112,6 +112,13 @@ body.overlay-open { overflow: hidden; }
   to   { transform: none; opacity: 1; }
 }
 
+/* The interest map's overlay: a sign panel lowered into its opening. A state
+   change, not an authored moment — the site has exactly one of those. */
+@keyframes signLower {
+  from { clip-path: inset(0 0 100% 0); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+
 /* A status lamp on the board breathes the way a real bulb does behind glass. */
 @keyframes lamp {
   0%, 100% { opacity: 1; }
@@ -140,6 +147,12 @@ body.overlay-open { overflow: hidden; }
 
   @keyframes lamp {
     0%, 100% { opacity: 1; }
+  }
+
+  /* The panel arrives without travelling. */
+  @keyframes signLower {
+    from { opacity: 0; }
+    to   { opacity: 1; }
   }
 }
 

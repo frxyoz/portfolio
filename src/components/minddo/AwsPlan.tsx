@@ -102,15 +102,15 @@ export default function AwsPlan() {
                 aria-label="AWS topology in a single region: the EC2 instance running k3s with the API and worker pods, alongside the managed Postgres and S3, and what sits inside versus outside the VPC." style={{ width: '100%', display: 'block' }} onClick={() => setPinned(null)}>
                 <Arrowheads />
 
-                <rect x={196} y={72} width={716} height={264} rx={8} fill="none" stroke={T.ruleStrong} strokeWidth={1.3} strokeDasharray="5 4" />
+                <rect x={196} y={72} width={716} height={264} fill="none" stroke={T.ruleStrong} strokeWidth={1.3} strokeDasharray="5 4" />
                 <text x={206} y={88} style={{ fontFamily: FONT, fontSize: 10.5, fontWeight: 600, fill: T.muted }}>AWS, single region</text>
 
-                <rect x={234} y={104} width={424} height={222} rx={7} fill={T.surface} stroke={T.rule} strokeWidth={1.2} />
+                <rect x={234} y={104} width={424} height={222} fill={T.surface} stroke={T.rule} strokeWidth={1.2} />
                 <text x={244} y={120} style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, fill: T.muted }}>
                     EC2 t3.large: 2 vCPU, 8 GiB, 30 GB gp3
                 </text>
 
-                <rect x={246} y={116} width={400} height={132} rx={6} fill="none" stroke={T.rule} strokeWidth={1.2} strokeDasharray="3 3" />
+                <rect x={246} y={116} width={400} height={132} fill="none" stroke={T.rule} strokeWidth={1.2} strokeDasharray="3 3" />
 
                 {EDGES.map((e, i) => {
                     const on = !!active && (e.from === active || e.to === active);
@@ -132,7 +132,7 @@ export default function AwsPlan() {
                         || EDGES.some(e => (e.from === active && e.to === n.id) || (e.to === active && e.from === n.id));
                     return (
                         <g key={n.id} {...bind(n.id, n.lines[0])} opacity={on ? 1 : 0.24} style={{ ...bind(n.id, n.lines[0]).style, transition: 'opacity .18s' }}>
-                            <rect x={n.x} y={n.y} width={n.w} height={n.h} rx={5} fill={tone.fill} stroke={active === n.id ? T.ink : tone.stroke} strokeWidth={active === n.id ? 2 : 1.2} />
+                            <rect x={n.x} y={n.y} width={n.w} height={n.h} fill={tone.fill} stroke={active === n.id ? T.ink : tone.stroke} strokeWidth={active === n.id ? 2 : 1.2} />
                             {n.lines.map((l, i) => (
                                 <text
                                     key={i}

@@ -124,6 +124,35 @@ function StationLabel({ item, terminus, align }: {
         {item.title}
       </h3>
 
+      {/* The operator's mark, on its own enamelled plate.
+          These arrive in their own brands' colours — among them a red seal and
+          a green bubble — and this system reserves red for an award and green
+          for a live service. The resolution is not to strip the marks of their
+          colour, which turns them to smudges, but to quarantine them: a mark
+          sits on a sign-white plate inside a steel frame, the way a licensed
+          operator's roundel is mounted on a station sign rather than painted
+          into it. Nothing inside the plate is making a claim in this palette,
+          and the frame is what says so. */}
+      {item.logo && (
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          alignSelf: 'flex-start', marginTop: 2,
+          width: 54, height: 54, padding: 8,
+          background: SIGN_WHITE, boxShadow: `inset 0 0 0 2px ${STEEL}`,
+        }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={item.logo}
+            alt=""
+            width={38}
+            height={38}
+            loading="lazy"
+            decoding="async"
+            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+          />
+        </span>
+      )}
+
       <span style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
         {item.orgUrl ? (
           <a
@@ -150,13 +179,6 @@ function StationLabel({ item, terminus, align }: {
         ) : (
           <span style={{ fontSize: TYPE.META, fontWeight: 700, color: ENAMEL }}>{item.org}</span>
         )}
-        {/* The employer marks are deliberately not drawn here. Each arrives in
-            its own brand's colours — among them a red seal and a green bubble —
-            which would spend the two colours this system reserves for AWARD and
-            LIVE on rows making no such claim; and reduced to one ink they turn
-            to smudges at 20px. A route diagram names its stations and does not
-            badge them with operator logos. The org name beside this is a live
-            link, so nothing verifiable is lost. */}
       </span>
 
       {item.desc && (

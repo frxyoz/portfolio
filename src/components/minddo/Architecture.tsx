@@ -330,13 +330,13 @@ export default function Architecture() {
             {sel ? (
                 <>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 9 }}>
-                        <span style={{ width: 10, height: 10, borderRadius: 2, background: T[sel.tone].fill, border: `1px solid ${T[sel.tone].stroke}` }} />
+                        <span style={{ width: 12, height: 12, background: T[sel.tone].fill, boxShadow: `inset 0 0 0 2px ${T[sel.tone].stroke}` }} />
                         <span style={{ fontSize: '0.92rem', fontWeight: 600, color: T.ink }}>{sel.title}</span>
                     </div>
                     <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 7 }}>
                         {sel.detail.map(d => (
                             <li key={d} style={{ fontSize: '0.86rem', color: T.body, lineHeight: 1.6, paddingLeft: 14, position: 'relative' }}>
-                                <span style={{ position: 'absolute', left: 0, top: 8, width: 5, height: 5, borderRadius: '50%', background: T.accent }} />
+                                <span style={{ position: 'absolute', left: 0, top: 8, width: 5, height: 5, background: T.accent }} />
                                 {d}
                             </li>
                         ))}
@@ -371,9 +371,9 @@ export default function Architecture() {
 
                 {GROUPS.map(g => (
                     <g key={g.label}>
-                        <rect x={g.x} y={g.y} width={g.w} height={g.h} rx={7} fill="none" stroke={T.rule} strokeWidth={1.4} strokeDasharray="4 4" />
+                        <rect x={g.x} y={g.y} width={g.w} height={g.h} fill="none" stroke={T.rule} strokeWidth={1.4} strokeDasharray="4 4" />
                         <text x={g.x + 10} y={g.y + 18} style={{ fontFamily: FONT, fontSize: 13, fontWeight: 600, fill: T.muted }}>{g.label}</text>
-                        <text x={g.x + 10} y={g.y + 32} style={{ fontFamily: MONO, fontSize: 12.6, fill: T.faint }}>{g.note}</text>
+                        <text x={g.x + 10} y={g.y + 32} style={{ fontFamily: FONT, fontSize: 12.2, fontWeight: 600, fontStretch: '88%', letterSpacing: '0.05em', fontVariantNumeric: 'tabular-nums', fill: T.faint }}>{g.note}</text>
                     </g>
                 ))}
 
@@ -396,7 +396,7 @@ export default function Architecture() {
                                 const x = lp.x - 4;
                                 return (
                                     <>
-                                        <rect x={x} y={lp.y - 9} width={w} height={12} fill="#fff" opacity={0.92} rx={2} />
+                                        <rect x={x} y={lp.y - 9} width={w} height={12} fill={T.canvas} opacity={0.92} />
                                         <text
                                             x={lp.x} y={lp.y} textAnchor={lp.anchor}
                                             style={{ fontFamily: FONT, fontSize: 12.6, fontWeight: on ? 600 : 400, fill: on ? T.accent : T.muted }}
@@ -417,13 +417,13 @@ export default function Architecture() {
                     return (
                         <g key={n.id} {...bind(n.id, n.title)} opacity={lit ? 1 : 0.22} style={{ ...bind(n.id, n.title).style, transition: 'opacity .18s' }}>
                             <rect
-                                x={n.x} y={n.y} width={n.w} height={n.h} rx={5}
+                                x={n.x} y={n.y} width={n.w} height={n.h}
                                 fill={tone.fill}
                                 stroke={isSel ? T.ink : tone.stroke}
                                 strokeWidth={isSel ? 2 : 1.3}
                             />
                             {pinned === n.id && (
-                                <rect x={n.x - 3} y={n.y - 3} width={n.w + 6} height={n.h + 6} rx={7} fill="none" stroke={T.ink} strokeWidth={1} strokeDasharray="3 3" />
+                                <rect x={n.x - 3} y={n.y - 3} width={n.w + 6} height={n.h + 6} fill="none" stroke={T.ink} strokeWidth={1} strokeDasharray="3 3" />
                             )}
                             <text x={n.x + 11} y={n.y + TITLE_Y} style={{ fontFamily: FONT, fontSize: 14, fontWeight: 600, fill: tone.text }}>
                                 {n.title}

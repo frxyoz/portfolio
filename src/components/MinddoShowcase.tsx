@@ -2,7 +2,14 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { T, FONT, MONO, H2, H3, P, C, Lede, Note, Table, Video } from './minddo/ui';
+import { T, FONT, MONO, PLATE, MICRO_PLATE, CONTROL, H2, H3, P, C, Note, Table, Video } from './minddo/ui';
+import Pictogram from './concourse/Pictogram';
+import FlapText from './concourse/FlapText';
+import {
+    SIGNAL, ENAMEL, ENAMEL_INK_SOFT, STEEL, STEEL_SOFT,
+    SIGN_WHITE, BOARD, BOARD_INK, BOARD_INK_SOFT, GREEN_LAMP,
+    EASE_OUT, TYPE, TABULAR,
+} from '@/design/tokens';
 import Architecture from './minddo/Architecture';
 import Lifecycle from './minddo/Lifecycle';
 import Pipeline from './minddo/Pipeline';
@@ -94,69 +101,150 @@ export default function MinddoShowcase() {
     }, []);
 
     return (
-        <div style={{ background: T.canvas, color: T.body, fontFamily: FONT }}>
-            {/* Top bar */}
+        <div style={{ background: T.canvas, color: T.body, fontFamily: FONT }} data-surface="sign">
+            {/* ── The rail ────────────────────────────────────────────────
+                Opaque steel at every scroll position, like every rail on this
+                site. This route is entered directly as often as it is entered
+                from the home page, so the rail has to introduce the page as
+                well as leave it. */}
             <header style={{
-                position: 'sticky', top: 0, zIndex: 300, background: 'rgba(255,255,255,0.96)',
-                backdropFilter: 'blur(10px)', borderBottom: `1px solid ${T.rule}`,
-                height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '0 clamp(16px, 4vw, 40px)', gap: 16,
+                position: 'sticky', top: 0, zIndex: 300, background: STEEL,
+                borderBottom: `1px solid ${STEEL_SOFT}`,
+                height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '0 12px 0 0', gap: 16,
             }}>
-                <Link
-                    href="/#projects"
-                    /* 44px, negative-margined back to the header edge: these two are
-                       the only navigation off this page and they were the height of
-                       their own lettering. */
-                    style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 8,
-                        fontSize: '0.8rem', color: T.muted,
-                        minHeight: 44, padding: '0 10px', marginLeft: -10,
-                    }}
-                >
-                    <span aria-hidden>←</span> Projects
-                </Link>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0 }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: T.ink, whiteSpace: 'nowrap' }}>{minddo.name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', height: '100%', minWidth: 0 }}>
+                    <Link
+                        href="/"
+                        aria-label="Olric Zeng — home"
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: 60, height: 60, flexShrink: 0,
+                            background: SIGNAL, color: STEEL,
+                            fontFamily: FONT, fontWeight: 800, fontStretch: '104%',
+                            fontSize: TYPE.LEDE, letterSpacing: '0.02em',
+                        }}
+                    >
+                        OZ
+                    </Link>
+                    <span style={{
+                        display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 18, minWidth: 0,
+                        ...PLATE, color: SIGN_WHITE,
+                    }}>
+                        <Pictogram name="doc" size={13} color={SIGNAL} />
+                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {minddo.name} — case study
+                        </span>
+                    </span>
                 </div>
-                <Link
-                    href="/#contact"
-                    style={{
-                        display: 'inline-flex', alignItems: 'center',
-                        fontSize: '0.78rem', color: T.accent, whiteSpace: 'nowrap',
-                        minHeight: 44, padding: '0 10px', marginRight: -10,
-                    }}
-                >
-                    Contact
-                </Link>
+
+                <nav aria-label="Leave this page" style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                    {([
+                        ['/#projects', 'Projects', 'arrow-left', true],
+                        ['/#contact', 'Contact', 'arrow-right', false],
+                    ] as const).map(([href, label, arrow, leading]) => (
+                        <Link
+                            key={href}
+                            href={href}
+                            style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 9,
+                                minHeight: 44, padding: '0 14px',
+                                ...CONTROL, color: SIGN_WHITE,
+                                transition: `color .18s ${EASE_OUT}`,
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.color = SIGNAL; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = SIGN_WHITE; }}
+                        >
+                            {leading && <Pictogram name={arrow} size={12} />}
+                            {label}
+                            {!leading && <Pictogram name={arrow} size={12} />}
+                        </Link>
+                    ))}
+                </nav>
             </header>
 
-            {/* Hero */}
-            <section style={{ borderBottom: `1px solid ${T.rule}`, padding: 'clamp(32px, 6vw, 56px) clamp(16px, 4vw, 40px)' }}>
+            {/* ── The hero, on the board ──────────────────────────────────
+                The one section of this page that is not a reading ground. A
+                case study opens the way a service opens on a departures board:
+                the name flaps up, and the facts of the service sit under
+                painted column heads. */}
+            <section style={{
+                background: BOARD, color: BOARD_INK,
+                padding: 'clamp(38px, 6vw, 68px) clamp(18px, 4vw, 44px) clamp(34px, 5vw, 56px)',
+            }}>
                 <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-                    <h1 style={{ fontSize: 'clamp(1.9rem, 4.2vw, 2.7rem)', fontWeight: 600, color: T.ink, letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: 10 }}>
-                        {minddo.name}
+                    <h1 style={{
+                        fontFamily: FONT, fontSize: 'clamp(2.6rem, 6.4vw, 5rem)', fontWeight: 800,
+                        fontStretch: '112%', lineHeight: 0.9, letterSpacing: '-0.035em',
+                        color: SIGNAL, margin: 0,
+                    }}>
+                        <FlapText text={minddo.name} variant="bare" stagger={1} />
                     </h1>
-                    <p style={{ fontSize: 'clamp(1rem, 2vw, 1.15rem)', color: T.muted, marginBottom: 22 }}>{minddo.subtitle}</p>
+                    <p style={{ ...PLATE, color: BOARD_INK_SOFT, marginTop: 18 }}>{minddo.subtitle}</p>
 
-                    {/* Prose left, demo right: the summary block leaves the right half empty on wide screens. */}
-                    <div className="minddo-hero" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 36, alignItems: 'start' }}>
+                    <div className="minddo-hero" style={{
+                        display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 38,
+                        alignItems: 'start', marginTop: 32,
+                    }}>
                         <div style={{ minWidth: 0 }}>
-                            <div style={{ maxWidth: 700 }}>
-                                <Lede>{minddo.lede}</Lede>
-                            </div>
+                            <p style={{
+                                fontFamily: FONT, fontSize: TYPE.LEDE, lineHeight: 1.62,
+                                color: BOARD_INK, maxWidth: '56ch', margin: 0,
+                            }}>
+                                {minddo.lede}
+                            </p>
 
-                            <dl style={{ display: 'grid', gridTemplateColumns: 'minmax(64px, auto) 1fr', gap: '10px 20px', maxWidth: 900, margin: '26px 0 0' }}>
-                                {[['Year', minddo.year], ['Role', minddo.role], ['Stack', minddo.stack], ['Scale', minddo.scale], ['Status', minddo.status]].map(([k, v]) => (
+                            {/* The service, under painted column heads. */}
+                            <dl style={{
+                                display: 'grid', gridTemplateColumns: 'minmax(74px, auto) 1fr',
+                                gap: 0, maxWidth: 940, margin: '30px 0 0',
+                                borderTop: `1px solid ${STEEL_SOFT}`,
+                            }}>
+                                {([
+                                    ['Year', minddo.year, false],
+                                    ['Role', minddo.role, false],
+                                    ['Stack', minddo.stack, false],
+                                    ['Scale', minddo.scale, false],
+                                    ['Status', minddo.status, true],
+                                ] as const).map(([k, v, live]) => (
                                     <div key={k} style={{ display: 'contents' }}>
-                                        <dt style={{ fontFamily: MONO, fontSize: '0.7rem', color: T.accent, textTransform: 'uppercase', letterSpacing: '0.06em', paddingTop: 2 }}>{k}</dt>
-                                        <dd style={{ fontSize: '0.86rem', color: T.body, lineHeight: 1.6 }}>{v}</dd>
+                                        <dt style={{
+                                            ...MICRO_PLATE, color: SIGNAL,
+                                            padding: '13px 20px 13px 0',
+                                            borderBottom: `1px solid ${STEEL_SOFT}`,
+                                        }}>
+                                            {k}
+                                        </dt>
+                                        <dd style={{
+                                            fontFamily: FONT, fontSize: TYPE.COPY, color: BOARD_INK,
+                                            lineHeight: 1.55, padding: '11px 0',
+                                            borderBottom: `1px solid ${STEEL_SOFT}`,
+                                            display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap',
+                                            ...TABULAR,
+                                        }}>
+                                            {/* Green is deployed-and-running, which is exactly
+                                                what this row claims. Its only use on the page. */}
+                                            {live && (
+                                                <span style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: 7,
+                                                    ...MICRO_PLATE, color: GREEN_LAMP, flexShrink: 0,
+                                                }}>
+                                                    <span aria-hidden style={{
+                                                        width: 9, height: 9, background: GREEN_LAMP,
+                                                        animation: 'lamp 2.4s ease-in-out infinite',
+                                                    }} />
+                                                    Live
+                                                </span>
+                                            )}
+                                            <span>{v}</span>
+                                        </dd>
                                     </div>
                                 ))}
                             </dl>
                         </div>
 
                         <Video
-                            label="DEMO"
+                            label="Demo"
                             title="Screen recording"
                             src={minddo.demoVideo}
                             style={{ margin: 0, minWidth: 0 }}
@@ -173,26 +261,39 @@ export default function MinddoShowcase() {
                 className="minddo-grid"
             >
                 <nav aria-label="Contents" className="minddo-toc" style={{ display: 'none' }}>
-                    <div style={{ position: 'sticky', top: 78, paddingTop: 36 }}>
-                        <p style={{ fontFamily: MONO, fontSize: '0.75rem', color: T.faint, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
-                            Contents
-                        </p>
-                        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 2, borderLeft: `1px solid ${T.rule}` }}>
-                            {SECTIONS.map(s => {
-                                const on = active === s.id;
+                    {/* The route diagram, spent a second time. DESIGN.md records
+                        that the device carried only one timeline on the whole
+                        site; a table of contents is a line with eleven stops on
+                        it and the reader standing at one of them, which is the
+                        thing the diagram was drawn for. */}
+                    <div style={{ position: 'sticky', top: 84, paddingTop: 44 }}>
+                        <p style={{ ...MICRO_PLATE, color: T.ink, marginBottom: 18 }}>Contents</p>
+                        <ul style={{ listStyle: 'none', position: 'relative', paddingLeft: 0 }}>
+                            <span aria-hidden style={{
+                                position: 'absolute', left: 6, top: 15, bottom: 15,
+                                width: 4, background: ENAMEL,
+                            }} />
+                            {SECTIONS.map(sec => {
+                                const on = active === sec.id;
                                 return (
-                                    <li key={s.id}>
+                                    <li key={sec.id} style={{ position: 'relative' }}>
                                         <a
-                                            href={`#${s.id}`}
+                                            href={`#${sec.id}`}
                                             aria-current={on ? 'true' : undefined}
                                             style={{
-                                                display: 'flex', alignItems: 'center',
-                                                minHeight: 28, padding: '5px 0 5px 14px',
-                                                marginLeft: -1, borderLeft: `2px solid ${on ? T.accent : 'transparent'}`,
-                                                fontSize: '0.79rem', color: on ? T.ink : T.muted, fontWeight: on ? 600 : 400,
+                                                display: 'flex', alignItems: 'center', gap: 13,
+                                                minHeight: 34, padding: '4px 8px 4px 0',
+                                                fontFamily: FONT, fontSize: TYPE.COPY,
+                                                fontWeight: on ? 700 : 400,
+                                                color: on ? T.ink : T.muted,
+                                                transition: `color .18s ${EASE_OUT}`,
                                             }}
                                         >
-                                            {s.label}
+                                            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden style={{ flexShrink: 0 }}>
+                                                <circle cx="8" cy="8" r={on ? 7.5 : 5} fill={on ? SIGNAL : ENAMEL} />
+                                                {on && <circle cx="8" cy="8" r="7.5" fill="none" stroke={STEEL} strokeWidth="2" />}
+                                            </svg>
+                                            <span style={{ textWrap: 'balance' }}>{sec.label}</span>
                                         </a>
                                     </li>
                                 );
@@ -312,19 +413,24 @@ export default function MinddoShowcase() {
                         <H3>Every finding</H3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, margin: '14px 0 20px' }}>
                             {security.map(f => (
-                                <div key={f.title} style={{ border: `1px solid ${T.rule}`, borderRadius: 6, overflow: 'hidden' }}>
+                                <div key={f.title} style={{ boxShadow: `inset 0 0 0 2px ${STEEL}` }}>
                                     <div style={{
-                                        display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline',
-                                        padding: '10px 14px', background: T.surface, borderBottom: `1px solid ${T.rule}`,
+                                        display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'center',
+                                        padding: '0 14px', minHeight: 46, background: STEEL,
                                     }}>
-                                        <span style={{ fontSize: '0.88rem', fontWeight: 600, color: T.ink }}>{f.title}</span>
-                                        <code style={{ fontFamily: MONO, fontSize: '0.72rem', color: T.muted }}>{f.commit}</code>
+                                        <span style={{
+                                            fontFamily: FONT, fontSize: TYPE.META, fontWeight: 700, fontStretch: '92%',
+                                            color: SIGN_WHITE,
+                                        }}>
+                                            {f.title}
+                                        </span>
+                                        <code style={{ fontFamily: MONO, fontSize: TYPE.MICRO, color: SIGNAL, flexShrink: 0 }}>{f.commit}</code>
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
-                                        {([['The hole', f.problem, T.bad.stroke], ['The fix', f.fix, T.good.stroke]] as const).map(([k, v, c]) => (
-                                            <div key={k} style={{ padding: '12px 14px', borderTop: `2px solid ${c}22` }}>
-                                                <div style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: c, marginBottom: 6 }}>{k}</div>
-                                                <p style={{ fontSize: '0.85rem', lineHeight: 1.62, color: T.body }}>{v}</p>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 1, background: T.ruleStrong }}>
+                                        {([['Refused', 'The hole', f.problem, T.bad], ['Admitted', 'The fix', f.fix, T.good]] as const).map(([, k, v, tone]) => (
+                                            <div key={k} style={{ background: T.canvas, padding: '0 0 14px' }}>
+                                                <div style={{ ...MICRO_PLATE, background: tone.stroke, color: SIGN_WHITE, padding: '8px 14px' }}>{k}</div>
+                                                <p style={{ fontFamily: FONT, fontSize: TYPE.COPY, lineHeight: 1.62, color: T.body, padding: '13px 14px 0' }}>{v}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -381,16 +487,24 @@ export default function MinddoShowcase() {
                         </P>
 
                         <H3>Twenty jobs at once, k3s on one t3.large</H3>
-                        <div style={{
-                            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(168px, 1fr))', gap: 1,
-                            background: T.rule, border: `1px solid ${T.rule}`, borderRadius: 6, overflow: 'hidden',
-                            margin: '16px 0 18px',
+                        {/* A measured run belongs on a board, not in a row of
+                            cards: column-head lettering, tabular figures, one
+                            ground. */}
+                        <div className="minddo-bleed" style={{
+                            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 1,
+                            background: STEEL_SOFT, boxShadow: `inset 0 0 0 2px ${STEEL}`,
+                            margin: '20px 0 22px',
                         }}>
                             {awsLoad.map(m => (
-                                <div key={m.label} style={{ background: T.canvas, padding: '14px 16px' }}>
-                                    <div style={{ fontFamily: MONO, fontSize: '1.15rem', fontWeight: 600, color: T.ink, letterSpacing: '-0.02em' }}>{m.value}</div>
-                                    <div style={{ fontSize: '0.76rem', fontWeight: 600, color: T.body, margin: '5px 0 3px' }}>{m.label}</div>
-                                    <div style={{ fontSize: '0.73rem', color: T.muted, lineHeight: 1.5 }}>{m.note}</div>
+                                <div key={m.label} style={{ background: BOARD, padding: '18px 18px 20px' }}>
+                                    <div style={{
+                                        fontFamily: FONT, fontSize: '1.7rem', fontWeight: 800, fontStretch: '104%',
+                                        letterSpacing: '-0.03em', lineHeight: 1, color: SIGNAL, ...TABULAR,
+                                    }}>
+                                        {m.value}
+                                    </div>
+                                    <div style={{ ...MICRO_PLATE, color: BOARD_INK, margin: '13px 0 7px' }}>{m.label}</div>
+                                    <div style={{ fontFamily: FONT, fontSize: TYPE.COPY, color: BOARD_INK_SOFT, lineHeight: 1.5 }}>{m.note}</div>
                                 </div>
                             ))}
                         </div>
@@ -438,13 +552,13 @@ export default function MinddoShowcase() {
                                 <H3>Speedups that would not change the output</H3>
                                 <ol style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 9, margin: '14px 0 12px' }}>
                                     {wins.map((w, i) => (
-                                        <li key={w} style={{ display: 'flex', gap: 11, fontSize: '0.87rem', color: T.body, lineHeight: 1.6 }}>
-                                            <span style={{ fontFamily: MONO, fontSize: '0.75rem', color: T.accent, paddingTop: 2 }}>{String(i + 1).padStart(2, '0')}</span>
+                                        <li key={w} style={{ display: 'flex', gap: 13, fontFamily: FONT, fontSize: TYPE.COPY, color: T.body, lineHeight: 1.6 }}>
+                                            <span style={{ ...MICRO_PLATE, color: T.accent, paddingTop: 5, ...TABULAR }}>{String(i + 1).padStart(2, '0')}</span>
                                             {w}
                                         </li>
                                     ))}
                                 </ol>
-                                <p style={{ fontFamily: MONO, fontSize: '0.9rem', color: T.ink, fontWeight: 600 }}>Together those should get it under 45 s.</p>
+                                <p style={{ fontFamily: FONT, fontSize: TYPE.BODY, color: T.ink, fontWeight: 700, ...TABULAR }}>Together those should get it under 45&nbsp;s.</p>
                             </div>
                         </div>
 
@@ -498,41 +612,82 @@ export default function MinddoShowcase() {
                         </Note>
                     </section>
 
-                    {/* takeaways */}
-                    <section style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 32 }}>
-                        <H3>What I got out of building it</H3>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 22, marginTop: 16 }}>
-                            {takeaways.map(t => (
-                                <div key={t.title}>
-                                    <div style={{ fontSize: '0.86rem', fontWeight: 600, color: T.ink, marginBottom: 6 }}>{t.title}</div>
-                                    <p style={{ fontSize: '0.85rem', color: T.body, lineHeight: 1.62 }}>{t.body}</p>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 34 }}>
-                            <Link
-                                href="/#projects"
-                                style={{
-                                    fontSize: '0.8rem', fontWeight: 500, color: T.body,
-                                    border: `1px solid ${T.ruleStrong}`, borderRadius: 4, padding: '9px 16px',
-                                }}
-                            >
-                                ← All projects
-                            </Link>
-                            <Link
-                                href="/#contact"
-                                style={{
-                                    fontSize: '0.8rem', fontWeight: 500, color: T.canvas, background: T.ink,
-                                    border: `1px solid ${T.ink}`, borderRadius: 4, padding: '9px 16px',
-                                }}
-                            >
-                                Get in touch
-                            </Link>
-                        </div>
-                    </section>
                 </main>
             </div>
+
+            {/* ── Onward travel, on the service ground ────────────────────
+                The page closes the way the home page's contact section does:
+                a committed enamel field, and gates that name where they go. */}
+            <section style={{ background: ENAMEL, color: SIGN_WHITE }}>
+                <div style={{
+                    maxWidth: 1400, margin: '0 auto',
+                    padding: 'clamp(40px, 6vw, 72px) clamp(18px, 4vw, 44px) clamp(44px, 6vw, 76px)',
+                }}>
+                    <h2 style={{
+                        fontFamily: FONT, fontSize: 'clamp(1.9rem, 3.4vw, 2.5rem)', fontWeight: 800,
+                        fontStretch: '104%', letterSpacing: '-0.025em', lineHeight: 1,
+                        color: SIGN_WHITE, margin: 0,
+                    }}>
+                        What I got out of building it
+                    </h2>
+                    <div aria-hidden style={{ height: 12, width: 120, background: SIGNAL, marginTop: 16 }} />
+
+                    <div style={{
+                        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                        gap: '28px 34px', marginTop: 34,
+                    }}>
+                        {takeaways.map(t => (
+                            <div key={t.title}>
+                                <div style={{ ...PLATE, color: SIGNAL, marginBottom: 11 }}>{t.title}</div>
+                                <p style={{
+                                    fontFamily: FONT, fontSize: TYPE.COPY, color: SIGN_WHITE,
+                                    lineHeight: 1.65, maxWidth: '40ch', margin: 0,
+                                }}>
+                                    {t.body}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div style={{
+                        display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 44,
+                        paddingTop: 34, borderTop: `1px solid ${ENAMEL_INK_SOFT}66`,
+                    }}>
+                        {([
+                            ['/#projects', 'All projects', 'arrow-left', true, false],
+                            ['/#contact', 'Get in touch', 'arrow-right', false, true],
+                        ] as const).map(([href, label, arrow, leading, primary]) => (
+                            <Link
+                                key={href}
+                                href={href}
+                                style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 11,
+                                    minHeight: 50, padding: '0 22px',
+                                    ...CONTROL,
+                                    background: primary ? SIGNAL : 'transparent',
+                                    color: primary ? STEEL : SIGN_WHITE,
+                                    border: `2px solid ${primary ? SIGNAL : ENAMEL_INK_SOFT}`,
+                                    transition: `background .18s ${EASE_OUT}, color .18s ${EASE_OUT}, border-color .18s ${EASE_OUT}`,
+                                }}
+                                onMouseEnter={e => {
+                                    e.currentTarget.style.background = SIGN_WHITE;
+                                    e.currentTarget.style.borderColor = SIGN_WHITE;
+                                    e.currentTarget.style.color = STEEL;
+                                }}
+                                onMouseLeave={e => {
+                                    e.currentTarget.style.background = primary ? SIGNAL : 'transparent';
+                                    e.currentTarget.style.borderColor = primary ? SIGNAL : ENAMEL_INK_SOFT;
+                                    e.currentTarget.style.color = primary ? STEEL : SIGN_WHITE;
+                                }}
+                            >
+                                {leading && <Pictogram name={arrow} size={13} />}
+                                {label}
+                                {!leading && <Pictogram name={arrow} size={13} />}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </section>
 
             <style>{`
                 /* Dense, interactive documentation: opt out of the site's custom cursor. */
@@ -546,10 +701,50 @@ export default function MinddoShowcase() {
                     body.plain-cursor [role="button"] { cursor: pointer !important; }
                     body.plain-cursor input[type="range"] { cursor: pointer !important; }
                 }
+                /* The queue-depth slider is the one native control on the page,
+                   and a native range ships in the platform's own blue with a
+                   round thumb — two things this system does not have. It is a
+                   steel channel with a signal block running in it. */
+                .minddo-range {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    background: transparent;
+                    cursor: pointer;
+                }
+                .minddo-range::-webkit-slider-runnable-track {
+                    height: 8px;
+                    background: #141414;
+                }
+                .minddo-range::-moz-range-track {
+                    height: 8px;
+                    background: #141414;
+                }
+                .minddo-range::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 14px;
+                    height: 24px;
+                    margin-top: -8px;
+                    border: 2px solid #141414;
+                    border-radius: 0;
+                    background: #ffd100;
+                }
+                .minddo-range::-moz-range-thumb {
+                    width: 14px;
+                    height: 24px;
+                    border: 2px solid #141414;
+                    border-radius: 0;
+                    background: #ffd100;
+                }
+
+                /* Figures and the board carry the argument, so on a wide screen
+                   they run past the reading measure rather than being pinned to
+                   it. The bleed stays inside the container's own padding. */
                 @media (min-width: 1120px) {
-                    .minddo-grid { grid-template-columns: 210px minmax(0, 1fr) !important; }
+                    .minddo-bleed { margin-right: -28px; }
+                    .minddo-grid { grid-template-columns: 236px minmax(0, 1fr) !important; }
                     .minddo-toc  { display: block !important; }
-                    .minddo-hero { grid-template-columns: minmax(0, 1fr) minmax(380px, 520px) !important; }
+                    .minddo-hero { grid-template-columns: minmax(0, 1fr) minmax(380px, 540px) !important; }
                 }
             `}</style>
         </div>

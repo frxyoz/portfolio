@@ -2,36 +2,72 @@
 
 import { useState, useEffect, useRef, ReactNode, CSSProperties } from 'react';
 
-/* Design tokens for the case study.
-   Deliberately not the portfolio's editorial theme: this page is dense technical
-   documentation, so it uses one UI typeface, a neutral ink palette, and the same
-   node colours the source diagrams use (amber = compute tier, blue = storage,
-   violet = external, red = blocked, green = allowed). */
+import {
+    SIGNAL, ENAMEL, STEEL, STEEL_SOFT, SIGN_WHITE, CHALK,
+    SIGN_INK, SIGN_INK_SOFT, RED, GREEN, RULE, RULE_STRONG,
+    EASE_OUT, SIGN, TYPE,
+} from '@/design/tokens';
+
+/* The case study, in the sign system.
+ *
+ * This page used to run a palette and a typeface of its own — a deliberate
+ * divergence from the portfolio, on the argument that dense documentation
+ * wants neutrality. The argument was sound and the seam was still visible: two
+ * worlds, one site, and this is the artifact a hiring manager reads longest.
+ * So it is Concourse now, with the reading discipline a twenty-minute read
+ * needs: grounds change *between* sections, never underneath body copy, and
+ * the reading column stays sign white and uncoloured from top to bottom.
+ *
+ * ── The schematic exemption ───────────────────────────────────────────────
+ * Concourse reserves red for an award and green for a deployed service. Seven
+ * diagrams on this page turn on a blocked-versus-allowed distinction that red
+ * and green are the only honest colours for, so this surface — and only this
+ * surface — reads them a second way:
+ *
+ *     red    a request that is refused
+ *     green  a request that is admitted
+ *
+ * The two readings never meet, because there is no award anywhere on this page
+ * and "deployed and running" appears exactly once, in the hero's status row,
+ * where it keeps its original meaning. The remaining three schematic tones are
+ * drawn straight out of the palette rather than invented: compute is signal,
+ * storage is enamel, anything outside the system is steel. Every figure that
+ * uses them ships a legend naming which is which.
+ */
 export const T = {
-    ink: '#12161d',
-    body: '#39414f',
-    muted: '#69727f',
-    /* Lightest text tier that still clears AA (4.6:1). It used to be #98a0ab at
-       2.64:1 — the worst contrast on the site, and every one of its uses is
-       text. Three greys cannot all pass on white; this page gets two. */
-    faint: '#6d7683',
-    rule: '#e3e7ec',
-    ruleStrong: '#cbd2db',
-    surface: '#f7f8fa',
-    surfaceAlt: '#fcfcfd',
-    canvas: '#ffffff',
-    /* 5.3:1 on white. Matches src/design/tokens.ts ACCENT_TEXT — one gold. */
-    accent: '#8a6508',
-    accentSoft: '#f6efdc',
-    /* Ornamental gold: rules and dots only, never a glyph. */
-    accentOrnament: '#b8860b',
-    tier: { fill: '#fff7e0', stroke: '#d9a50f', text: '#5a4406' },
-    store: { fill: '#eaf3ff', stroke: '#3b6ea5', text: '#123a5e' },
-    extern: { fill: '#f3eaff', stroke: '#7a55b5', text: '#3b2065' },
-    bad: { fill: '#ffe6e4', stroke: '#c0392b', text: '#7a1d13' },
-    /* Ground for a warning callout: the same red, pulled back to a tint. */
-    badSurface: '#fff8f7',
-    good: { fill: '#e6f6ea', stroke: '#2e7d46', text: '#14512a' },
+    ink: SIGN_INK,
+    body: SIGN_INK,
+    /* Concourse ships two ink tiers on a light ground and no more, so the
+       four this page used collapse to two. Rank is carried by weight and by
+       the width axis instead, which is the system's own instruction. */
+    muted: SIGN_INK_SOFT,
+    faint: SIGN_INK_SOFT,
+    rule: RULE,
+    ruleStrong: RULE_STRONG,
+    surface: CHALK,
+    surfaceAlt: SIGN_WHITE,
+    canvas: SIGN_WHITE,
+    /* Information and services — which is what a label on a documentation page
+       is. 9.6:1 on the reading ground. */
+    accent: ENAMEL,
+    accentSoft: CHALK,
+    /* Structural signal: bars, plates, the lit rail marker. Never a glyph on a
+       light ground, where yellow does not clear anything. */
+    accentOrnament: SIGNAL,
+
+    /* ── Schematic tones. See the exemption above. ─────────────────────── */
+    /** Compute — the tier that does work. Signal yellow, pulled to a fill. */
+    tier: { fill: '#ffeeb0', stroke: '#8a6c00', text: '#3a2d00' },
+    /** Storage. Enamel blue. */
+    store: { fill: '#dbe4f6', stroke: ENAMEL, text: ENAMEL },
+    /** Outside the system: someone else's service, someone else's URL. */
+    extern: { fill: CHALK, stroke: STEEL_SOFT, text: STEEL },
+    /** Refused. */
+    bad: { fill: '#f7dedc', stroke: RED, text: '#6e120d' },
+    /** The same refusal pulled back to a ground a paragraph can sit on. */
+    badSurface: '#faeeec',
+    /** Admitted. */
+    good: { fill: '#dcefe4', stroke: GREEN, text: '#0b3f26' },
 } as const;
 
 export type Tone = 'tier' | 'store' | 'extern' | 'bad' | 'good';
@@ -42,29 +78,62 @@ export const SR_ONLY: CSSProperties = {
     overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0,
 };
 
-export const FONT = 'var(--font-body, "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif)';
+/** One face, the same one the rest of the site is set in. */
+export const FONT = SIGN;
+/* The single exception to the One Face Rule, and it is scoped to what a
+   monospace is actually for: an identifier, a route, a filename, a config key
+   — strings whose character-by-character shape is the content. It is not
+   allowed to carry a figure label, a metric, a heading or a section index,
+   all of which it used to, and all of which are Archivo now. */
 export const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+
+/* ── Sign-system type roles, local to this page ──────────────────────────── */
+
+/** Plate lettering: the workhorse uppercase micro-label. */
+export const PLATE: CSSProperties = {
+    fontFamily: SIGN, fontSize: TYPE.LABEL, fontWeight: 800,
+    fontStretch: '88%', letterSpacing: '0.18em', textTransform: 'uppercase',
+    lineHeight: 1,
+};
+/** The smallest plate lettering: column heads, legend entries. */
+export const MICRO_PLATE: CSSProperties = {
+    ...PLATE, fontSize: TYPE.MICRO, letterSpacing: '0.2em',
+};
+/** Anything you click. */
+export const CONTROL: CSSProperties = {
+    fontFamily: SIGN, fontSize: TYPE.CONTROL, fontWeight: 700,
+    fontStretch: '88%', letterSpacing: '0.16em', textTransform: 'uppercase',
+    lineHeight: 1,
+};
 
 /* ── Text primitives ─────────────────────────────────────────────────────── */
 
+/* A section opener on this page is the same device the home page uses — the
+   headline followed by a solid accent bar — at the scale eleven of them in one
+   document can carry. The bar is what a visitor scrolling fast actually reads:
+   it says "a new section starts here" before a single word is legible. */
 export function H2({ id, children }: { id: string; children: ReactNode }) {
     return (
-        <h2
-            id={id}
-            style={{
-                fontFamily: FONT, fontSize: '1.5rem', fontWeight: 600, color: T.ink,
-                letterSpacing: '-0.015em', lineHeight: 1.25, scrollMarginTop: 76,
-                marginBottom: 14,
-            }}
-        >
-            {children}
-        </h2>
+        <div style={{ scrollMarginTop: 84, marginBottom: 22 }} id={id}>
+            <h2 style={{
+                fontFamily: FONT, fontSize: 'clamp(1.9rem, 3.4vw, 2.5rem)', fontWeight: 800,
+                fontStretch: '104%', letterSpacing: '-0.025em', lineHeight: 1,
+                color: T.ink, margin: 0, textWrap: 'balance',
+            }}>
+                {children}
+            </h2>
+            <div aria-hidden style={{ height: 12, width: 120, background: T.accentOrnament, marginTop: 16 }} />
+        </div>
     );
 }
 
 export function H3({ children }: { children: ReactNode }) {
     return (
-        <h3 style={{ fontFamily: FONT, fontSize: '1.02rem', fontWeight: 600, color: T.ink, letterSpacing: '-0.01em', marginBottom: 8 }}>
+        <h3 style={{
+            fontFamily: FONT, fontSize: TYPE.TITLE, fontWeight: 700, fontStretch: '96%',
+            color: T.ink, letterSpacing: '-0.012em', lineHeight: 1.2,
+            marginTop: 30, marginBottom: 10,
+        }}>
             {children}
         </h3>
     );
@@ -72,7 +141,10 @@ export function H3({ children }: { children: ReactNode }) {
 
 export function P({ children, style }: { children: ReactNode; style?: CSSProperties }) {
     return (
-        <p style={{ fontFamily: FONT, fontSize: '0.95rem', color: T.body, lineHeight: 1.7, marginBottom: 14, ...style }}>
+        <p style={{
+            fontFamily: FONT, fontSize: TYPE.BODY, fontWeight: 400,
+            color: T.body, lineHeight: 1.68, maxWidth: '68ch', marginBottom: 16, ...style,
+        }}>
             {children}
         </p>
     );
@@ -81,8 +153,9 @@ export function P({ children, style }: { children: ReactNode; style?: CSSPropert
 export function C({ children }: { children: ReactNode }) {
     return (
         <code style={{
-            fontFamily: MONO, fontSize: '0.84em', color: T.ink,
-            background: T.surface, border: `1px solid ${T.rule}`, borderRadius: 3, padding: '1px 5px',
+            fontFamily: MONO, fontSize: '0.86em', color: T.ink,
+            background: T.surface, boxShadow: `inset 0 0 0 1px ${T.ruleStrong}`,
+            padding: '1px 5px', whiteSpace: 'nowrap',
         }}>
             {children}
         </code>
@@ -91,27 +164,39 @@ export function C({ children }: { children: ReactNode }) {
 
 export function Lede({ children }: { children: ReactNode }) {
     return (
-        <p style={{ fontFamily: FONT, fontSize: '1.05rem', color: T.body, lineHeight: 1.65, marginBottom: 20 }}>
+        <p style={{
+            fontFamily: FONT, fontSize: TYPE.LEDE, fontWeight: 400,
+            color: T.body, lineHeight: 1.62, maxWidth: '58ch', marginBottom: 20,
+        }}>
             {children}
         </p>
     );
 }
 
+/* A notice on a concourse is a panel with a plate bolted across its head, not
+   a tinted box with a coloured edge. The plate carries the one word that says
+   what kind of notice it is; the panel below it is a plain ground. */
 export function Note({ label, tone = 'accent', children }: { label: string; tone?: 'accent' | 'warn'; children: ReactNode }) {
-    const c = tone === 'warn' ? T.bad : { stroke: T.accent, fill: T.accentSoft, text: T.ink };
+    const warn = tone === 'warn';
     return (
         <div style={{
-            border: `1px solid ${c.stroke}44`,
-            background: tone === 'warn' ? T.badSurface : T.surfaceAlt,
-            padding: '14px 16px', margin: '18px 0', borderRadius: 4,
+            background: warn ? T.badSurface : T.surface,
+            margin: '22px 0', maxWidth: '68ch',
         }}>
             <div style={{
-                fontFamily: FONT, fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.09em',
-                textTransform: 'uppercase', color: c.stroke, marginBottom: 7,
+                ...PLATE,
+                background: warn ? T.bad.stroke : STEEL,
+                color: warn ? SIGN_WHITE : SIGNAL,
+                padding: '9px 14px',
             }}>
                 {label}
             </div>
-            <div style={{ fontFamily: FONT, fontSize: '0.9rem', color: T.body, lineHeight: 1.68 }}>{children}</div>
+            <div style={{
+                fontFamily: FONT, fontSize: TYPE.COPY, color: T.body, lineHeight: 1.68,
+                padding: '14px 16px 16px',
+            }}>
+                {children}
+            </div>
         </div>
     );
 }
@@ -138,7 +223,7 @@ export function Table({ head, rows, widths, label }: {
             tabIndex={0}
             role="region"
             aria-label={name}
-            style={{ overflowX: 'auto', border: `1px solid ${T.rule}`, borderRadius: 5, margin: '18px 0' }}
+            style={{ overflowX: 'auto', boxShadow: `inset 0 0 0 1px ${T.ruleStrong}`, margin: '20px 0' }}
         >
             <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 560, fontFamily: FONT }}>
                 <caption style={SR_ONLY}>{name}</caption>
@@ -149,10 +234,9 @@ export function Table({ head, rows, widths, label }: {
                                 key={h}
                                 scope="col"
                                 style={{
-                                    textAlign: 'left', padding: '10px 14px', background: T.surface,
-                                    borderBottom: `1px solid ${T.rule}`, width: widths?.[i],
-                                    fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.08em',
-                                    textTransform: 'uppercase', color: T.muted, whiteSpace: 'nowrap',
+                                    textAlign: 'left', padding: '11px 14px', background: T.surface,
+                                    borderBottom: `2px solid ${STEEL}`, width: widths?.[i],
+                                    color: T.ink, whiteSpace: 'nowrap', ...MICRO_PLATE,
                                 }}
                             >
                                 {h}
@@ -167,9 +251,10 @@ export function Table({ head, rows, widths, label }: {
                                 <td
                                     key={j}
                                     style={{
-                                        padding: '11px 14px', verticalAlign: 'top',
+                                        padding: '12px 14px', verticalAlign: 'top',
                                         borderBottom: i === rows.length - 1 ? 'none' : `1px solid ${T.rule}`,
-                                        fontSize: '0.87rem', color: j === 0 ? T.ink : T.body, lineHeight: 1.6,
+                                        fontSize: TYPE.COPY, fontWeight: j === 0 ? 600 : 400,
+                                        color: j === 0 ? T.ink : T.body, lineHeight: 1.6,
                                     }}
                                 >
                                     {cell}
@@ -187,23 +272,21 @@ export function Table({ head, rows, widths, label }: {
 
 /* Drawn rather than borrowed from the character set: ✕ and ⤢ render at whatever
    weight the body face happens to give them, which is never the weight of the
-   diagram line work beside them. These are 1.4px, the same as the strokes in
-   the figures. */
+   diagram line work beside them. Solid silhouettes on the sign system's own
+   grid, so they hold at the 11px they are used at. */
 
 function ExpandIcon() {
     return (
-        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden focusable="false">
-            <path d="M7.2 1h3.8v3.8M11 1 7.1 4.9M4.8 11H1V7.2M1 11l3.9-3.9"
-                stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden focusable="false">
+            <path d="M13.6 1.6 L22.4 1.6 L22.4 10.4 L18.6 10.4 L18.6 8.1 L14.1 12.6 L11.4 9.9 L15.9 5.4 L13.6 5.4 Z M1.6 13.6 L5.4 13.6 L5.4 15.9 L9.9 11.4 L12.6 14.1 L8.1 18.6 L10.4 18.6 L10.4 22.4 L1.6 22.4 Z" />
         </svg>
     );
 }
 
 function CloseIcon() {
     return (
-        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden focusable="false">
-            <path d="M1.6 1.6l8.8 8.8M10.4 1.6l-8.8 8.8"
-                stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden focusable="false">
+            <path d="M4.6 2 L12 9.4 L19.4 2 L22 4.6 L14.6 12 L22 19.4 L19.4 22 L12 14.6 L4.6 22 L2 19.4 L9.4 12 L2 4.6 Z" />
         </svg>
     );
 }
@@ -260,25 +343,34 @@ export function Figure({
     }, [full]);
 
     const frame = (
-        <div style={{ border: `1px solid ${T.rule}`, borderRadius: 6, background: T.canvas, overflow: 'hidden' }}>
+        <div style={{ boxShadow: `inset 0 0 0 2px ${STEEL}`, background: T.canvas, overflow: 'hidden' }}>
+            {/* The head is a steel plate with the figure's number silkscreened
+                on it in signal — the same construction as a rail, not a tinted
+                strip standing in for one. */}
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-                padding: '10px 14px', borderBottom: `1px solid ${T.rule}`, background: T.surface,
+                padding: '0 8px 0 14px', minHeight: 46, background: STEEL,
             }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0 }}>
-                    <span style={{ fontFamily: MONO, fontSize: '0.7rem', color: T.accent, flexShrink: 0 }}>{label}</span>
-                    <span style={{ fontFamily: FONT, fontSize: '0.82rem', fontWeight: 600, color: T.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                    <span style={{ ...MICRO_PLATE, color: SIGNAL, flexShrink: 0 }}>{label}</span>
+                    <span style={{
+                        fontFamily: FONT, fontSize: TYPE.META, fontWeight: 700, fontStretch: '92%',
+                        color: SIGN_WHITE, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
                         {title}
                     </span>
                 </div>
                 <button
                     onClick={() => setFull(v => !v)}
                     style={{
-                        fontFamily: FONT, fontSize: '0.72rem', fontWeight: 500, color: T.muted,
-                        background: T.canvas, border: `1px solid ${T.ruleStrong}`, borderRadius: 4,
-                        padding: '6px 10px', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
-                        display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 30,
+                        ...CONTROL, color: SIGNAL,
+                        background: 'transparent', border: `2px solid ${SIGNAL}`,
+                        padding: '0 12px', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
+                        display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 34,
+                        transition: `background .18s ${EASE_OUT}, color .18s ${EASE_OUT}`,
                     }}
+                    onMouseEnter={e => { e.currentTarget.style.background = SIGNAL; e.currentTarget.style.color = STEEL; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = SIGNAL; }}
                 >
                     {full ? 'Close' : 'Expand'}
                     {full ? <CloseIcon /> : <ExpandIcon />}
@@ -301,19 +393,22 @@ export function Figure({
             </div>
 
             {panel && (
-                <div style={{ padding: '0 16px 16px', borderTop: `1px solid ${T.rule}`, marginTop: -4 }}>
+                <div style={{ padding: '0 16px 16px', borderTop: `1px solid ${T.ruleStrong}`, marginTop: -4 }}>
                     <div style={{ paddingTop: 13 }}>{panel}</div>
                 </div>
             )}
 
             {legend && (
                 <div style={{
-                    display: 'flex', flexWrap: 'wrap', gap: 16, padding: '10px 14px',
-                    borderTop: `1px solid ${T.rule}`, background: T.surfaceAlt,
+                    display: 'flex', flexWrap: 'wrap', gap: '10px 20px', padding: '11px 14px',
+                    borderTop: `2px solid ${STEEL}`, background: T.surface,
                 }}>
                     {legend.map(l => (
-                        <span key={l.text} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: FONT, fontSize: '0.72rem', color: T.muted }}>
-                            <span style={{ width: 11, height: 11, borderRadius: 2, background: T[l.tone].fill, border: `1px solid ${T[l.tone].stroke}` }} />
+                        <span key={l.text} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: T.ink, ...MICRO_PLATE }}>
+                            <span aria-hidden style={{
+                                width: 12, height: 12, background: T[l.tone].fill,
+                                boxShadow: `inset 0 0 0 2px ${T[l.tone].stroke}`,
+                            }} />
                             {l.text}
                         </span>
                     ))}
@@ -330,19 +425,19 @@ export function Figure({
                     aria-modal="true"
                     aria-label={`${title} — expanded`}
                     style={{
-                        position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(18,22,29,0.55)',
+                        position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(13,13,13,0.72)',
                         padding: 'clamp(12px, 3vw, 40px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}
                     onClick={e => { if (e.target === e.currentTarget) setFull(false); }}
                 >
-                    <div ref={dialogRef} style={{ width: '100%', maxWidth: 1500, maxHeight: '94vh', overflowY: 'auto', borderRadius: 6 }}>
+                    <div ref={dialogRef} style={{ width: '100%', maxWidth: 1500, maxHeight: '94vh', overflowY: 'auto' }}>
                         {frame}
                     </div>
                 </div>
             ) : frame}
 
             {!full && caption && (
-                <figcaption style={{ fontFamily: FONT, fontSize: '0.8rem', color: T.muted, lineHeight: 1.6, marginTop: 9 }}>
+                <figcaption style={{ fontFamily: FONT, fontSize: TYPE.COPY, color: T.muted, lineHeight: 1.6, marginTop: 11, maxWidth: '68ch' }}>
                     {caption}
                 </figcaption>
             )}
@@ -375,7 +470,7 @@ export function drop(a: Box, b: Box, bias = 0.5) {
 export function Arrowheads() {
     return (
         <defs>
-            {[['ah', T.ruleStrong], ['ah-on', T.accent], ['ah-bad', T.bad.stroke], ['ah-good', T.good.stroke]].map(([id, color]) => (
+            {[['ah', STEEL_SOFT], ['ah-on', T.accent], ['ah-bad', T.bad.stroke], ['ah-good', T.good.stroke]].map(([id, color]) => (
                 <marker key={id} id={id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                     <path d="M 0 0 L 10 5 L 0 10 z" fill={color} />
                 </marker>
@@ -454,13 +549,16 @@ export function Video({ label, title, src, caption, style }: {
 }) {
     return (
         <figure className="minddo-bleed" style={{ marginTop: 22, marginBottom: 26, ...style }}>
-            <div style={{ border: `1px solid ${T.rule}`, borderRadius: 6, background: T.canvas, overflow: 'hidden' }}>
+            <div style={{ boxShadow: `inset 0 0 0 2px ${STEEL}`, background: T.canvas, overflow: 'hidden' }}>
                 <div style={{
-                    display: 'flex', alignItems: 'baseline', gap: 10,
-                    padding: '10px 14px', borderBottom: `1px solid ${T.rule}`, background: T.surface,
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '0 14px', minHeight: 46, background: STEEL,
                 }}>
-                    <span style={{ fontFamily: MONO, fontSize: '0.7rem', color: T.accent, flexShrink: 0 }}>{label}</span>
-                    <span style={{ fontFamily: FONT, fontSize: '0.82rem', fontWeight: 600, color: T.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span style={{ ...MICRO_PLATE, color: SIGNAL, flexShrink: 0 }}>{label}</span>
+                    <span style={{
+                        fontFamily: FONT, fontSize: TYPE.META, fontWeight: 700, fontStretch: '92%',
+                        color: SIGN_WHITE, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
                         {title}
                     </span>
                 </div>
@@ -468,14 +566,14 @@ export function Video({ label, title, src, caption, style }: {
                     src={src}
                     title={title}
                     loading="lazy"
-                    style={{ width: '100%', aspectRatio: '16 / 9', display: 'block', border: 'none', background: T.ink }}
+                    style={{ width: '100%', aspectRatio: '16 / 9', display: 'block', border: 'none', background: STEEL }}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen
                 />
             </div>
             {caption && (
-                <figcaption style={{ fontFamily: FONT, fontSize: '0.8rem', color: T.muted, lineHeight: 1.6, marginTop: 9 }}>
+                <figcaption style={{ fontFamily: FONT, fontSize: TYPE.COPY, color: T.muted, lineHeight: 1.6, marginTop: 11, maxWidth: '68ch' }}>
                     {caption}
                 </figcaption>
             )}

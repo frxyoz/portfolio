@@ -7,16 +7,24 @@
    in for a drawing. */
 
 export type PictogramName =
-    | 'arrow-right' | 'arrow-left' | 'arrow-down' | 'arrow-up-right'
+    | 'arrow-right' | 'arrow-left' | 'arrow-down' | 'arrow-up' | 'arrow-up-right'
     | 'close' | 'clock' | 'pin' | 'mail' | 'doc'
     | 'stack' | 'braces' | 'graph'
-    | 'cap' | 'case' | 'github' | 'linkedin' | 'play' | 'check';
+    | 'cap' | 'case' | 'github' | 'linkedin' | 'play' | 'check'
+    /* Interest-network glyphs: one per line on the mind map, plus the two
+       markers the map's own legend needs. */
+    | 'ball' | 'controller' | 'record' | 'bowl'
+    | 'interchange' | 'terminus' | 'map' | 'external';
 
-const PATHS: Record<PictogramName, string> = {
+/* Exported because the mind map's relief extrudes four of these into solid
+   geometry. The glyph is authored once and read at two scales, in two and in
+   three dimensions. */
+export const PATHS: Record<PictogramName, string> = {
     /* DOT-style arrows: a solid triangular head on a bar of the same weight. */
     'arrow-right': 'M13.2 3 L22 12 L13.2 21 L13.2 15.6 L2 15.6 L2 8.4 L13.2 8.4 Z',
     'arrow-left': 'M10.8 3 L2 12 L10.8 21 L10.8 15.6 L22 15.6 L22 8.4 L10.8 8.4 Z',
     'arrow-down': 'M21 10.8 L12 22 L3 10.8 L8.4 10.8 L8.4 2 L15.6 2 L15.6 10.8 Z',
+    'arrow-up': 'M21 13.2 L12 2 L3 13.2 L8.4 13.2 L8.4 22 L15.6 22 L15.6 13.2 Z',
     'arrow-up-right': 'M8 2 L22 2 L22 16 L17.2 16 L17.2 10.2 L6.1 21.3 L2.7 17.9 L13.8 6.8 L8 6.8 Z',
     close: 'M4.6 2 L12 9.4 L19.4 2 L22 4.6 L14.6 12 L22 19.4 L19.4 22 L12 14.6 L4.6 22 L2 19.4 L9.4 12 L2 4.6 Z',
     /* Solid disc with the hands cut out, so it stays a silhouette at any size. */
@@ -38,12 +46,35 @@ const PATHS: Record<PictogramName, string> = {
     linkedin: 'M2.4 2.4 L21.6 2.4 L21.6 21.6 L2.4 21.6 Z M5.4 9.6 L5.4 18.6 L8.7 18.6 L8.7 9.6 Z M7.05 4.9 A2 2 0 1 1 7.05 8.9 A2 2 0 1 1 7.05 4.9 Z M10.8 9.6 L10.8 18.6 L14.1 18.6 L14.1 13.8 C14.1 12.6 14.9 12.1 15.7 12.1 C16.5 12.1 17.1 12.7 17.1 13.9 L17.1 18.6 L20.4 18.6 L20.4 13.3 C20.4 10.6 18.9 9.4 17 9.4 C15.5 9.4 14.6 10.1 14.1 10.9 L14.1 9.6 Z',
     play: 'M4.5 2.4 L21.5 12 L4.5 21.6 Z',
     check: 'M9.3 21.4 L0.8 12.9 L4.2 9.5 L9.3 14.6 L19.8 4.1 L23.2 7.5 Z',
+    /* ── The interest network's line glyphs ──────────────────────────────
+       Same law as the rest of the sheet: one filled silhouette, cut-outs
+       reversed out, legible at 14px on a station plate and at 96px extruded
+       into the relief. */
+
+    /* Football. A disc with the panel geometry knocked out of it: one centred
+       pentagon and five at the vertices, which is what the eye actually uses
+       to tell a football from any other circle. */
+    ball: 'M12 1.5A10.5 10.5 0 1 0 12 22.5A10.5 10.5 0 1 0 12 1.5ZM12 7.3L16.47 10.55L14.76 15.8L9.24 15.8L7.53 10.55ZM17.97 3.79L18.89 6.64L16.47 8.4L14.04 6.64L14.97 3.79ZM21.65 15.14L19.23 16.9L16.8 15.14L17.73 12.29L20.73 12.29ZM12 22.15L9.57 20.39L10.5 17.54L13.5 17.54L14.43 20.39ZM2.35 15.14L3.27 12.29L6.27 12.29L7.2 15.14L4.77 16.9ZM6.03 3.79L9.03 3.79L9.96 6.64L7.53 8.4L5.11 6.64Z',
+    /* Gamepad: a stadium body with the d-pad and two face buttons reversed out. */
+    controller: 'M6.5 6 L17.5 6 A6 6 0 0 1 17.5 18 L6.5 18 A6 6 0 0 1 6.5 6 Z M7.7 9.4 L9.5 9.4 L9.5 10.9 L11 10.9 L11 12.7 L9.5 12.7 L9.5 14.2 L7.7 14.2 L7.7 12.7 L6.2 12.7 L6.2 10.9 L7.7 10.9 Z M16.1 8.9 A1.5 1.5 0 1 1 16.1 11.9 A1.5 1.5 0 1 1 16.1 8.9 Z M18.3 12.4 A1.5 1.5 0 1 1 18.3 15.4 A1.5 1.5 0 1 1 18.3 12.4 Z',
+    /* Record: a disc with one groove and a spindle hole. */
+    record: 'M12 1.5 A10.5 10.5 0 1 0 12 22.5 A10.5 10.5 0 1 0 12 1.5 Z M12 4.7 A7.3 7.3 0 1 1 12 19.3 A7.3 7.3 0 1 1 12 4.7 Z M12 5.9 A6.1 6.1 0 1 0 12 18.1 A6.1 6.1 0 1 0 12 5.9 Z M12 9.4 A2.6 2.6 0 1 1 12 14.6 A2.6 2.6 0 1 1 12 9.4 Z',
+    /* Noodle bowl with the chopsticks laid across it. */
+    bowl: 'M1.4 11.4 L22.6 11.4 C22.6 17.1 17.8 21.8 12 21.8 C6.2 21.8 1.4 17.1 1.4 11.4 Z M4.1 13.3 C4.6 16.9 7.9 19.6 12 19.6 C16.1 19.6 19.4 16.9 19.9 13.3 Z M18.6 1.6 L20.6 2.6 L12.9 9.9 L11.4 8.6 Z M21.4 4.3 L22.6 6.2 L14.6 9.9 L13.8 8.3 Z',
+    /* Interchange: the two station discs, joined. Unions rather than cuts. */
+    interchange: 'M7 7.4 A4.6 4.6 0 1 1 7 16.6 A4.6 4.6 0 1 1 7 7.4 Z M17 7.4 A4.6 4.6 0 1 1 17 16.6 A4.6 4.6 0 1 1 17 7.4 Z M7 9.8 L17 9.8 L17 14.2 L7 14.2 Z',
+    /* Terminus: the hollow interchange ring, the one circle the system allows. */
+    terminus: 'M12 1.8 A10.2 10.2 0 1 0 12 22.2 A10.2 10.2 0 1 0 12 1.8 Z M12 6.6 A5.4 5.4 0 1 1 12 17.4 A5.4 5.4 0 1 1 12 6.6 Z',
+    /* A folded route map. */
+    map: 'M8.6 2 L15.4 4.6 L22.4 2 L22.4 19.4 L15.4 22 L8.6 19.4 L1.6 22 L1.6 4.6 Z M9.8 5.3 L9.8 18.6 L14.2 20.2 L14.2 6.9 Z',
+    /* Leaves the network: an arrow out of a frame. */
+    external: 'M2.4 4.6 L12.4 4.6 L12.4 7.4 L5.2 7.4 L5.2 18.8 L16.6 18.8 L16.6 11.6 L19.4 11.6 L19.4 21.6 L2.4 21.6 Z M14.2 2.4 L21.6 2.4 L21.6 9.8 L18.8 9.8 L18.8 7.2 L12.5 13.5 L10.5 11.5 L16.8 5.2 L14.2 5.2 Z',
 };
 
 /* Glyphs whose subpaths are meant to union rather than cut. Everything else
    uses even-odd, where an inner subpath reverses out of the silhouette — the
    clock's hands, the envelope's flap line, the server's drive slots. */
-const NONZERO = new Set<PictogramName>(['cap', 'graph', 'braces']);
+const NONZERO = new Set<PictogramName>(['cap', 'graph', 'braces', 'interchange']);
 
 export default function Pictogram({
     name,

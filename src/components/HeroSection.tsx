@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import Link from 'next/link';
-import { motion, useScroll, useTransform, useMotionValue, useReducedMotion } from 'framer-motion';
+import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import { profile } from '@/data/profile';
 import { projects } from '@/data/projects';
 import { SECTIONS } from '@/data/minddo';
@@ -306,30 +306,25 @@ function FieldPortrait({
        what tells you the hero is handing over. */
     const reduced = useReducedMotion();
 
-    // Boost to 1 when the mind map is open so the portrait stays fully lit over it.
-    const boost = useMotionValue(mindMapOpen ? 1 : 0);
-    useEffect(() => { boost.set(mindMapOpen ? 1 : 0); }, [mindMapOpen, boost]);
-
-    const scrollFade = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
+    const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
     const scrollBlur = useTransform(scrollYProgress, [0, 0.3], [0, 12]);
-    const scrollScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.9]);
+    const scaleRaw = useTransform(scrollYProgress, [0, 0.3], [1, 0.9]);
+    const blurRaw = useTransform(scrollBlur, (bl: number) => `blur(${bl}px)`);
 
-    const opacity = useTransform(
-        [scrollFade, boost] as const, ([f, b]: number[]) => Math.max(f, b));
-    const blurRaw = useTransform(
-        [scrollBlur, boost] as const, ([bl, b]: number[]) => b > 0.5 ? 'none' : `blur(${bl}px)`);
-    const scaleRaw = useTransform(
-        [scrollScale, boost] as const, ([sc, b]: number[]) => b > 0.5 ? 1 : sc);
-
-    const visible = (heroInView || mindMapOpen) && !hidden;
+    /* The portrait stands down while the map is open. It used to be held lit
+       over the overlay, back when the overlay was a card deck the portrait
+       could plausibly sit at the centre of; a network map has no such centre,
+       and a face over the middle of a diagram is just something in the way.
+       The map carries its own Exit gate, and Escape still closes it. */
+    const visible = heroInView && !hidden && !mindMapOpen;
 
     return (
         <div style={{
-            position: 'fixed', top: 0, bottom: 0, right: 0, zIndex: 500,
-            width: mindMapOpen ? '100%' : PANEL_W,
+            position: 'fixed', top: 0, bottom: 0, right: 0, zIndex: 300,
+            width: PANEL_W,
             pointerEvents: 'none',
             display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-            paddingBottom: mindMapOpen ? 0 : boardH,
+            paddingBottom: boardH,
             opacity: visible ? 1 : 0,
             transition: 'opacity 0.35s ease',
         }}>

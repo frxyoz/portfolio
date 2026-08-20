@@ -207,13 +207,14 @@ components:
 
 # Design System: Concourse
 
-<!-- Scope: the home page's visual system (`src/app/page.tsx` and everything it
-     composes). The MindDo case study at `src/app/projects/minddo/` and
-     `src/components/minddo/` runs a deliberate neutral palette of its own and is
-     OUT of this system — it does not read `src/design/tokens.ts` and nothing in
-     this file governs it. The canonical source for every value here is
-     `src/design/tokens.ts`; `src/app/globals.css` mirrors only the handful CSS
-     itself needs. -->
+<!-- Scope: the whole site. The home page (`src/app/page.tsx`), the interest
+     corridor (`src/components/MindMap.tsx` and `src/components/mindmap/`)
+     and the MindDo case study (`src/app/projects/minddo/` and
+     `src/components/minddo/`) are all inside this system and all read
+     `src/design/tokens.ts`. The case study carries one documented exemption —
+     see "The schematic exemption" under Colors — and one scoped second face,
+     recorded under Typography. `src/app/globals.css` mirrors only the handful
+     of values CSS itself needs. -->
 
 ## Overview
 
@@ -271,7 +272,28 @@ An enamel sign palette: two saturated fields (signal and enamel), two structural
 
 **The Two Values Per Lamp Rule.** Every reserved colour ships in two values — one measured against the light grounds, one against the board — carrying one meaning. A lamp that only clears contrast on one ground is a lamp that fails somewhere on the page.
 
-**The Foreign Colour Rule.** Third-party marks and logos are not drawn in this system. They arrive in their own brands' colours, and a route diagram names its stations rather than badging them with operator logos. Name the thing and link it instead.
+**The Schematic Exemption (case study only).** Seven diagrams on
+`/projects/minddo` turn on a blocked-versus-allowed distinction, and red and
+green are the only honest colours for it. On that surface, and nowhere else,
+the two reserved lamps carry a second reading: **red is a request that is
+refused, green is a request that is admitted.** The readings never collide,
+because no award appears anywhere on that page and "deployed and running"
+appears exactly once, in the hero's status row, where it keeps its original
+meaning. The other three schematic tones are drawn out of the palette rather
+than invented — compute is signal, storage is enamel, anything outside the
+system is steel — and every figure that uses them ships a legend naming which
+is which. The values live in `T` in `src/components/minddo/ui.tsx`.
+
+**The Foreign Mark Rule.** Third-party marks are not *drawn* in this system,
+but they are no longer refused by it. An employer's logo arrives in its own
+brand's colours — among the four on the timeline, a red seal and a green bubble
+— and stripping it to one ink turns it to a smudge at 20px. So a mark is
+**quarantined instead of recoloured**: it sits at full colour on a sign-white
+plate inside a 2px steel frame, the way a licensed operator's roundel is
+mounted onto a station sign rather than painted into it. The frame is what
+declares that nothing inside it is speaking this palette, which is how a red
+seal can sit two hundred pixels from a reserved award lamp without either one
+lying. Outside a frame, the rule stands: name the organisation and link it.
 
 **The Committed Ground Rule.** The page runs four grounds in sequence — signal yellow (hero), sign white (Background), board black (Projects), enamel blue (Contact) — and closes on a steel rail. A section commits to one ground fully. There is no third neutral surface layered on top to soften a transition.
 
@@ -305,9 +327,15 @@ enough that nothing ever needs a half-step.
 | `TYPE.TITLE` | 1.32rem | Station titles, stack entries, detail headings |
 | `TYPE.SUBHEAD` | 1.50rem | The largest step that is not a clamped display size |
 
-Above the ramp sit exactly two fluid sizes, both clamped, both display-only:
-the hero name at `clamp(3.4rem, 8.6vw, 9.6rem)` and section headlines at
-`clamp(3rem, 6vw, 5rem)`.
+Above the ramp sit three fluid sizes, all clamped, all display-only: the hero
+name at `clamp(3.4rem, 8.6vw, 9.6rem)`, section headlines at
+`clamp(3rem, 6vw, 5rem)`, and — on the case study only — the in-document
+section opener at `clamp(1.9rem, 3.4vw, 2.5rem)`. The third exists because
+eleven section openers inside one long read cannot be set at the page-section
+headline size without the document becoming a stack of billboards; it is still
+followed by the same solid accent bar, at 12 × 120px rather than 12 × 180px.
+The case study's hero name takes `clamp(2.6rem, 6.4vw, 5rem)`, between the two
+page-level display sizes.
 
 `TYPE.BODY` is 1rem and not a hair less, because Safari zooms into any form
 field below 16px on focus and never zooms back out. That is a floor, not a
@@ -324,7 +352,17 @@ preference.
 
 ### Named Rules
 
-**The One Face Rule.** Archivo, at every width and weight the variable axes allow. A second family is never the answer to a hierarchy problem — reach for the width axis, the weight axis, or scale.
+**The One Face Rule.** Archivo, at every width and weight the variable axes
+allow. A second family is never the answer to a hierarchy problem — reach for
+the width axis, the weight axis, or scale.
+
+*One exemption, scoped to what a monospace is actually for.* The case study
+sets identifiers, routes, filenames and config keys — strings whose
+character-by-character shape is the content — in a system monospace. It is not
+allowed to carry a figure label, a metric, a heading or a section index, all of
+which it used to and all of which are Archivo now. A monospace worn as a
+costume for "technical" is still banned; a monospace around `task_acks_late` is
+doing a job no width axis can do.
 
 **The Tabular Rule.** `font-variant-numeric: tabular-nums` is set at the root, not per call site. On this page there is no figure that wants to be proportional: years, times, counts, and platform numbers all sit in columns.
 
@@ -436,6 +474,51 @@ Each row carries a platform number in expanded signal caps, a destination flappi
 
 **Split-flap text** (`concourse/FlapText.tsx`). The page's structural grammar, not a widget: the hero name, the board rows, the project names, and the loading curtain all flap. One tick is 38ms — close to the real mechanism and slow enough that the eye reads individual characters. Cells travel through a fixed drum order (that ordering, not randomness, is what reads as machinery) and no cell travels more than 14 steps, so the board lands as one gesture. The `cell` variant draws the physical flap — matte face, centre seam, 2px gap; the `bare` variant animates letters alone, for lettering painted on a panel. The real string is always present once in the DOM off-screen, and the turning cells are `aria-hidden`.
 
+**The corridor** (`src/components/MindMap.tsx`, `src/components/mindmap/`).
+The overlay behind the hero portrait: a tiled station passage scrolled sideways,
+eleven posters pasted along it, a platform line running the floor. You walk it.
+The zones you pass through are the four interests, the sheets are the stops, and
+FIFA / FM is the only interchange because it sits on the seam where the Soccer
+zone becomes the Gaming zone.
+
+Everything on the wall is drawn rather than sourced. The tile is four repeating
+gradients — a 64 × 34 brick offset every other course, grout showing as the gap
+— so it stays crisp at any scale and loads nothing. The grime is two soft
+washes, dark at the soffit and dark at the skirting, clean at eye level where a
+cleaner's arm reaches. The graffiti is four authored letterforms (`oz`,
+`wildstyle`, `throwup`, `scrawl`), each a single filled path so it behaves like
+paint rather than like a stroke of type, placed by transform into the gaps the
+sheets leave; chalk marker multiplies into the grout, spray sits on the glaze.
+The stickers are the sign system's own pictograms printed on vinyl and slapped
+on askew — the one place in the system where a mark from the signage ends up
+somewhere the signage did not choose.
+
+**A poster is not signage, and that is what lets it carry colour.** The sheets
+are advertising pasted onto the wall beside the signs, so they are exempt from
+"colour is category" — but they come off the same press, printed in one of four
+schemes built from the system's own inks (`enamel`, `signal`, `steel`, `paper`),
+which is what makes a wall of eleven read as one campaign rather than a
+scrapbook. Two mounts carry the difference between paid and unpaid: a `panel` is
+bolted into a steel frame and square; a `flyposter` is pasted onto the tile a
+degree or two askew and tears along its bottom edge.
+
+**The eleven drawings are the point.** They were authored for the original
+poster deck, survived a redesign that replaced them with a diagram, and came
+back. The reason anybody stops walking is the picture; the caption under it is
+one line, and there is no reading panel anywhere on the surface.
+
+The corridor is laid out once at `WALL_H` and scaled to fit **both** axes — a
+height-only fit puts a single 400px sheet at 480px on a 430px phone. Whatever
+height is left over becomes ceiling, hung with an overhead gantry: the
+directional sign you read while walking, before you are close enough to read the
+wall.
+
+**The case study's contents rail** (`/projects/minddo`). The route diagram
+again, stood on end: a 4px enamel bar with a station disc per section, the
+section being read taking a signal disc inside a steel ring. A table of
+contents is a line with eleven stops and the reader standing at one of them,
+which is the thing the diagram was drawn for.
+
 **The route diagram** (Background). The timeline drawn as a transit line: a 12px enamel bar running left to right with one 45° climb in the middle, station discs printed on the line, and a hollow interchange ring at the terminus. Data is reversed from résumé order — you board at the first station and the terminus is where he is now. On mobile the same line stands on end.
 
 **The status lamp.** A square of a reserved colour beside its one reserved word. The Live lamp — and only the Live lamp — breathes on a 2.4s `lamp` keyframe, the way a real bulb does behind glass.
@@ -491,8 +574,23 @@ One deceleration curve for the whole site — `cubic-bezier(.22, 1, .36, 1)` —
 
 Recorded honestly rather than dropped — these are true of the build as shipped:
 
-- **The route diagram is used once.** It is the system's most convincing own-world device and it appears only in Background. It could carry more of the page than one timeline.
+- ~~**The route diagram is used once.**~~ Closed. It now carries three things:
+  the Background timeline, the platform line running the floor of the corridor
+  behind the hero portrait, and the case study's table of contents, which is a
+  line with eleven stops and the reader standing at one of them.
 - **Arrows rarely name a destination.** Real wayfinding pairs a direction with a place. Here, arrow-plus-destination happens on the departures board and in the project sheet's onward-travel pair; elsewhere (nav, contact rows, buttons) the arrow travels alone.
 - **`public/og-image.png` is stale.** It still shows the previous gold-and-serif visual world and must be reauthored before the site is shared anywhere that unfurls a link.
 - **The cutout portrait keeps a soft edge.** `/public/subject.webp` was re-matted in this build (fringe pixels 1702 → 596 on a sampled measure) but retains a genuine soft hair edge, which is why the hero splits into a yellow field and a sign-white panel — the portrait stands on white rather than in the saturated field. A properly matted asset would free that composition.
-- **`src/components/MindMap.tsx` is outside the sign system.** The three.js overlay reached by clicking the hero portrait still runs its own illustrated world. It reads the legacy aliases in `tokens.ts` (`ACCENT`, `INK`, `CANVAS`), which now carry Concourse values, so it inherits the palette — but not the sign language. The seam is visible to anyone who opens it.
+- ~~**`src/components/MindMap.tsx` is outside the sign system.**~~ Closed. It is
+  the corridor now. See "The corridor" under Signature Components.
+
+- **The corridor is the third shape this content has taken.** It was a poster
+  deck (visual, silent about structure), then a network map (structurally exact,
+  airless — a diagram with a column of prose beside it). The corridor keeps the
+  drawings and keeps the one structural fact worth drawing, and the cost is that
+  the network's other relationships are now implied by adjacency rather than
+  stated. That is the right trade for this surface and it is still a trade.
+
+- **three.js is gone from the project.** The relief renderer was the only thing
+  importing it. The dependency is uninstalled, and the home page no longer has a
+  550 KB chunk waiting behind a click.
