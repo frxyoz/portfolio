@@ -10,9 +10,9 @@ import {
     SIGN_INK, EASE_OUT, SIGN, TYPE, TABULAR,
 } from '@/design/tokens';
 import Art, { SCHEMES, SCHEME_INK, SCHEME_SUB } from './mindmap/art';
-import { tileStyle, Grime, Graffiti, Decal, Ceiling, Skirting } from './mindmap/wall';
+import { tileStyle, Grime, Graffiti, Buffs, Decal, Ceiling, Skirting } from './mindmap/wall';
 import {
-    WALL_H, LINE_Y, CORRIDOR_W, ZONES, POSTERS, TAGS, STICKERS,
+    WALL_H, LINE_Y, CORRIDOR_W, ZONES, POSTERS, TAGS, GHOSTS, BUFFS, STICKERS,
     ZONE_BY_ID, type Poster, type Zone,
 } from './mindmap/corridor';
 
@@ -424,7 +424,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
         <div
             role="dialog"
             aria-modal="true"
-            aria-label="Interests — the corridor"
+            aria-label="My interests"
             style={{
                 position: 'fixed', inset: 0, zIndex: 400,
                 background: STEEL, color: SIGN_INK, fontFamily: SIGN,
@@ -453,7 +453,7 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                         display: 'flex', alignItems: 'center', gap: 9, whiteSpace: 'nowrap',
                     }}>
                         <Pictogram name="map" size={14} color={SIGNAL} />
-                        {isMobile ? 'Interests' : 'Interests — the corridor'}
+                        My interests
                     </span>
                 </div>
 
@@ -505,9 +505,13 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
                         width: CORRIDOR_W, height: WALL_H,
                         transform: `scale(${scale})`, transformOrigin: 'bottom left',
                     }}>
-                        {/* Sprayed first: the paint goes under the sheets that
-                            were pasted over it, which is the order it happened
-                            in on any wall that has both. */}
+                        {/* The wall's three ages, in the order they happened:
+                            the paint that got covered, the grey that covered
+                            it, and the paint that went straight back up on the
+                            grey. All of it under the sheets, because the
+                            sheets were pasted over it. */}
+                        <Graffiti tags={GHOSTS} />
+                        <Buffs patches={BUFFS} />
                         <Graffiti tags={TAGS} />
 
                         {ZONES.map(z => <ZoneGate key={z.id} zone={z} />)}

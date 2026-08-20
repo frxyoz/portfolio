@@ -24,7 +24,7 @@ export const WALL_H = 620;
 /** Where the platform line runs, measured from the top of the wall. */
 export const LINE_Y = 548;
 /** How far past the last sheet the corridor runs before it ends. */
-export const CORRIDOR_TAIL = 300;
+export const CORRIDOR_TAIL = 380;
 
 export type Scheme = keyof typeof SCHEMES;
 
@@ -87,12 +87,13 @@ export const POSTERS: Poster[] = [
         x: 500, y: 84, w: 400, h: 404, tilt: 0,
     },
     {
-        /* Navy, because that is what the club is. The shirt colour and the
-           system's enamel blue turn out to be the same ink, so this costs the
-           palette nothing — and Soccer takes the black panel next door so the
-           zone does not run two navy sheets in a row. */
+        /* Navy, because that is what the club is — but printed the way the
+           badge is: navy bird on a white sheet, not a white bird knocked out
+           of navy. The shirt colour and the system's enamel blue turn out to
+           be the same ink, so this costs the palette nothing, and the paper
+           stock keeps the sheet quiet between two loud panels. */
         id: 'tottenham', zone: 'soccer', name: 'Tottenham', art: 'tottenham',
-        scheme: 'enamel', mount: 'flyposter',
+        scheme: 'paper', mount: 'flyposter',
         note: 'A Spurs fan since 2019 — through the highs and the (many) lows.',
         x: 990, y: 112, w: 296, h: 380, tilt: -1.8,
     },
@@ -175,52 +176,124 @@ export const CORRIDOR_W =
    gaps between sheets — landing where the posters are not is the entire job. */
 
 export interface Tag {
-    /** Which authored letterform, from `wall.tsx`. */
-    kind: 'oz' | 'wildstyle' | 'throwup' | 'scrawl';
+    /** Which authored mark, from `wall.tsx`. */
+    kind: 'oz' | 'wildstyle' | 'throwup' | 'scrawl' | 'handstyle' | 'blockbuster' | 'chevron';
     x: number;
     y: number;
     scale: number;
     tilt: number;
-    color: 'signal' | 'enamel' | 'chalk';
+    /** The can or the nib it was made with. Every one is a system ink. */
+    color: 'signal' | 'signal-deep' | 'enamel' | 'enamel-lit' | 'chalk' | 'steel';
+    /** Which drawing in the kind's family went up here. Authored, not random:
+     *  the corridor is walked in one direction, so no two marks the reader
+     *  passes in sequence are allowed to be the same hand. */
+    hand?: number;
+    /** The cut-in around a piece. A throw-up without one is a shape; with one
+     *  it is a throw-up, and that difference is most of what reads as real. */
+    keyline?: Tag['color'];
     opacity: number;
 }
 
+/** A roller pass by the cleaning contractor. See `Buffs` in `wall.tsx`. */
+export interface Buff {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    /** Index into the three greys that were on the van. */
+    paint: 0 | 1 | 2;
+    opacity: number;
+    /** Roller-nap pitch: how far the sleeve travels before it laps itself. */
+    nap: number;
+}
+
+/* The wall has three ages on it, and they are rendered in the order they
+   happened: the paint that was there first and got covered, the grey that
+   covered it, and the paint that went straight back up on top of the grey.
+   Skipping the middle layer is what makes a drawn wall read as decorated —
+   a wall nobody ever cleaned is a set, not a station. */
+
+/** Layer one: what was there before the last buff, showing through it. */
+export const GHOSTS: Tag[] = [
+    { kind: 'oz', x: 700, y: 268, scale: 0.6, tilt: -4, color: 'signal', opacity: 0.5 },
+    { kind: 'scrawl', hand: 0, x: 1145, y: 498, scale: 0.42, tilt: 3, color: 'steel', opacity: 0.5 },
+    { kind: 'oz', x: 2820, y: 220, scale: 0.8, tilt: 4, color: 'enamel', opacity: 0.5 },
+    { kind: 'scrawl', hand: 2, x: 3582, y: 292, scale: 0.44, tilt: -4, color: 'signal', opacity: 0.5 },
+    { kind: 'throwup', hand: 0, x: 5044, y: 250, scale: 0.5, tilt: -3, color: 'enamel', opacity: 0.5 },
+    { kind: 'throwup', hand: 1, x: 5930, y: 232, scale: 1.0, tilt: 3, color: 'signal', opacity: 0.5 },
+];
+
+/** Layer two: the grey that went over layer one. */
+export const BUFFS: Buff[] = [
+    { x: 692, y: 252, w: 146, h: 92, paint: 0, opacity: 0.9, nap: 21 },
+    { x: 1140, y: 490, w: 116, h: 56, paint: 2, opacity: 0.85, nap: 15 },
+    { x: 2812, y: 200, w: 196, h: 122, paint: 2, opacity: 0.88, nap: 22 },
+    { x: 3574, y: 272, w: 136, h: 86, paint: 1, opacity: 0.9, nap: 20 },
+    { x: 5038, y: 236, w: 134, h: 88, paint: 0, opacity: 0.86, nap: 19 },
+    { x: 5922, y: 214, w: 300, h: 160, paint: 1, opacity: 0.9, nap: 26 },
+];
+
+/* Layer three: the live wall. Positions are placed by hand into the gaps the
+   sheets and the zone gates leave — landing where the posters are not is the
+   entire job, and the marks that sit on a grey patch are sitting there on
+   purpose, because that is the wall's newest surface and every writer knows
+   it. Chevrons only ever point the way you are walking. */
 export const TAGS: Tag[] = [
     /* 01 Soccer */
-    { kind: 'wildstyle', x: 48, y: 250, scale: 1.5, tilt: -6, color: 'signal', opacity: 0.8 },
-    { kind: 'scrawl', x: 300, y: 120, scale: 0.8, tilt: 4, color: 'chalk', opacity: 0.7 },
-    { kind: 'throwup', x: 90, y: 460, scale: 1.0, tilt: 3, color: 'enamel', opacity: 0.66 },
-    { kind: 'oz', x: 760, y: 96, scale: 1.15, tilt: -4, color: 'signal', opacity: 0.86 },
-    { kind: 'scrawl', x: 730, y: 486, scale: 0.9, tilt: 3, color: 'chalk', opacity: 0.72 },
-    { kind: 'throwup', x: 1180, y: 470, scale: 1.05, tilt: 4, color: 'enamel', opacity: 0.62 },
-    { kind: 'wildstyle', x: 1178, y: 66, scale: 0.9, tilt: 3, color: 'signal', opacity: 0.7 },
+    { kind: 'blockbuster', x: 12, y: 296, scale: 0.46, tilt: -3, color: 'enamel', opacity: 0.36 },
+    { kind: 'wildstyle', hand: 1, x: 48, y: 250, scale: 1.5, tilt: -6, color: 'signal', keyline: 'steel', opacity: 0.8 },
+    { kind: 'scrawl', hand: 1, x: 300, y: 120, scale: 0.8, tilt: 4, color: 'chalk', opacity: 0.7 },
+    { kind: 'throwup', hand: 0, x: 90, y: 460, scale: 1.0, tilt: 3, color: 'enamel', keyline: 'signal', opacity: 0.66 },
+    { kind: 'chevron', x: 700, y: 496, scale: 0.3, tilt: 2, color: 'signal', opacity: 0.8 },
+    { kind: 'handstyle', hand: 0, x: 700, y: 286, scale: 0.42, tilt: -5, color: 'steel', opacity: 0.66 },
+    { kind: 'oz', x: 760, y: 96, scale: 1.15, tilt: -4, color: 'signal', keyline: 'steel', opacity: 0.86 },
+    { kind: 'handstyle', hand: 2, x: 1142, y: 494, scale: 0.4, tilt: 3, color: 'steel', opacity: 0.62 },
+    { kind: 'throwup', hand: 1, x: 1180, y: 470, scale: 1.05, tilt: 4, color: 'enamel', opacity: 0.62 },
+    { kind: 'wildstyle', hand: 0, x: 1178, y: 66, scale: 0.9, tilt: 3, color: 'signal', opacity: 0.7 },
+    { kind: 'blockbuster', x: 1608, y: 88, scale: 0.66, tilt: -2, color: 'enamel-lit', opacity: 0.3 },
+    { kind: 'chevron', x: 1608, y: 30, scale: 0.34, tilt: -2, color: 'signal', opacity: 0.72 },
 
     /* 02 Gaming */
-    { kind: 'oz', x: 1640, y: 210, scale: 1.7, tilt: -3, color: 'signal', opacity: 0.9 },
-    { kind: 'scrawl', x: 1630, y: 430, scale: 1.0, tilt: -7, color: 'chalk', opacity: 0.7 },
-    { kind: 'throwup', x: 1930, y: 60, scale: 1.0, tilt: -2, color: 'signal', opacity: 0.72 },
-    { kind: 'wildstyle', x: 1900, y: 460, scale: 1.15, tilt: 5, color: 'enamel', opacity: 0.6 },
-    { kind: 'scrawl', x: 2410, y: 76, scale: 0.86, tilt: -5, color: 'chalk', opacity: 0.68 },
-    { kind: 'throwup', x: 2830, y: 130, scale: 1.1, tilt: 4, color: 'signal', opacity: 0.76 },
-    { kind: 'wildstyle', x: 2860, y: 420, scale: 1.25, tilt: 5, color: 'enamel', opacity: 0.6 },
+    { kind: 'oz', x: 1640, y: 210, scale: 1.7, tilt: -3, color: 'signal', keyline: 'steel', opacity: 0.9 },
+    { kind: 'scrawl', hand: 2, x: 1630, y: 430, scale: 1.0, tilt: -7, color: 'chalk', opacity: 0.7 },
+    { kind: 'throwup', hand: 0, x: 1930, y: 60, scale: 1.0, tilt: -2, color: 'signal', opacity: 0.72 },
+    { kind: 'wildstyle', hand: 1, x: 1900, y: 460, scale: 1.15, tilt: 5, color: 'enamel', opacity: 0.6 },
+    { kind: 'handstyle', hand: 1, x: 2386, y: 296, scale: 0.4, tilt: 5, color: 'steel', opacity: 0.62 },
+    { kind: 'chevron', x: 2384, y: 498, scale: 0.26, tilt: 3, color: 'steel', opacity: 0.5 },
+    { kind: 'scrawl', hand: 0, x: 2410, y: 76, scale: 0.86, tilt: -5, color: 'chalk', opacity: 0.68 },
+    { kind: 'blockbuster', x: 2816, y: 372, scale: 0.62, tilt: 2, color: 'signal-deep', opacity: 0.34 },
+    { kind: 'handstyle', hand: 3, x: 2818, y: 226, scale: 0.6, tilt: -4, color: 'signal', opacity: 0.82 },
+    { kind: 'chevron', x: 2816, y: 28, scale: 0.36, tilt: 2, color: 'signal', opacity: 0.78 },
+    { kind: 'throwup', hand: 1, x: 2830, y: 130, scale: 1.1, tilt: 4, color: 'signal', keyline: 'steel', opacity: 0.76 },
+    { kind: 'wildstyle', hand: 0, x: 2860, y: 420, scale: 1.25, tilt: 5, color: 'enamel', opacity: 0.6 },
+    { kind: 'chevron', x: 3138, y: 32, scale: 0.24, tilt: 3, color: 'signal', opacity: 0.66 },
 
     /* 03 Music */
-    { kind: 'scrawl', x: 3160, y: 470, scale: 0.94, tilt: -4, color: 'chalk', opacity: 0.7 },
-    { kind: 'oz', x: 3150, y: 110, scale: 1.05, tilt: 6, color: 'signal', opacity: 0.8 },
-    { kind: 'throwup', x: 3600, y: 490, scale: 1.0, tilt: -5, color: 'enamel', opacity: 0.6 },
-    { kind: 'wildstyle', x: 3585, y: 62, scale: 0.9, tilt: -4, color: 'signal', opacity: 0.72 },
-    { kind: 'scrawl', x: 4040, y: 496, scale: 0.9, tilt: 6, color: 'chalk', opacity: 0.68 },
-    { kind: 'throwup', x: 4030, y: 68, scale: 0.95, tilt: 3, color: 'signal', opacity: 0.7 },
+    { kind: 'scrawl', hand: 1, x: 3160, y: 470, scale: 0.94, tilt: -4, color: 'chalk', opacity: 0.7 },
+    { kind: 'oz', x: 3150, y: 110, scale: 1.05, tilt: 6, color: 'signal', keyline: 'steel', opacity: 0.8 },
+    { kind: 'handstyle', hand: 0, x: 3584, y: 288, scale: 0.42, tilt: 4, color: 'steel', opacity: 0.6 },
+    { kind: 'throwup', hand: 0, x: 3600, y: 490, scale: 1.0, tilt: -5, color: 'enamel', opacity: 0.6 },
+    { kind: 'wildstyle', hand: 1, x: 3585, y: 62, scale: 0.9, tilt: -4, color: 'signal', opacity: 0.72 },
+    { kind: 'handstyle', hand: 2, x: 4014, y: 288, scale: 0.36, tilt: -5, color: 'steel', opacity: 0.62 },
+    { kind: 'chevron', x: 4014, y: 500, scale: 0.22, tilt: -3, color: 'signal', opacity: 0.7 },
+    { kind: 'scrawl', hand: 2, x: 4040, y: 496, scale: 0.9, tilt: 6, color: 'chalk', opacity: 0.68 },
+    { kind: 'throwup', hand: 1, x: 4030, y: 68, scale: 0.95, tilt: 3, color: 'signal', opacity: 0.7 },
 
     /* 04 Food */
-    { kind: 'wildstyle', x: 4400, y: 250, scale: 1.4, tilt: -4, color: 'signal', opacity: 0.82 },
-    { kind: 'throwup', x: 4390, y: 460, scale: 1.05, tilt: 3, color: 'enamel', opacity: 0.62 },
-    { kind: 'oz', x: 5060, y: 100, scale: 1.1, tilt: -5, color: 'signal', opacity: 0.8 },
-    { kind: 'scrawl', x: 5060, y: 486, scale: 0.9, tilt: 7, color: 'chalk', opacity: 0.7 },
-    { kind: 'throwup', x: 5510, y: 476, scale: 1.02, tilt: 3, color: 'enamel', opacity: 0.62 },
-    { kind: 'wildstyle', x: 5490, y: 60, scale: 0.92, tilt: 4, color: 'signal', opacity: 0.72 },
-    { kind: 'oz', x: 5980, y: 250, scale: 1.6, tilt: -5, color: 'signal', opacity: 0.88 },
-    { kind: 'scrawl', x: 5970, y: 470, scale: 0.95, tilt: -6, color: 'chalk', opacity: 0.7 },
+    { kind: 'wildstyle', hand: 0, x: 4400, y: 250, scale: 1.4, tilt: -4, color: 'signal', keyline: 'steel', opacity: 0.82 },
+    { kind: 'throwup', hand: 0, x: 4390, y: 460, scale: 1.05, tilt: 3, color: 'enamel', opacity: 0.62 },
+    { kind: 'handstyle', hand: 4, x: 4580, y: 300, scale: 0.34, tilt: 5, color: 'steel', opacity: 0.6 },
+    { kind: 'oz', x: 5060, y: 100, scale: 1.1, tilt: -5, color: 'signal', keyline: 'steel', opacity: 0.8 },
+    { kind: 'handstyle', hand: 1, x: 5042, y: 252, scale: 0.42, tilt: 4, color: 'steel', opacity: 0.66 },
+    { kind: 'chevron', x: 5042, y: 494, scale: 0.26, tilt: 2, color: 'enamel', opacity: 0.55 },
+    { kind: 'scrawl', hand: 0, x: 5060, y: 486, scale: 0.9, tilt: 7, color: 'chalk', opacity: 0.7 },
+    { kind: 'handstyle', hand: 3, x: 5474, y: 294, scale: 0.35, tilt: 3, color: 'steel', opacity: 0.6 },
+    { kind: 'throwup', hand: 1, x: 5510, y: 476, scale: 1.02, tilt: 3, color: 'enamel', opacity: 0.62 },
+    { kind: 'wildstyle', hand: 1, x: 5490, y: 60, scale: 0.92, tilt: 4, color: 'signal', opacity: 0.72 },
+    { kind: 'blockbuster', x: 5938, y: 58, scale: 0.95, tilt: -2, color: 'enamel', keyline: 'chalk', opacity: 0.34 },
+    { kind: 'handstyle', hand: 0, x: 5928, y: 250, scale: 0.9, tilt: -3, color: 'steel', opacity: 0.76 },
+    { kind: 'chevron', x: 5936, y: 402, scale: 0.55, tilt: -4, color: 'signal', opacity: 0.9 },
+    { kind: 'oz', x: 5980, y: 500, scale: 0.7, tilt: -5, color: 'signal', keyline: 'steel', opacity: 0.72 },
 ];
 
 export interface Sticker {
