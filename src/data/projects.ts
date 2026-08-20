@@ -14,7 +14,17 @@ export const projects: Project[] = [
         overview:
             'A student project URL goes in; screenshots, a narrated demo video in English and Mandarin, an AI-written summary, skill tags, a QR code and a print-ready flyer come out — in about 100 seconds.',
         details: [],
-        stack: [],
+        /* `details` is empty because the whole account lives on its own route,
+           but the stack is not: the platform panel prints these on the home
+           page, and a panel reading a hardcoded list beside a data file that
+           says the project has no stack is two sources for one fact. */
+        stack: [
+            { name: 'AWS', role: 'EC2, S3, the cluster it runs on' },
+            { name: 'k3s', role: 'Kubernetes on one node' },
+            { name: 'KEDA', role: 'Autoscaling on queue depth' },
+            { name: 'Postgres', role: 'Submissions and showcase rows' },
+            { name: 'Celery', role: 'Queue and workers' },
+        ],
         mockLabel: 'Pipeline — Queue to Showcase',
     },
     {

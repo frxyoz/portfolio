@@ -2,11 +2,12 @@
 
 import { useRef, useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import Link from 'next/link';
-import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
+import { motion, useScroll, useTransform, useMotionValue } from 'framer-motion';
 import { profile } from '@/data/profile';
 import { projects } from '@/data/projects';
 import { SECTIONS } from '@/data/minddo';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useReducedMotionSafe } from '@/hooks/useReducedMotionSafe';
 import { useOverlay } from '@/contexts/OverlayContext';
 import FlapText from './concourse/FlapText';
 import Pictogram, { type PictogramName } from './concourse/Pictogram';
@@ -18,10 +19,12 @@ import {
     SIGN, EASE_OUT, TYPE,
 } from '@/design/tokens';
 
-/* MindMap pulls in three.js — roughly 550 KB of the home page's JavaScript for
-   an overlay behind a click. React.lazy rather than next/dynamic: next/dynamic
-   requests its chunk when the module evaluates, so the split saved nothing while
-   the overlay still sat in the tree. lazy() only fetches on first real render. */
+/* The corridor is a whole second surface — eleven drawn sheets, a tiled wall
+   and its own rail — sitting behind a click most visitors never make, so it
+   stays out of the home page's first payload. React.lazy rather than
+   next/dynamic: next/dynamic requests its chunk when the module evaluates, so
+   the split saved nothing while the overlay still sat in the tree. lazy() only
+   fetches on first real render. */
 const MindMapOverlay = lazy(() =>
     import('./MindMap').then(m => ({ default: m.MindMapOverlay })),
 );
@@ -125,7 +128,7 @@ const DESTINATIONS: Destination[] = [
    columns and the phone's stacked service line are always in the markup; CSS
    decides which is painted. */
 function DepartureBoard({ armed }: { armed: boolean }) {
-    const reduced = useReducedMotion();
+    const reduced = useReducedMotionSafe();
 
     const goTo = (id: string) => {
         const el = document.getElementById(id);
@@ -237,17 +240,26 @@ function DepartureBoard({ armed }: { armed: boolean }) {
                     transition: `background 0.18s ${EASE_OUT}`,
                 };
 
+                /* The row lights the same way whether the pointer arrived or
+                   the keyboard did. A focus ring says which row is selected;
+                   it does not say the row is a place you can go, which is what
+                   the lit ground and the travelling arrow say. */
+                const light = (el: HTMLElement) => {
+                    el.style.background = BOARD_LIT;
+                    const g = el.querySelector<HTMLElement>('.oz-gate');
+                    if (g) g.style.transform = d.external ? 'translate(3px, -3px)' : 'translateY(4px)';
+                };
+                const dim = (el: HTMLElement) => {
+                    el.style.background = 'transparent';
+                    const g = el.querySelector<HTMLElement>('.oz-gate');
+                    if (g) g.style.transform = 'none';
+                };
+
                 const hover = {
-                    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
-                        e.currentTarget.style.background = BOARD_LIT;
-                        const g = e.currentTarget.querySelector<HTMLElement>('.oz-gate');
-                        if (g) g.style.transform = d.external ? 'translate(3px, -3px)' : 'translateY(4px)';
-                    },
-                    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
-                        e.currentTarget.style.background = 'transparent';
-                        const g = e.currentTarget.querySelector<HTMLElement>('.oz-gate');
-                        if (g) g.style.transform = 'none';
-                    },
+                    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => light(e.currentTarget),
+                    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => dim(e.currentTarget),
+                    onFocus: (e: React.FocusEvent<HTMLElement>) => light(e.currentTarget),
+                    onBlur: (e: React.FocusEvent<HTMLElement>) => dim(e.currentTarget),
                 };
 
                 return d.external ? (
@@ -295,7 +307,7 @@ function FieldPortrait({
        the same things when motion is reduced: the blur and the scale, both of
        which read as the viewport moving underneath you. The fade stays — it is
        what tells you the hero is handing over. */
-    const reduced = useReducedMotion();
+    const reduced = useReducedMotionSafe();
 
     const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
     const scrollBlur = useTransform(scrollYProgress, [0, 0.3], [0, 12]);
@@ -410,7 +422,7 @@ export default function HeroSection() {
     const [heroInView, setHeroInView] = useState(true);
     const [entered, setEntered] = useState(false);
     const isMobile = useIsMobile();
-    const reduced = useReducedMotion();
+    const reduced = useReducedMotionSafe();
     const { overlayOpen } = useOverlay();
 
     const boardH = (isMobile ? ROW_H_SM : ROW_H) * DESTINATIONS.length + HEAD_H + BOARD_PAD;
@@ -448,8 +460,11 @@ export default function HeroSection() {
        third of the scroll, and what is left is an emptied departures board with
        the signature written across it. That hand-off is the one authored moment
        on this page; everything else is a state change. */
-    const fieldRaw = useTransform(scrollYProgress, [0, 0.3], [SIGNAL, BOARD]);
-    const field = reduced ? BOARD : fieldRaw;
+    /* The drain is driven by scroll position, not by a clock, so it is a state
+       change rather than travel and reduced motion keeps it. Forcing it to
+       BOARD for that visitor painted the hero black from the first frame —
+       with every word of the panel still set in STEEL, which is 1.1:1 on it. */
+    const field = useTransform(scrollYProgress, [0, 0.3], [SIGNAL, BOARD]);
 
     /* Reduced motion keeps the hand-off but drops the travel. The fade stays —
        it is the state change that tells you the hero is giving way. The scale
@@ -472,8 +487,23 @@ export default function HeroSection() {
     const op3Raw = useTransform(scrollYProgress, [0.06, 0.07], [0, 1]);
     const op4Raw = useTransform(scrollYProgress, [0.399, 0.401], [0, 1]);
 
-    const draw = reduced ? [1, 1, 1, 1] : [draw1Raw, draw2Raw, draw3Raw, draw4Raw];
-    const ops = reduced ? [1, 1, 1, 1] : [op1Raw, op2Raw, op3Raw, op4Raw];
+    /* Reduced motion gets the finished stroke rather than the pen — but it
+       still has to arrive on an emptied board. Held at zero until the field
+       has drained, or the signature stands in signal yellow on the signal
+       field, across the hero copy, from the first frame. */
+    const opSettled = useTransform(scrollYProgress, [0.3, 0.36], [0, 1]);
+    /* A MotionValue rather than the number 1. `pathLength` handed to a path
+       as a plain style value alongside a MotionValue opacity renders as
+       `stroke-dasharray: 0 1` — four yellow dots where the signature should
+       be. Both axes have to come through the same door. */
+    const drawSettled = useMotionValue(1);
+
+    const draw = reduced
+        ? [drawSettled, drawSettled, drawSettled, drawSettled]
+        : [draw1Raw, draw2Raw, draw3Raw, draw4Raw];
+    const ops = reduced
+        ? [opSettled, opSettled, opSettled, opSettled]
+        : [op1Raw, op2Raw, op3Raw, op4Raw];
 
     const lede = profile.lede;
 
@@ -731,7 +761,7 @@ export default function HeroSection() {
 
             {/* Mounted on intent, not on page load: `dynamic()` fetches its chunk
                 the moment the component mounts, so an always-rendered overlay
-                would pull three.js into first paint no matter what `open` says. */}
+                would pull the corridor into first paint whatever `open` says. */}
             {(mindMapArmed || mindMapOpen) && (
                 <Suspense fallback={null}>
                     <MindMapOverlay open={mindMapOpen} onClose={() => setMindMapOpen(false)} />

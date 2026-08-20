@@ -212,12 +212,21 @@ export function Table({ head, rows, widths, label }: {
     label?: string;
 }) {
     const name = label ?? `${head[0]} table`;
+    /* A minimum the columns can actually live in, rather than one number for
+       every table on the page. 560px shared between three columns is 186px
+       each, which folds `/showcases/{id}/{file}` onto two lines and a note
+       onto five — and since a row is as tall as its tallest cell, the phone
+       got a timetable of 350px rows mostly full of nothing. A row is only as
+       short as its longest cell allows, so the allowance has to be wide enough
+       for the notes column, not just for the route: 300px a column keeps the
+       routes on one line and the notes to three or four. The region scrolls,
+       which is what it is for. */
+    const minWidth = Math.max(560, head.length * 300);
     return (
-        /* The table is 560px at minimum, so on a phone it always scrolls
-           sideways. A div that scrolls but cannot be focused is unreachable
-           without a pointer: `tabindex="0"` puts the far columns back within
-           reach of the arrow keys, and the role plus name explain what the
-           visitor has just landed in. */
+        /* On a phone this always scrolls sideways. A div that scrolls but
+           cannot be focused is unreachable without a pointer: `tabindex="0"`
+           puts the far columns back within reach of the arrow keys, and the
+           role plus name explain what the visitor has just landed in. */
         <div
             className="scroll-region"
             tabIndex={0}
@@ -225,7 +234,7 @@ export function Table({ head, rows, widths, label }: {
             aria-label={name}
             style={{ overflowX: 'auto', boxShadow: `inset 0 0 0 1px ${T.ruleStrong}`, margin: '20px 0' }}
         >
-            <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 560, fontFamily: FONT }}>
+            <table style={{ borderCollapse: 'collapse', width: '100%', minWidth, fontFamily: FONT }}>
                 <caption style={SR_ONLY}>{name}</caption>
                 <thead>
                     <tr>

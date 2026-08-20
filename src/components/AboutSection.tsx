@@ -138,15 +138,20 @@ function StationLabel({ item, terminus, align }: {
         <span style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           alignSelf: 'flex-start', marginTop: 2,
-          width: 54, height: 54, padding: 8,
+          width: 54, height: 54, padding: 11,
           background: SIGN_WHITE, boxShadow: `inset 0 0 0 2px ${STEEL}`,
         }}>
+          {/* 32px inside the plate rather than 38. Two of these marks are
+              supplied at 64px square, which is exactly two device pixels per
+              CSS pixel at 32 and short of it at 38 — and a seal rendered
+              slightly short of its own resolution is the one thing on this
+              diagram that reads as an artefact. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={item.logo}
             alt=""
-            width={38}
-            height={38}
+            width={32}
+            height={32}
             loading="lazy"
             decoding="async"
             style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}

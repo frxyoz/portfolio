@@ -127,14 +127,12 @@ export default function MinddoShowcase() {
                     >
                         OZ
                     </Link>
-                    <span style={{
-                        display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 18, minWidth: 0,
-                        ...PLATE, color: SIGN_WHITE,
+                    <span className="oz-md-title" style={{
+                        display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 18,
+                        ...PLATE, color: SIGN_WHITE, whiteSpace: 'nowrap',
                     }}>
                         <Pictogram name="doc" size={13} color={SIGNAL} />
-                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {minddo.name} — case study
-                        </span>
+                        {minddo.name} — case study
                     </span>
                 </div>
 
@@ -478,8 +476,7 @@ export default function MinddoShowcase() {
                         {/* A measured run belongs on a board, not in a row of
                             cards: column-head lettering, tabular figures, one
                             ground. */}
-                        <div className="minddo-bleed" style={{
-                            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 1,
+                        <div className="minddo-bleed oz-md-board" style={{
                             background: STEEL_SOFT, boxShadow: `inset 0 0 0 2px ${STEEL}`,
                             margin: '20px 0 22px',
                         }}>
