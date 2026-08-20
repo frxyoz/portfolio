@@ -7,7 +7,7 @@ import Pictogram from './concourse/Pictogram';
 import FlapText from './concourse/FlapText';
 import {
     SIGNAL, ENAMEL, ENAMEL_INK_SOFT, STEEL, STEEL_SOFT,
-    SIGN_WHITE, BOARD, BOARD_INK, BOARD_INK_SOFT, GREEN_LAMP,
+    SIGN_WHITE, BOARD, BOARD_INK, BOARD_INK_SOFT,
     EASE_OUT, TYPE, TABULAR,
 } from '@/design/tokens';
 import Architecture from './minddo/Architecture';
@@ -201,12 +201,12 @@ export default function MinddoShowcase() {
                                 borderTop: `1px solid ${STEEL_SOFT}`,
                             }}>
                                 {([
-                                    ['Year', minddo.year, false],
-                                    ['Role', minddo.role, false],
-                                    ['Stack', minddo.stack, false],
-                                    ['Scale', minddo.scale, false],
-                                    ['Status', minddo.status, true],
-                                ] as const).map(([k, v, live]) => (
+                                    ['Year', minddo.year],
+                                    ['Role', minddo.role],
+                                    ['Stack', minddo.stack],
+                                    ['Scale', minddo.scale],
+                                    ['Deployment', minddo.deployment],
+                                ] as const).map(([k, v]) => (
                                     <div key={k} style={{ display: 'contents' }}>
                                         <dt style={{
                                             ...MICRO_PLATE, color: SIGNAL,
@@ -222,20 +222,8 @@ export default function MinddoShowcase() {
                                             display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap',
                                             ...TABULAR,
                                         }}>
-                                            {/* Green is deployed-and-running, which is exactly
-                                                what this row claims. Its only use on the page. */}
-                                            {live && (
-                                                <span style={{
-                                                    display: 'inline-flex', alignItems: 'center', gap: 7,
-                                                    ...MICRO_PLATE, color: GREEN_LAMP, flexShrink: 0,
-                                                }}>
-                                                    <span aria-hidden style={{
-                                                        width: 9, height: 9, background: GREEN_LAMP,
-                                                        animation: 'lamp 2.4s ease-in-out infinite',
-                                                    }} />
-                                                    Live
-                                                </span>
-                                            )}
+                                            {/* No lamp on this row. Green means running, and the
+                                                cluster is torn down; a lamp here would be a lie. */}
                                             <span>{v}</span>
                                         </dd>
                                     </div>
@@ -311,8 +299,8 @@ export default function MinddoShowcase() {
                             head={['Artifact', 'Produced by', 'Detail']}
                             widths={['26%', '18%', '56%']}
                             rows={artifacts.map(a => [
-                                <code key={a.file} style={{ fontFamily: MONO, fontSize: '0.82rem' }}>{a.file}</code>,
-                                <span key="b" style={{ fontSize: '0.82rem', color: T.muted }}>{a.by}</span>,
+                                <code key={a.file} style={{ fontFamily: MONO, fontSize: TYPE.META }}>{a.file}</code>,
+                                <span key="b" style={{ fontSize: TYPE.META, color: T.muted }}>{a.by}</span>,
                                 a.detail,
                             ])}
                         />
@@ -339,13 +327,13 @@ export default function MinddoShowcase() {
                             head={['Route', 'Guard', 'Notes']}
                             widths={['30%', '26%', '44%']}
                             rows={[
-                                [<code key="1" style={{ fontFamily: MONO, fontSize: '0.8rem' }}>POST /generate</code>, 'rate limit 5/IP/hr', 'Returns 202 in about 5 ms with a submission_id'],
-                                [<code key="2" style={{ fontFamily: MONO, fontSize: '0.8rem' }}>POST /generate/sync</code>, 'rate limit 2/IP/hr', 'Runs the pipeline in process; debug path only, capped harder because concurrent calls starve the event loop the probes answer on'],
-                                [<code key="3" style={{ fontFamily: MONO, fontSize: '0.8rem' }}>GET /showcases/{'{id}'}/{'{file}'}</code>, 'id charset, filename allowlist, path containment', 'Local disk first, then S3'],
-                                [<code key="4" style={{ fontFamily: MONO, fontSize: '0.8rem' }}>DELETE /api/admin/showcases/{'{id}'}</code>, 'ADMIN_API_TOKEN', 'Soft delete, sets is_public=false'],
-                                [<code key="5" style={{ fontFamily: MONO, fontSize: '0.8rem' }}>GET /health/live</code>, 'none', 'Liveness: process only, touches no dependency'],
-                                [<code key="6" style={{ fontFamily: MONO, fontSize: '0.8rem' }}>GET /health</code>, 'none', 'Readiness: 503 when the Celery broker is unreachable'],
-                                [<code key="7" style={{ fontFamily: MONO, fontSize: '0.8rem' }}>GET /</code>, 'file allowlist', 'index.html, *.jsx, /assets, nothing else'],
+                                [<code key="1" style={{ fontFamily: MONO, fontSize: TYPE.META }}>POST /generate</code>, 'rate limit 5/IP/hr', 'Returns 202 in about 5 ms with a submission_id'],
+                                [<code key="2" style={{ fontFamily: MONO, fontSize: TYPE.META }}>POST /generate/sync</code>, 'rate limit 2/IP/hr', 'Runs the pipeline in process; debug path only, capped harder because concurrent calls starve the event loop the probes answer on'],
+                                [<code key="3" style={{ fontFamily: MONO, fontSize: TYPE.META }}>GET /showcases/{'{id}'}/{'{file}'}</code>, 'id charset, filename allowlist, path containment', 'Local disk first, then S3'],
+                                [<code key="4" style={{ fontFamily: MONO, fontSize: TYPE.META }}>DELETE /api/admin/showcases/{'{id}'}</code>, 'ADMIN_API_TOKEN', 'Soft delete, sets is_public=false'],
+                                [<code key="5" style={{ fontFamily: MONO, fontSize: TYPE.META }}>GET /health/live</code>, 'none', 'Liveness: process only, touches no dependency'],
+                                [<code key="6" style={{ fontFamily: MONO, fontSize: TYPE.META }}>GET /health</code>, 'none', 'Readiness: 503 when the Celery broker is unreachable'],
+                                [<code key="7" style={{ fontFamily: MONO, fontSize: TYPE.META }}>GET /</code>, 'file allowlist', 'index.html, *.jsx, /assets, nothing else'],
                             ]}
                         />
                     </section>
@@ -353,14 +341,14 @@ export default function MinddoShowcase() {
                     {/* lifecycle */}
                     <section id="lifecycle" style={{ marginBottom: 56 }}>
                         <H2 id="lifecycle-h">Request lifecycle</H2>
-                        <P>Two of the details in this diagram started out as bugs — the ack that gets held until the job actually finishes, and the asset read that falls through to S3 when the file is not on local disk.</P>
+                        <P>Two of the details in this diagram started out as bugs. The ack is held until the job actually finishes, and the asset read falls through to S3 when the file is not on local disk.</P>
                         <Lifecycle />
                     </section>
 
                     {/* pipeline */}
                     <section id="pipeline" style={{ marginBottom: 56 }}>
                         <H2 id="pipeline-h">The generation pipeline</H2>
-                        <P>The seven steps run one after another, but they do not all genuinely depend on each other. The gap between the order they run in and the order they would need to run in is where most of the wasted time sits.</P>
+                        <P>The seven steps run one after another, but they do not all genuinely depend on each other. Three of them share no data with any other step, and running them in dependency order instead would save about 25 s a job.</P>
                         <Pipeline />
                     </section>
 
@@ -370,18 +358,18 @@ export default function MinddoShowcase() {
                         <Scaling />
                         <H3>Sizing the ceiling, three times</H3>
                         <P>
-                            Everything below came out of running this on a real node rather than a laptop. The lesson
-                            underneath all four rows is the same: the scheduler admits pods based on what they
-                            <em> request</em>, and the kernel kills them based on what they <em>use</em>. A ceiling
-                            that fits in requests is not a ceiling that fits.
+                            Everything below came out of running this on a real node rather than a laptop. All four
+                            rows are the same mistake: the scheduler admits pods based on what they
+                            <em> request</em>, and the kernel kills them based on what they <em>use</em>. Six pods
+                            fit under the first rule and got OOM killed under the second.
                         </P>
                         <Table
                             head={['What changed', 'From', 'To', 'Why']}
                             widths={['18%', '13%', '15%', '54%']}
                             rows={sizing.map(r => [
                                 r.change,
-                                <code key="f" style={{ fontFamily: MONO, fontSize: '0.78rem', color: T.muted }}>{r.from}</code>,
-                                <code key="t" style={{ fontFamily: MONO, fontSize: '0.78rem', color: T.accent }}>{r.to}</code>,
+                                <code key="f" style={{ fontFamily: MONO, fontSize: TYPE.META, color: T.muted }}>{r.from}</code>,
+                                <code key="t" style={{ fontFamily: MONO, fontSize: TYPE.META, color: T.accent }}>{r.to}</code>,
                                 r.why,
                             ])}
                         />
@@ -439,10 +427,10 @@ export default function MinddoShowcase() {
                         </div>
 
                         <Note label="The pattern">
-                            Both of the serious ones were controls I was certain I had already written. I remembered
-                            writing them, and they did not do what I thought they did. What eventually turned them up
-                            was reading back through my own code and asking of each check, fairly slowly, what it was
-                            really testing.
+                            Both of the serious ones were controls I was certain I had already written. The admin
+                            route did check something; it checked whether a service key was configured, not who was
+                            calling. Reading my own code back slowly, line by line, was the only thing that caught
+                            the gap between the check I remembered writing and the one that was there.
                         </Note>
 
                         <H3>What is still wrong with it</H3>
@@ -461,8 +449,8 @@ export default function MinddoShowcase() {
                             head={['Control', 'Value', 'Failure it prevents']}
                             widths={['24%', '20%', '56%']}
                             rows={reliability.map(r => [
-                                <code key={r.control} style={{ fontFamily: MONO, fontSize: '0.8rem' }}>{r.control}</code>,
-                                <span key="v" style={{ fontFamily: MONO, fontSize: '0.78rem', color: T.accent }}>{r.value}</span>,
+                                <code key={r.control} style={{ fontFamily: MONO, fontSize: TYPE.META }}>{r.control}</code>,
+                                <span key="v" style={{ fontFamily: MONO, fontSize: TYPE.META, color: T.accent }}>{r.value}</span>,
                                 r.prevents,
                             ])}
                         />
@@ -498,7 +486,8 @@ export default function MinddoShowcase() {
                             {awsLoad.map(m => (
                                 <div key={m.label} style={{ background: BOARD, padding: '18px 18px 20px' }}>
                                     <div style={{
-                                        fontFamily: FONT, fontSize: '1.7rem', fontWeight: 800, fontStretch: '104%',
+                                        // Display lettering, so clamped and fluid rather than a ramp step.
+                                        fontFamily: FONT, fontSize: 'clamp(1.5rem, 2.6vw, 1.9rem)', fontWeight: 800, fontStretch: '104%',
                                         letterSpacing: '-0.03em', lineHeight: 1, color: SIGNAL, ...TABULAR,
                                     }}>
                                         {m.value}
@@ -522,10 +511,9 @@ export default function MinddoShowcase() {
                             twice each: on a saturated node, neither <C>celery inspect ping</C> nor even
                             <C>/health/live</C> can answer inside its window. Every job still finished, because
                             <C>task_acks_late</C> puts an unacknowledged task back on the queue and the 660 s grace
-                            period lets Celery finish what it is holding. The reliability design absorbed a fault the
-                            sizing did not prevent. The unfixed half is that those probes are still tuned for an idle
-                            node, and a probe that restarts a healthy process under load is a self-inflicted outage
-                            waiting for a busier day.
+                            period lets Celery finish what it is holding. Those probes are still tuned for an idle
+                            node, so under load they restart healthy processes and the retry machinery covers for
+                            them. Widening the windows is on the list.
                         </Note>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
@@ -535,11 +523,11 @@ export default function MinddoShowcase() {
                                     head={['Component', 'Detail', 'Cost']}
                                     rows={cost.map(c => [
                                         c.component,
-                                        <span key="d" style={{ fontSize: '0.82rem', color: T.muted }}>{c.detail}</span>,
-                                        <code key="v" style={{ fontFamily: MONO, fontSize: '0.82rem', color: T.ink }}>{c.value}</code>,
+                                        <span key="d" style={{ fontSize: TYPE.META, color: T.muted }}>{c.detail}</span>,
+                                        <code key="v" style={{ fontFamily: MONO, fontSize: TYPE.META, color: T.ink }}>{c.value}</code>,
                                     ])}
                                 />
-                                <P style={{ fontSize: '0.85rem' }}>
+                                <P style={{ fontSize: TYPE.COPY }}>
                                     Claude is the entire per-showcase cost, so a cache hit takes it to zero. Video
                                     generation has no cache of its own yet, which is the obvious thing to do next.
                                     The whole twenty-job run cost about two cents, but that is a cache hit rate rather
@@ -587,10 +575,12 @@ export default function MinddoShowcase() {
                     <section id="aws" style={{ marginBottom: 56 }}>
                         <H2 id="aws-h">Running on AWS</H2>
                         <P>
-                            This went live on 16 August 2026: k3s on a single t3.large, KEDA installed with Helm, real
+                            This went up on 16 August 2026: k3s on a single t3.large, KEDA installed with Helm, real
                             S3 in place of MinIO, and no AWS keys anywhere in the cluster because boto3 picks up the
                             instance profile. The URL guard existed before any of it, which turned out to matter, since
-                            the metadata endpoint it blocks is now a real endpoint holding real credentials.
+                            the metadata endpoint it blocks was now a real endpoint holding real credentials. The
+                            cluster came down once the load test was done, since an idle t3.large still bills by the
+                            hour.
                         </P>
                         <P>
                             Three of the seven verification steps I run after a deploy are there because the
@@ -608,7 +598,7 @@ export default function MinddoShowcase() {
                             real. Docker now lives on the node, there is a second copy of the tree to keep in sync,
                             the image exists twice on the same 30 GB disk, and rsync ships whatever is on disk rather
                             than whatever is in git, so it delivered the gitignored <C>k8s/secret.yaml</C> and
-                            <C>COPY . .</C> baked it into the image. That is the failure mode of the quick path.
+                            <C>COPY . .</C> baked it into the image. A <C>.dockerignore</C> covers that now.
                         </Note>
                     </section>
 

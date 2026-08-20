@@ -95,7 +95,7 @@ export default function AwsPlan() {
                 { tone: 'tier', text: 'AWS resource' },
                 { tone: 'extern', text: 'outside AWS' },
             ]}
-            caption="This is what is running. The 20-job load test in section 09 ran against this cluster; the 102.7 s single-job baseline is still a docker compose number." panel={panel}
+            caption="This is what was deployed. The 20-job load test in section 09 ran against this cluster; the 102.7 s single-job baseline is still a docker compose number." panel={panel}
         >
             <svg viewBox="0 0 920 350"
                 role="img"

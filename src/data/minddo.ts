@@ -26,7 +26,7 @@ export const minddo = {
     role: 'Sole engineer: architecture, backend, infra, security',
     stack: 'FastAPI, Celery, Redis, Playwright, Claude Sonnet 4.6, ffmpeg, Supabase, S3, Kubernetes, KEDA',
     scale: '~2,200 lines of Python, ~4,900 of JSX, 12 Kubernetes manifests',
-    status: 'Live on AWS: k3s on a t3.large, KEDA autoscaling verified under a 20-job load test. Also runs on docker compose and k3d.',
+    deployment: 'Deployed to AWS on 16 August 2026: k3s on a t3.large, KEDA autoscaling verified under a 20-job load test. Torn down after the run so it stops billing. Also runs on docker compose and k3d.',
     lede: 'You give it a link to a student\'s project and about a hundred seconds later you get eleven files back: two screenshots, a recorded walkthrough of the site, narrated videos in English and Mandarin, copy written by Claude, a QR code, and a flyer that is ready to print.',
     // youtube-nocookie so the embed sets no cookie until playback starts.
     demoVideo: 'https://www.youtube-nocookie.com/embed/_IFdL_suGr0',
@@ -152,14 +152,14 @@ export const takeaways: { title: string; body: string }[] = [
     },
     {
         title: 'Kubernetes experience',
-        body: 'Liveness and readiness are not the same probe, and treating them as one restarts the entire fleet the first time Redis hiccups. Grace periods have to match how long the work actually takes. The thing I only learned on a real node is that a ceiling which fits in requests is not a ceiling that fits: the scheduler admits pods on requests, the OOM killer acts on usage.',
+        body: 'Liveness and readiness are not the same probe, and treating them as one restarts the entire fleet the first time Redis hiccups. Grace periods have to match how long the work actually takes. And a real node taught me what a laptop could not: the scheduler admits pods on requests, the OOM killer acts on usage, so six pods can pass admission and still die.',
     },
     {
         title: 'Reviewing my own code',
-        body: 'Four passes over the codebase turned up four holes. The question that found every one of them was the same: what is this check actually checking?',
+        body: 'Four passes over the codebase turned up four holes. Asking what each check was actually checking, rather than what I remembered writing it to do, found every one of them.',
     },
     {
         title: 'Cost engineering',
-        body: 'Caching on a content hash and moving off paid TTS took the unit cost from $0.043 to $0.023. The ceilings I set are not capacity estimates; they are there to limit how much a runaway loop can spend before I notice.',
+        body: 'Caching on a content hash and moving off paid TTS took the unit cost from $0.043 to $0.023. I set the rate limit and the pod ceiling to cap how much a runaway loop can spend before I notice, which is a different job from sizing for expected traffic.',
     },
 ];
