@@ -18,7 +18,13 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; font-size: 16px; }
+/* `position: relative` on the root is not decoration. The hero's whole
+   hand-off — the field draining, the panel fading, the signature drawing — is
+   driven by a scroll progress measured against this element, and that
+   measurement walks the offsetParent chain up to the scroll container. A
+   static root is the case that chain cannot resolve, which is what framer has
+   been warning about on every page load. */
+html { position: relative; scroll-behavior: smooth; font-size: 16px; }
 
 body {
   font-family: var(--font-sign, 'Archivo', 'Helvetica Neue', Arial, sans-serif);
@@ -274,13 +280,41 @@ html.oz-loaded .oz-curtain { display: none; }
   outline-offset: 2px;
 }
 
-/* The case study runs a neutral palette of its own, so its scroll rails take a
-   grey rather than the site's steel. Firefox gets the same treatment through
-   the standard properties, which it honours and WebKit ignores. */
+/* A scroll region's rail is a rail like any other, so it takes the system's
+   steel at the weight a rail inside a figure wants rather than the neutral grey
+   this page carried back when it ran a palette of its own. Firefox gets the
+   same treatment through the standard properties, which it honours and WebKit
+   ignores. */
 .scroll-region {
   scrollbar-width: thin;
-  scrollbar-color: rgba(18, 22, 29, 0.22) transparent;
+  scrollbar-color: rgba(20, 20, 20, 0.28) transparent;
 }
 .scroll-region::-webkit-scrollbar-thumb {
-  background: rgba(18, 22, 29, 0.22);
+  background: rgba(20, 20, 20, 0.28);
+}
+
+/* The case study's rail plate. At full width it introduces a page that is as
+   often entered from a link as from the home page; on a phone the same string
+   truncated to a single letter and an ellipsis, which introduces nothing. The
+   OZ plate and the H1 directly beneath it already say where you are. */
+@media (max-width: 719px) {
+  /* `!important` because the plate is inline-styled, like everything in this
+     tree, and an inline `display` outranks a stylesheet without it. */
+  .oz-md-title { display: none !important; }
+}
+
+/* The load-test board. `auto-fit` filled the row with as many 190px tracks as
+   the bleed allowed, which for six figures meant a last row of one cell and
+   four empty ones — and with a 1px steel gap under the grid, an empty cell is
+   not empty, it is a slab. Explicit counts that divide six. */
+.oz-md-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+}
+@media (max-width: 899px) {
+  .oz-md-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 519px) {
+  .oz-md-board { grid-template-columns: minmax(0, 1fr); }
 }

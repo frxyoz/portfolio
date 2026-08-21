@@ -192,7 +192,7 @@ export default function ContactSection() {
 
                     {/* The enquiry form, on its own plate. */}
                     <Reveal delay={0.1}>
-                        <div style={{ background: STEEL, border: `3px solid ${STEEL}` }}>
+                        <div style={{ background: STEEL }}>
                             <span style={deskHeader}>
                                 <Pictogram name="mail" size={13} />
                                 Send a message
@@ -325,11 +325,33 @@ export default function ContactSection() {
                     </span>
                     Olric Zeng
                 </span>
+                {/* The address was set as plain text here while the same
+                    address is a live channel three rows above it. A terminal
+                    prints the number you can call, not a picture of it. */}
                 <span style={{
                     fontSize: TYPE.LABEL, fontWeight: 600, fontStretch: '88%',
                     letterSpacing: '0.16em', textTransform: 'uppercase', color: BOARD_INK_SOFT,
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
                 }}>
-                    © {new Date().getFullYear()} · olriczeng@gmail.com
+                    © {new Date().getFullYear()} ·
+                    <a
+                        href="mailto:olriczeng@gmail.com"
+                        style={{
+                            color: BOARD_INK_SOFT,
+                            boxShadow: `inset 0 -1px 0 0 ${BOARD_INK_SOFT}66`,
+                            transition: `color 0.2s ${EASE_OUT}, box-shadow 0.2s ${EASE_OUT}`,
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.color = SIGNAL;
+                            e.currentTarget.style.boxShadow = `inset 0 -1px 0 0 ${SIGNAL}`;
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.color = BOARD_INK_SOFT;
+                            e.currentTarget.style.boxShadow = `inset 0 -1px 0 0 ${BOARD_INK_SOFT}66`;
+                        }}
+                    >
+                        olriczeng@gmail.com
+                    </a>
                 </span>
             </footer>
         </section>

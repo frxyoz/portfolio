@@ -212,12 +212,21 @@ export function Table({ head, rows, widths, label }: {
     label?: string;
 }) {
     const name = label ?? `${head[0]} table`;
+    /* A minimum the columns can actually live in, rather than one number for
+       every table on the page. 560px shared between three columns is 186px
+       each, which folds `/showcases/{id}/{file}` onto two lines and a note
+       onto five — and since a row is as tall as its tallest cell, the phone
+       got a timetable of 350px rows mostly full of nothing. A row is only as
+       short as its longest cell allows, so the allowance has to be wide enough
+       for the notes column, not just for the route: 300px a column keeps the
+       routes on one line and the notes to three or four. The region scrolls,
+       which is what it is for. */
+    const minWidth = Math.max(560, head.length * 300);
     return (
-        /* The table is 560px at minimum, so on a phone it always scrolls
-           sideways. A div that scrolls but cannot be focused is unreachable
-           without a pointer: `tabindex="0"` puts the far columns back within
-           reach of the arrow keys, and the role plus name explain what the
-           visitor has just landed in. */
+        /* On a phone this always scrolls sideways. A div that scrolls but
+           cannot be focused is unreachable without a pointer: `tabindex="0"`
+           puts the far columns back within reach of the arrow keys, and the
+           role plus name explain what the visitor has just landed in. */
         <div
             className="scroll-region"
             tabIndex={0}
@@ -225,7 +234,7 @@ export function Table({ head, rows, widths, label }: {
             aria-label={name}
             style={{ overflowX: 'auto', boxShadow: `inset 0 0 0 1px ${T.ruleStrong}`, margin: '20px 0' }}
         >
-            <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 560, fontFamily: FONT }}>
+            <table style={{ borderCollapse: 'collapse', width: '100%', minWidth, fontFamily: FONT }}>
                 <caption style={SR_ONLY}>{name}</caption>
                 <thead>
                     <tr>
@@ -539,22 +548,27 @@ export function useFocus<Id extends string>() {
 
 /* ── Video: a YouTube embed in the same frame the diagrams use ───────────── */
 
-export function Video({ label, title, src, caption, style }: {
-    label: string;
+export function Video({ label, title, src, caption, style, bleed = true }: {
+    /** The plate on the head, when the embed needs naming as a kind. Omitted
+     *  where the title already says what the recording is. */
+    label?: string;
     title: string;
     /** Privacy-preserving embed URL, e.g. https://www.youtube-nocookie.com/embed/<id> */
     src: string;
     caption?: ReactNode;
     style?: CSSProperties;
+    /** Off when the embed sits inside a grid that already owns the width: the
+     *  bleed's negative right margin would otherwise pull it over its column. */
+    bleed?: boolean;
 }) {
     return (
-        <figure className="minddo-bleed" style={{ marginTop: 22, marginBottom: 26, ...style }}>
+        <figure className={bleed ? 'minddo-bleed' : undefined} style={{ marginTop: 22, marginBottom: 26, ...style }}>
             <div style={{ boxShadow: `inset 0 0 0 2px ${STEEL}`, background: T.canvas, overflow: 'hidden' }}>
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: 12,
                     padding: '0 14px', minHeight: 46, background: STEEL,
                 }}>
-                    <span style={{ ...MICRO_PLATE, color: SIGNAL, flexShrink: 0 }}>{label}</span>
+                    {label && <span style={{ ...MICRO_PLATE, color: SIGNAL, flexShrink: 0 }}>{label}</span>}
                     <span style={{
                         fontFamily: FONT, fontSize: TYPE.META, fontWeight: 700, fontStretch: '92%',
                         color: SIGN_WHITE, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',

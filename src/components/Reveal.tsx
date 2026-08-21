@@ -1,6 +1,7 @@
 'use client';
 
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { useReducedMotionSafe } from '@/hooks/useReducedMotionSafe';
 import { CSSProperties, ReactNode } from 'react';
 
 interface RevealProps {
@@ -17,7 +18,7 @@ interface RevealProps {
    the entrance entirely would be worse than either: a visitor who has asked for
    less motion still needs to see that new content arrived. */
 export default function Reveal({ children, delay = 0, style, className }: RevealProps) {
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionSafe();
 
   return (
     <motion.div

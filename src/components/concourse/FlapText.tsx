@@ -62,20 +62,29 @@ export default function FlapText({
     const armed = !reduced && play;
     /* One run of the board is identified by everything that would restart it.
        Infinity means settled: every cell shows its own letter and nothing is
-       scheduled, which is also the server's render and the reduced-motion
-       render, so the text is in the HTML whether or not the board ever runs. */
+       scheduled. Every first render starts settled, server and client alike —
+       the cascade is armed from the effect below. Starting at tick 0 in the
+       initial state made the run depend on `reduced`, which the server cannot
+       know: it shipped "A" where the client rendered "O" and React threw the
+       whole tree away on hydration. Settled first also means the real string,
+       not a drum position, is what lands in the HTML. */
     const runKey = `${text}|${armed}|${startDelay}|${stagger}`;
-    const [run, setRun] = useState({ key: runKey, tick: armed ? 0 : Infinity });
-    if (run.key !== runKey) setRun({ key: runKey, tick: armed ? 0 : Infinity });
+    const [run, setRun] = useState({ key: runKey, tick: Infinity });
+    if (run.key !== runKey) setRun({ key: runKey, tick: Infinity });
 
     useEffect(() => {
         if (!armed) return;
         let t = 0;
-        /* One interval per row, cleared the moment its last flap lands. A single
-           shared ticker kept the columns in phase but left a loop alive for the
-           page's lifetime and stalled whenever its subscriber set briefly
-           emptied; a row that owns its own timer cannot be stopped by another
-           row. The guard on `key` drops any frame belonging to a previous run. */
+        /* The run starts on the first interval rather than from the effect
+           body: the settled string is what both renders agree on, and the
+           first flap is one tick away from it.
+
+           One interval per row, cleared the moment its last flap lands. A
+           single shared ticker kept the columns in phase but left a loop alive
+           for the page's lifetime and stalled whenever its subscriber set
+           briefly emptied; a row that owns its own timer cannot be stopped by
+           another row. The guard on `key` drops any frame belonging to a
+           previous run. */
         const id = setInterval(() => {
             t += 1;
             const done = t > lastTick;

@@ -132,6 +132,10 @@ function Doors() {
    there, hung off the soffit on two rods: the thing you read while walking,
    before you are close enough to read anything on the wall. */
 
+/** The hanging sign's own height. A directional plate is set once and hung
+ *  wherever the soffit is; it does not grow because the ceiling did. */
+const PLATE_H = 44;
+
 function Gantry({ scale, height }: { scale: number; height: number }) {
     return (
         <div aria-hidden style={{ position: 'absolute', left: 0, top: 26, right: 0, height }}>
@@ -145,8 +149,13 @@ function Gantry({ scale, height }: { scale: number; height: number }) {
                             display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
                         }}
                     >
-                        {/* The rods it hangs from. */}
-                        <div style={{ display: 'flex', gap: 74, paddingLeft: 22, height: Math.max(8, height * 0.22) }}>
+                        {/* The rods it hangs from. They take whatever ceiling
+                            the plate does not, which is the way round a real
+                            gantry works: the sign is a fixed size and the drop
+                            is however far the soffit happens to be. Sizing the
+                            plate off the ceiling instead put a 160px black
+                            slab carrying 10px lettering over a phone. */}
+                        <div style={{ display: 'flex', gap: 74, paddingLeft: 22, height: Math.max(8, height - PLATE_H) }}>
                             <span style={{ width: 3, height: '100%', background: STEEL_SOFT }} />
                             <span style={{ width: 3, height: '100%', background: STEEL_SOFT }} />
                         </div>
@@ -157,7 +166,7 @@ function Gantry({ scale, height }: { scale: number; height: number }) {
                         <div style={{
                             display: 'inline-flex', alignItems: 'center', gap: 11,
                             background: STEEL, color: SIGNAL,
-                            padding: '0 16px', height: Math.max(30, height * 0.52),
+                            padding: '0 16px', height: PLATE_H,
                             borderBottom: `4px solid ${pal.bg}`,
                             ...CONTROL, whiteSpace: 'nowrap',
                         }}>
@@ -434,7 +443,10 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
         const el = scrollRef.current;
         if (!el) return;
         const measure = () => {
-            const next = Math.max(0.5, Math.min(1.12, el.clientHeight / WALL_H, el.clientWidth / 620));
+            /* 560 rather than 620: on a 390pt phone the wider divisor left the
+               wall at 63% of the bay and the rest blank tile. This keeps a
+               sheet and a half in view and buys back a little of the ceiling. */
+            const next = Math.max(0.5, Math.min(1.12, el.clientHeight / WALL_H, el.clientWidth / 560));
             /* The corridor's own scale is what maps a scroll offset back to a
                position on the wall, so `syncZone` reads it from here rather
                than from a render closure. */

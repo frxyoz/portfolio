@@ -19,8 +19,12 @@ import type { CSSProperties } from 'react';
  * inline-styled and lean on hex-alpha concatenation (`${SIGNAL}33`), which
  * `var()` cannot express. globals.css mirrors the few values CSS itself needs.
  *
- * The MindDo case study at /projects/minddo carries its own neutral palette in
- * src/components/minddo/ui.tsx and does not read this file.
+ * The MindDo case study at /projects/minddo is in this world too. It reads
+ * these values through src/components/minddo/ui.tsx, which maps them onto the
+ * names a documentation page needs and adds the schematic tones its diagrams
+ * turn on — red for refused, green for admitted. That second reading of the
+ * two reserved colours is the one documented exemption in the system, and it
+ * holds on that surface only. See DESIGN.md under Colors.
  */
 
 /* ── Signal yellow — the path forward ─────────────────────────────────────── */

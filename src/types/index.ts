@@ -31,6 +31,10 @@ export interface Project {
      *  before the screenshot arrives instead of shifting layout under it. */
     mockSize?: [number, number];
     demoVideo?: string;
+    /** A deployed build anyone can open. Kept separate from `githubUrl` because
+     *  a running thing and its source are two different offers, and a project
+     *  can have either without the other. */
+    liveUrl?: string;
     /** When set, the card navigates to this route instead of opening the overlay. */
     href?: string;
 }

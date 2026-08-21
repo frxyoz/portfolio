@@ -18,7 +18,7 @@ import DataModel from './minddo/DataModel';
 import SsrfGuard from './minddo/SsrfGuard';
 import AwsPlan from './minddo/AwsPlan';
 import {
-    minddo, awsLoad, artifacts, security, residualRisks,
+    minddo, awsLoad, clipMetrics, artifacts, security, residualRisks,
     reliability, sizing, cost, wins, limitations, takeaways, SECTIONS,
 } from '@/data/minddo';
 
@@ -91,6 +91,13 @@ function useActiveSection() {
     return active;
 }
 
+/* The recording in the scaling section shows three of the load test's numbers
+   happening on screen. They are read out of the board's own data rather than
+   retyped, so the two places can never disagree. */
+const clip = clipMetrics
+    .map(label => awsLoad.find(m => m.label === label))
+    .filter((m): m is (typeof awsLoad)[number] => !!m);
+
 export default function MinddoShowcase() {
     const active = useActiveSection();
 
@@ -127,14 +134,12 @@ export default function MinddoShowcase() {
                     >
                         OZ
                     </Link>
-                    <span style={{
-                        display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 18, minWidth: 0,
-                        ...PLATE, color: SIGN_WHITE,
+                    <span className="oz-md-title" style={{
+                        display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 18,
+                        ...PLATE, color: SIGN_WHITE, whiteSpace: 'nowrap',
                     }}>
                         <Pictogram name="doc" size={13} color={SIGNAL} />
-                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {minddo.name} — case study
-                        </span>
+                        {minddo.name} — case study
                     </span>
                 </div>
 
@@ -356,6 +361,52 @@ export default function MinddoShowcase() {
                     <section id="scaling" style={{ marginBottom: 56 }}>
                         <H2 id="scaling-h">Autoscaling control loop</H2>
                         <Scaling />
+
+                        <H3>The loop, running</H3>
+                        <P style={{ marginBottom: 10 }}>
+                            The diagram above is the control law; this is the control law happening. Twenty jobs
+                            submitted at once against k3s on a single t3.large: the queue fills, KEDA walks the
+                            deployment from one worker to four, and the cluster drains itself back down once there
+                            is nothing left to pull.
+                        </P>
+                        {/* Recording and figures side by side on a wide screen,
+                            because each is the other's evidence: the numbers say
+                            what happened, the clip shows it happening. */}
+                        <div className="minddo-bleed minddo-clip">
+                            <Video
+                                title="20-job load test on AWS"
+                                src={minddo.scalingVideo}
+                                bleed={false}
+                                style={{ margin: 0, minWidth: 0 }}
+                            />
+                            <aside
+                                aria-label="What the recording shows"
+                                style={{
+                                    background: STEEL_SOFT, boxShadow: `inset 0 0 0 2px ${STEEL}`,
+                                    display: 'grid', gridTemplateRows: `auto repeat(${clip.length}, 1fr)`, gap: 1,
+                                }}
+                            >
+                                <div style={{ ...MICRO_PLATE, background: STEEL, color: SIGNAL, padding: '16px 16px 15px' }}>
+                                    Measured on AWS
+                                </div>
+                                {clip.map(m => (
+                                    <div key={m.label} style={{ background: BOARD, padding: '16px 18px 18px' }}>
+                                        <div style={{
+                                            fontFamily: FONT, fontSize: 'clamp(1.4rem, 2.1vw, 1.8rem)', fontWeight: 800,
+                                            fontStretch: '104%', letterSpacing: '-0.03em', lineHeight: 1,
+                                            color: SIGNAL, ...TABULAR,
+                                        }}>
+                                            {m.value}
+                                        </div>
+                                        <div style={{ ...MICRO_PLATE, color: BOARD_INK, margin: '12px 0 7px' }}>{m.label}</div>
+                                        <div style={{ fontFamily: FONT, fontSize: TYPE.COPY, color: BOARD_INK_SOFT, lineHeight: 1.5 }}>
+                                            {m.note}
+                                        </div>
+                                    </div>
+                                ))}
+                            </aside>
+                        </div>
+
                         <H3>Sizing the ceiling, three times</H3>
                         <P>
                             Everything below came out of running this on a real node rather than a laptop. All four
@@ -478,8 +529,7 @@ export default function MinddoShowcase() {
                         {/* A measured run belongs on a board, not in a row of
                             cards: column-head lettering, tabular figures, one
                             ground. */}
-                        <div className="minddo-bleed" style={{
-                            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 1,
+                        <div className="minddo-bleed oz-md-board" style={{
                             background: STEEL_SOFT, boxShadow: `inset 0 0 0 2px ${STEEL}`,
                             margin: '20px 0 22px',
                         }}>
@@ -725,6 +775,23 @@ export default function MinddoShowcase() {
                     border: 2px solid #141414;
                     border-radius: 0;
                     background: #ffd100;
+                }
+
+                /* The load-test recording and the three figures it shows.
+                   Stacked on a phone, side by side once the column is wide
+                   enough that a 16:9 embed beside a 230px board still leaves
+                   the video large enough to read a terminal in. */
+                .minddo-clip {
+                    display: grid;
+                    gap: 20px;
+                    align-items: stretch;
+                    margin: 4px 0 6px;
+                }
+                @media (min-width: 900px) {
+                    .minddo-clip {
+                        grid-template-columns: minmax(0, 1.9fr) minmax(230px, 1fr);
+                        gap: 22px;
+                    }
                 }
 
                 /* Figures and the board carry the argument, so on a wide screen
