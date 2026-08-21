@@ -227,6 +227,42 @@ function PlatformPanel({
     );
 }
 
+/** A steel plate link on the sheet's signal head — live build, source, whatever
+ *  else the project can hand you. */
+function SheetLink({ href, icon, label }: {
+    href: string;
+    icon: 'external' | 'github';
+    label: string;
+}) {
+    return (
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+                display: 'inline-flex', alignItems: 'center', gap: 10,
+                background: STEEL, color: SIGNAL,
+                padding: '0 22px', minHeight: 48,
+                fontSize: TYPE.CONTROL, fontWeight: 800, fontStretch: '88%',
+                letterSpacing: '0.18em', textTransform: 'uppercase',
+                transition: `background 0.2s ${EASE_OUT}, color 0.2s ${EASE_OUT}`,
+            }}
+            onMouseEnter={e => {
+                e.currentTarget.style.background = SIGN_WHITE;
+                e.currentTarget.style.color = STEEL;
+            }}
+            onMouseLeave={e => {
+                e.currentTarget.style.background = STEEL;
+                e.currentTarget.style.color = SIGNAL;
+            }}
+        >
+            <Pictogram name={icon} size={15} />
+            {label}
+            <NewTabNote />
+        </a>
+    );
+}
+
 // ─── The platform sheet ──────────────────────────────────────────────────────
 function PlatformSheet({
     project, onClose, onPrev, onNext, prevProject, nextProject, isMobile,
@@ -430,33 +466,17 @@ function PlatformSheet({
                         </p>
                     )}
 
-                    {project.githubUrl && (
-                        <div style={{ marginTop: 26 }}>
-                            <a
-                                href={project.githubUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                    display: 'inline-flex', alignItems: 'center', gap: 10,
-                                    background: STEEL, color: SIGNAL,
-                                    padding: '0 22px', minHeight: 48,
-                                    fontSize: TYPE.CONTROL, fontWeight: 800, fontStretch: '88%',
-                                    letterSpacing: '0.18em', textTransform: 'uppercase',
-                                    transition: `background 0.2s ${EASE_OUT}, color 0.2s ${EASE_OUT}`,
-                                }}
-                                onMouseEnter={e => {
-                                    e.currentTarget.style.background = SIGN_WHITE;
-                                    e.currentTarget.style.color = STEEL;
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.background = STEEL;
-                                    e.currentTarget.style.color = SIGNAL;
-                                }}
-                            >
-                                <Pictogram name="github" size={15} />
-                                Source
-                                <NewTabNote />
-                            </a>
+                    {/* The running thing first, its source second — that is the
+                        order a visitor wants them in, and a project may offer
+                        either one without the other. */}
+                    {(project.liveUrl || project.githubUrl) && (
+                        <div style={{ marginTop: 26, display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                            {project.liveUrl && (
+                                <SheetLink href={project.liveUrl} icon="external" label="Open Live" />
+                            )}
+                            {project.githubUrl && (
+                                <SheetLink href={project.githubUrl} icon="github" label="Source" />
+                            )}
                         </div>
                     )}
                 </div>

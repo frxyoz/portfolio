@@ -28,6 +28,42 @@ export const projects: Project[] = [
         mockLabel: 'Pipeline — Queue to Showcase',
     },
     {
+        id: 'gzmetro',
+        name: 'gz-metro',
+        subtitle: 'Network History, 1997–2026',
+        year: '2026',
+        desc: 'A scrubbable map of the Guangzhou Metro that redraws the whole network at any date across twenty-nine years.',
+        award: null,
+        githubUrl: 'https://github.com/frxyoz/gz-metro',
+        liveUrl: 'https://gzmetro.olriczeng.com',
+        overview:
+            'Drag the timeline and the map rebuilds itself. Nineteen lines and 140 stations arrive on the dates they actually opened, and the segments that were closed and renumbered in the 2010 restructure disappear again on the day it happened.',
+        details: [
+            {
+                heading: 'Time as a Filter',
+                body: 'Every segment and station carries an opening date and, where it applies, a closing one. The slider converts to a date integer and MapLibre filter expressions cull the layers on the GPU, so scrubbing across twenty-nine years never rebuilds a feature or touches the DOM.',
+            },
+            {
+                heading: 'Real Geometry',
+                body: 'The map draws a 600 KB GeoJSON of real track alignment on an OpenStreetMap-derived basemap rather than a schematic, so the express runs out to Nansha and Conghua sit at the length they really are. Opening dates are phase-level, from public operator records.',
+            },
+            {
+                heading: 'Reading the Network',
+                body: 'A bilingual line index lists each line with its opening year; clicking a line or a station opens a panel with its interchanges and its own dated history. A play control sweeps the whole period in about half a minute, and the slider position survives a reload.',
+            },
+        ],
+        stack: [
+            { name: 'MapLibre GL', role: 'Vector map & filter expressions' },
+            { name: 'GeoJSON', role: 'Temporal line & station data' },
+            { name: 'OpenStreetMap', role: 'Track geometry' },
+            { name: 'CARTO', role: 'Basemap tiles' },
+        ],
+        mockLabel: 'The Network as of 2026',
+        mockImage: '/gzmetro.webp',
+        mockSrcSet: '/gzmetro-640.webp 640w, /gzmetro-900.webp 900w, /gzmetro.webp 1200w',
+        mockSize: [1200, 633],
+    },
+    {
         id: 'luminary',
         name: 'Luminary',
         subtitle: 'Study Tracker App',
