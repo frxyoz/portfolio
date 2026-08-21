@@ -114,6 +114,10 @@ reintroduce it.
   1→4 worker scale-up in 17 s, 18.9 min queue drain, 257 s median per job, 102.7 s uncontended
   baseline, ~$0.023 per showcase. Demo video embedded from YouTube. Full case study at
   `src/data/minddo.ts` and `src/components/minddo/`.
+- **gz-metro** (2026) — Network History, 1997–2026. Live at
+  `gzmetro.olriczeng.com`. MapLibre GL over a temporal GeoJSON of real track geometry; 19 lines
+  and 140 stations, each filtered by its own opening and closing date.
+  Source: `github.com/frxyoz/gz-metro`.
 - **Luminary** (2025) — Study Tracker App. *Best Overall App, AppDev Hack Challenge 2025.*
   Source: `github.com/tnt07-t/luminary-backend`.
 - **Boroughs** (2025) — NYC Housing Compatibility Finder. *#1 Live Right Award, Cornell Claude

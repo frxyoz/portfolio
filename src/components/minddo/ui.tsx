@@ -548,22 +548,27 @@ export function useFocus<Id extends string>() {
 
 /* ── Video: a YouTube embed in the same frame the diagrams use ───────────── */
 
-export function Video({ label, title, src, caption, style }: {
-    label: string;
+export function Video({ label, title, src, caption, style, bleed = true }: {
+    /** The plate on the head, when the embed needs naming as a kind. Omitted
+     *  where the title already says what the recording is. */
+    label?: string;
     title: string;
     /** Privacy-preserving embed URL, e.g. https://www.youtube-nocookie.com/embed/<id> */
     src: string;
     caption?: ReactNode;
     style?: CSSProperties;
+    /** Off when the embed sits inside a grid that already owns the width: the
+     *  bleed's negative right margin would otherwise pull it over its column. */
+    bleed?: boolean;
 }) {
     return (
-        <figure className="minddo-bleed" style={{ marginTop: 22, marginBottom: 26, ...style }}>
+        <figure className={bleed ? 'minddo-bleed' : undefined} style={{ marginTop: 22, marginBottom: 26, ...style }}>
             <div style={{ boxShadow: `inset 0 0 0 2px ${STEEL}`, background: T.canvas, overflow: 'hidden' }}>
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: 12,
                     padding: '0 14px', minHeight: 46, background: STEEL,
                 }}>
-                    <span style={{ ...MICRO_PLATE, color: SIGNAL, flexShrink: 0 }}>{label}</span>
+                    {label && <span style={{ ...MICRO_PLATE, color: SIGNAL, flexShrink: 0 }}>{label}</span>}
                     <span style={{
                         fontFamily: FONT, fontSize: TYPE.META, fontWeight: 700, fontStretch: '92%',
                         color: SIGN_WHITE, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',

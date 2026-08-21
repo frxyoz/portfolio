@@ -30,7 +30,15 @@ export const minddo = {
     lede: 'You give it a link to a student\'s project and about a hundred seconds later you get eleven files back: two screenshots, a recorded walkthrough of the site, narrated videos in English and Mandarin, copy written by Claude, a QR code, and a flyer that is ready to print.',
     // youtube-nocookie so the embed sets no cookie until playback starts.
     demoVideo: 'https://www.youtube-nocookie.com/embed/_IFdL_suGr0',
+    // The 2026-08-16 load test, recorded: the queue filling, KEDA taking the
+    // deployment from one pod to four, and the warm drain afterwards.
+    scalingVideo: 'https://www.youtube-nocookie.com/embed/vf6gnGhu7rk',
 };
+
+/** The three figures the load-test recording actually shows on screen, named
+ *  rather than restated so the scaling section reads them straight out of
+ *  {@link awsLoad} and the numbers can never drift apart. */
+export const clipMetrics = ['1 to 4 workers', 'Jobs completed', 'Scale-down'] as const;
 
 // The 2026-08-16 load test: 20 jobs at once against k3s on one t3.large.
 export const awsLoad: { value: string; label: string; note: string }[] = [
