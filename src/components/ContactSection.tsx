@@ -8,7 +8,7 @@ import { NewTabNote, SR_ONLY } from './concourse/srOnly';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import {
     SIGNAL, SIGNAL_DEEP, ENAMEL, ENAMEL_INK_SOFT, STEEL, SIGN_WHITE, SIGN_INK,
-    BOARD_INK_SOFT, GREEN_LAMP, RED_LAMP, SIGN, EASE_OUT, TYPE,} from '@/design/tokens';
+    BOARD_INK_SOFT, RED_LAMP, SIGN, EASE_OUT, TYPE,} from '@/design/tokens';
 
 const SOCIAL_ICON: Record<string, PictogramName> = {
     GitHub: 'github',
@@ -125,25 +125,7 @@ export default function ContactSection() {
                             margin: isMobile ? '20px 0 28px' : '26px 0 32px',
                         }} />
 
-                        {/* The status lamp. Green here means the same thing it means
-                            on the board: open and running. */}
                         <Reveal delay={0.1}>
-                            <span style={{
-                                display: 'inline-flex', alignItems: 'center', gap: 10,
-                                background: STEEL, color: GREEN_LAMP,
-                                padding: '9px 14px', marginBottom: 22,
-                                fontSize: TYPE.LABEL, fontWeight: 800, fontStretch: '88%',
-                                letterSpacing: '0.18em', textTransform: 'uppercase',
-                            }}>
-                                <span aria-hidden="true" style={{
-                                    width: 8, height: 8, background: GREEN_LAMP,
-                                    animation: 'lamp 2.4s ease-in-out infinite',
-                                }} />
-                                Open to internships
-                            </span>
-                        </Reveal>
-
-                        <Reveal delay={0.14}>
                             <p style={{
                                 fontSize: isMobile ? TYPE.BODY : TYPE.LEDE, lineHeight: 1.65,
                                 color: SIGN_WHITE, maxWidth: '38ch', marginBottom: 34,
@@ -153,7 +135,7 @@ export default function ContactSection() {
                             </p>
                         </Reveal>
 
-                        <Reveal delay={0.18}>
+                        <Reveal delay={0.14}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                                 {profile.socialLinks.map(s => (
                                     <a
