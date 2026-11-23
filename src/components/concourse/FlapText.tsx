@@ -102,6 +102,9 @@ export default function FlapText({
             className={className}
             style={{
                 display: 'inline-flex',
+                flexWrap: variant === 'bare' ? 'wrap' : 'nowrap',
+                maxWidth: '100%',
+                minWidth: 0,
                 gap: variant === 'cell' ? 2 : 0,
                 whiteSpace: 'pre',
                 position: 'relative',

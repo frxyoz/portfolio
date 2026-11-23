@@ -147,15 +147,15 @@ export const TABULAR: CSSProperties = {
  * which is a continuum, not a ramp. These are the only heights the home page
  * uses; the display lettering above them is clamped and fluid by nature.
  *
- * Roughly 1.12 between steps, which is tight enough that neighbouring ranks
- * stay distinguishable and loose enough that nothing needs a half-step. */
+ * The compact roles have an 11.2px floor at the default root size. Control
+ * and metadata share a size; weight, tracking and spacing distinguish their jobs. */
 export const TYPE = {
     /** Board column heads and the smallest plate lettering. */
-    MICRO: '0.58rem',
+    MICRO: '0.70rem',
     /** Chips, status lamps, plate labels — the system's workhorse caps size. */
-    LABEL: '0.66rem',
+    LABEL: '0.75rem',
     /** Anything you click: nav links, buttons, gates, social rows. */
-    CONTROL: '0.74rem',
+    CONTROL: '0.82rem',
     /** Years, counts, secondary rows, the rail clock. */
     META: '0.82rem',
     /** Supporting copy inside a panel. */
