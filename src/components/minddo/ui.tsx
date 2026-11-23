@@ -143,7 +143,7 @@ export function P({ children, style }: { children: ReactNode; style?: CSSPropert
     return (
         <p style={{
             fontFamily: FONT, fontSize: TYPE.BODY, fontWeight: 400,
-            color: T.body, lineHeight: 1.68, maxWidth: '68ch', marginBottom: 16, ...style,
+            color: T.body, lineHeight: 1.68, maxWidth: '68ch', textWrap: 'pretty', marginBottom: 16, ...style,
         }}>
             {children}
         </p>
@@ -155,7 +155,7 @@ export function C({ children }: { children: ReactNode }) {
         <code style={{
             fontFamily: MONO, fontSize: '0.86em', color: T.ink,
             background: T.surface, boxShadow: `inset 0 0 0 1px ${T.ruleStrong}`,
-            padding: '1px 5px', whiteSpace: 'nowrap',
+            padding: '1px 5px', overflowWrap: 'anywhere',
         }}>
             {children}
         </code>
@@ -318,10 +318,18 @@ export function Figure({
 }) {
     const [full, setFull] = useState(false);
     const dialogRef = useRef<HTMLDivElement>(null);
+    const expandRef = useRef<HTMLButtonElement>(null);
     const returnFocusTo = useRef<HTMLElement | null>(null);
 
     useEffect(() => {
-        if (!full) return;
+        if (!full) {
+            if (returnFocusTo.current) {
+                // The inline frame remounts on close; its old trigger is detached.
+                (expandRef.current ?? returnFocusTo.current).focus({ preventScroll: true });
+                returnFocusTo.current = null;
+            }
+            return;
+        }
         returnFocusTo.current = document.activeElement as HTMLElement;
 
         const fn = (e: KeyboardEvent) => {
@@ -347,7 +355,6 @@ export function Figure({
         return () => {
             window.removeEventListener('keydown', fn);
             document.body.style.overflow = '';
-            returnFocusTo.current?.focus();
         };
     }, [full]);
 
@@ -370,6 +377,7 @@ export function Figure({
                     </span>
                 </div>
                 <button
+                    ref={expandRef}
                     onClick={() => setFull(v => !v)}
                     style={{
                         ...CONTROL, color: SIGNAL,
@@ -398,12 +406,12 @@ export function Figure({
                 aria-label={`${title} diagram`}
                 style={{ overflowX: 'auto' }}
             >
-                <div style={{ minWidth: full ? undefined : minWidth, padding: 16 }}>{children}</div>
+                <div style={{ minWidth, padding: 16 }}>{children}</div>
             </div>
 
             {panel && (
                 <div style={{ padding: '0 16px 16px', borderTop: `1px solid ${T.ruleStrong}`, marginTop: -4 }}>
-                    <div style={{ paddingTop: 13 }}>{panel}</div>
+                    <div style={{ paddingTop: 13, fontSize: TYPE.COPY, maxWidth: '58ch', textWrap: 'pretty' }}>{panel}</div>
                 </div>
             )}
 
