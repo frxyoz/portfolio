@@ -10,7 +10,7 @@ export const profile: ProfileData = {
         {
             period: '2026',
             title: 'Software Engineering Intern',
-            org: 'SiteFit AI',
+            org: 'SiteFit',
             orgUrl: 'https://www.linkedin.com/in/sitefit-ai-48b2183b9',
             logo: '/sitefit.webp',
         },
