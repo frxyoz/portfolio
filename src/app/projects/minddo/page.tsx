@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import MinddoShowcase from '@/components/MinddoShowcase';
 
-const TITLE = 'MindDo Showcase — Olric Zeng';
+const TITLE = 'MindDo Showcase by Olric Zeng';
 const DESCRIPTION =
-    'An asynchronous, autoscaling media-generation pipeline: a student project URL goes in, a full parent-facing showcase package comes out. FastAPI, Celery, Playwright, Claude, Kubernetes + KEDA, deployed on AWS.';
+    'How I built MindDo, a tool that turns student projects into videos, screenshots and shareable showcases.';
 
 export const metadata: Metadata = {
     title: TITLE,
@@ -16,10 +16,10 @@ export const metadata: Metadata = {
         siteName: 'Olric Zeng',
         images: [
             {
-                url: 'https://olriczeng.com/og-image.png',
+                url: 'https://olriczeng.com/opengraph-image',
                 width: 1200,
                 height: 630,
-                alt: 'MindDo Showcase — Olric Zeng',
+                alt: 'MindDo Showcase by Olric Zeng',
             },
         ],
         type: 'article',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         title: TITLE,
         description: DESCRIPTION,
-        images: ['https://olriczeng.com/og-image.png'],
+        images: ['https://olriczeng.com/opengraph-image'],
     },
 };
 

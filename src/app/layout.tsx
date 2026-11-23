@@ -22,13 +22,15 @@ const archivo = Archivo({
    where it was — one hand-exported PNG, drifting away from the design it claims
    to show. `metadataBase` is what lets the generated route resolve to an
    absolute URL, which is the only kind an unfurl can fetch. */
+const description = "I'm Olric, a Computer Science student at Cornell. I build web apps and the infrastructure behind them.";
+
 export const metadata: Metadata = {
     metadataBase: new URL('https://olriczeng.com'),
     title: 'Olric Zeng',
-    description: 'Portfolio of Olric Zeng — Computer Science at Cornell. Full-stack and infrastructure projects.',
+    description,
     openGraph: {
         title: 'Olric Zeng',
-        description: 'Portfolio of Olric Zeng — Computer Science at Cornell. Full-stack and infrastructure projects.',
+        description,
         url: 'https://olriczeng.com',
         siteName: 'Olric Zeng',
         type: 'website',
@@ -36,7 +38,7 @@ export const metadata: Metadata = {
     twitter: {
         card: 'summary_large_image',
         title: 'Olric Zeng',
-        description: 'Portfolio of Olric Zeng — Computer Science at Cornell. Full-stack and infrastructure projects.',
+        description,
     },
 };
 

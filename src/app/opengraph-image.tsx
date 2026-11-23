@@ -14,7 +14,7 @@ import {
  * `clamp`. Archivo ships here as three static instances instead, vendored beside
  * this file so the build never depends on reaching Google. */
 
-export const alt = 'Olric Zeng — Computer Science at Cornell';
+export const alt = 'Olric Zeng, Computer Science at Cornell';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -65,7 +65,7 @@ export default async function Image() {
                         display: 'flex', marginTop: 22, color: SIGNAL_INK_SOFT,
                         fontSize: 25, fontWeight: 400, letterSpacing: '0.01em',
                     }}>
-                        Computer Science at Cornell — backend, infrastructure, and frontend.
+                        Computer Science at Cornell. Building web apps and infrastructure.
                     </div>
                 </div>
 
@@ -80,7 +80,7 @@ export default async function Image() {
                             IN PRODUCTION
                         </div>
                         <div style={{ display: 'flex', color: SIGNAL, fontSize: 22, fontWeight: 700, letterSpacing: '0.02em' }}>
-                            MindDo.AI — queue, workers, autoscaling
+                            MindDo.AI
                         </div>
                     </div>
                     <div style={{ display: 'flex', width: 1, height: 52, background: RULE_DARK }} />
