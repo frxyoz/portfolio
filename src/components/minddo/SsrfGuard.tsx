@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { T, FONT, MONO, Tone, Arrowheads, Figure } from './ui';
+import { TYPE } from '@/design/tokens';
 
 type Id = 'u' | 's' | 'h' | 'lit' | 'ipc' | 'dns' | 'all' | 'block' | 'ok' | 'nav' | 'sub' | 'recheck' | 'walk' | 'ok2' | 'block2';
 
@@ -127,14 +128,14 @@ export default function SsrfGuard() {
                             style={{
                                 display: 'flex', alignItems: 'baseline', gap: 10, textAlign: 'left',
                                 background: on ? T.surface : T.canvas,
-                                border: `1px solid ${on ? T.ink : T.rule}`, borderRadius: 4,
+                                border: `1px solid ${on ? T.ink : T.rule}`, borderRadius: 0,
                                 padding: '7px 11px', cursor: 'pointer', width: '100%',
                             }}
                         >
-                            <span style={{ fontFamily: MONO, fontSize: '0.76rem', color: on ? T.ink : T.body, wordBreak: 'break-all' }}>
+                            <span style={{ fontFamily: MONO, fontSize: TYPE.META, color: on ? T.ink : T.body, wordBreak: 'break-all' }}>
                                 {p.url}
                             </span>
-                            <span style={{ fontFamily: FONT, fontSize: '0.72rem', color: T.faint, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontFamily: FONT, fontSize: TYPE.LABEL, color: T.faint, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
                                 {p.note}
                             </span>
                         </button>
@@ -149,8 +150,8 @@ export default function SsrfGuard() {
                     <>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                             <span style={{
-                                fontFamily: FONT, fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.08em',
-                                textTransform: 'uppercase', padding: '3px 9px', borderRadius: 3,
+                                fontFamily: FONT, fontSize: TYPE.MICRO, fontWeight: 600, letterSpacing: '0.08em',
+                                textTransform: 'uppercase', padding: '3px 9px', borderRadius: 0,
                                 color: probe.verdict === 'blocked' ? T.bad.text : T.good.text,
                                 background: probe.verdict === 'blocked' ? T.bad.fill : T.good.fill,
                                 border: `1px solid ${probe.verdict === 'blocked' ? T.bad.stroke : T.good.stroke}`,
@@ -158,7 +159,7 @@ export default function SsrfGuard() {
                             }}>
                                 {probe.verdict}
                             </span>
-                            <span style={{ fontFamily: MONO, fontSize: '0.76rem', color: T.muted }}>
+                            <span style={{ fontFamily: MONO, fontSize: TYPE.META, color: T.muted }}>
                                 {Math.min(step, probe.path.length)} / {probe.path.length} checks
                             </span>
                         </div>
