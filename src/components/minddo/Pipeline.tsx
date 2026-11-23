@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { T, FONT, MONO, Arrowheads, Figure } from './ui';
+import { T, FONT, MONO, Arrowheads, Figure, useFocus } from './ui';
+import { TYPE } from '@/design/tokens';
 
 type Id = 'capture' | 'demo' | 'qr' | 'ai' | 'flyer' | 'video' | 'persist';
 
@@ -15,7 +16,7 @@ interface Stage {
     detail: string[];
 }
 
-const W = 146, H = 66;
+const W = 146, H = 76;
 
 const STAGES: Stage[] = [
     {
@@ -101,10 +102,11 @@ function path(pos: Record<Id, [number, number]>, [a, b]: [Id, Id]) {
 export default function Pipeline() {
     const reduced = useReducedMotion();
     const [mode, setMode] = useState<'seq' | 'par'>('seq');
-    const [hover, setHover] = useState<Id | null>(null);
+    const { active, bind } = useFocus<Id>();
+    const detailId = useId();
     const pos = mode === 'seq' ? SEQ : PAR;
     const edges = mode === 'seq' ? SEQ_EDGES : PAR_EDGES;
-    const sel = STAGES.find(s => s.id === hover) ?? null;
+    const sel = STAGES.find(s => s.id === active) ?? null;
 
     const controls = (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 14 }}>
@@ -114,18 +116,19 @@ export default function Pipeline() {
                         <button
                             key={m}
                             onClick={() => setMode(m)}
+                            aria-pressed={on}
                             style={{
-                                fontFamily: FONT, fontSize: '0.75rem', fontWeight: 500,
+                                fontFamily: FONT, fontSize: TYPE.CONTROL, fontWeight: 500,
                                 color: on ? T.canvas : T.body, background: on ? T.ink : T.canvas,
-                                border: `1px solid ${on ? T.ink : T.ruleStrong}`, borderRadius: 4,
-                                padding: '5px 11px', cursor: 'pointer',
+                                border: `1px solid ${on ? T.ink : T.ruleStrong}`, borderRadius: 0,
+                                padding: '5px 11px', minHeight: 44, cursor: 'pointer',
                             }}
                         >
                             {label}
                         </button>
                     );
                 })}
-                <span style={{ fontFamily: FONT, fontSize: '0.75rem', color: T.muted }}>
+                <span style={{ fontFamily: FONT, fontSize: TYPE.META, color: T.muted }}>
                     {mode === 'seq'
                         ? 'Seven steps in order, three of which share no data with each other.'
                         : 'The real chain is capture, AI, video.'}
@@ -134,12 +137,12 @@ export default function Pipeline() {
     );
 
     const panel = (
-        <div style={{  minHeight: 96, fontFamily: FONT }}>
+        <div id={detailId} aria-live="polite" aria-atomic="true" style={{ minHeight: 96, fontFamily: FONT }}>
                 {sel ? (
                     <>
                         <div style={{ fontSize: '0.92rem', fontWeight: 600, color: T.ink, marginBottom: 8 }}>
                             {sel.title}
-                            <span style={{ fontFamily: MONO, fontSize: '0.74rem', color: T.muted, marginLeft: 10, fontWeight: 400 }}>
+                            <span style={{ fontFamily: MONO, fontSize: TYPE.META, color: T.muted, marginLeft: 10, fontWeight: 400 }}>
                                 {sel.deps.length ? `depends on ${sel.deps.join(', ')}` : 'depends on the URL only'}
                             </span>
                         </div>
@@ -171,22 +174,22 @@ export default function Pipeline() {
             minWidth={1120}
             caption={
                 <>
-                    These are layout positions rather than timing bars. End to end it measures 102.7 s, and roughly 25 s of that is avoidable.
+                    Focus or hover a stage for details; select it to keep them open. These are layout positions rather than timing bars. End to end it measures 102.7 s, and roughly 25 s of that is avoidable.
                 </>
             } controls={controls} panel={panel}
         >
             <svg viewBox="0 0 1120 296"
-                role="img"
+                role="group"
                 aria-label="The generation pipeline as a chain of stages from URL capture through screenshotting, the Claude call, narration, video assembly and flyer render, shown both as built in sequence and as it could run in parallel." style={{ width: '100%', display: 'block' }}>
                 <Arrowheads />
 
                 {edges.map(([a, b]) => {
-                    const on = hover === a || hover === b;
+                    const on = active === a || active === b;
                     return (
                         <motion.path
                             key={`${mode}-${a}-${b}`}
                             initial={false}
-                            animate={{ opacity: hover && !on ? 0.15 : 1 }}
+                            animate={{ opacity: active && !on ? 0.15 : 1 }}
                             transition={{ duration: 0.25 }}
                             d={path(pos, [a, b])}
                             fill="none"
@@ -199,9 +202,11 @@ export default function Pipeline() {
 
                 {STAGES.map(s => {
                     const [x, y] = pos[s.id];
-                    const on = hover === s.id;
-                    const dim = hover !== null && !on;
+                    const on = active === s.id;
+                    const dim = active !== null && !on;
                     const independent = s.deps.length === 0;
+                    const split = s.sub.length > 18 ? s.sub.indexOf(' ') : -1;
+                    const subtitle = split < 0 ? [s.sub] : [s.sub.slice(0, split), s.sub.slice(split + 1)];
                     return (
                         <motion.g
                             key={s.id}
@@ -214,8 +219,8 @@ export default function Pipeline() {
                             transition={reduced
                                 ? { duration: 0.01 }
                                 : { type: 'spring', stiffness: 210, damping: 26 }}
-                            onMouseEnter={() => setHover(s.id)}
-                            onMouseLeave={() => setHover(null)}
+                            {...bind(s.id, `Step ${s.step}: ${s.title}`)}
+                            aria-describedby={active === s.id ? detailId : undefined}
                             style={{ cursor: 'pointer' }}
                         >
                             <rect
@@ -224,15 +229,17 @@ export default function Pipeline() {
                                 stroke={on ? T.ink : mode === 'par' && independent ? T.good.stroke : T.tier.stroke}
                                 strokeWidth={on ? 2 : 1.3}
                             />
-                            <text x={11} y={19} style={{ fontFamily: MONO, fontSize: 10.8, fill: T.accent }}>step {s.step}</text>
+                            <text x={11} y={19} style={{ fontFamily: MONO, fontSize: 11.2, fill: T.accent }}>step {s.step}</text>
                             <text x={11} y={38} style={{ fontFamily: FONT, fontSize: 12, fontWeight: 600, fill: T.ink }}>{s.title}</text>
-                            <text x={11} y={54} style={{ fontFamily: MONO, fontSize: 10.6, fill: T.muted }}>{s.sub}</text>
+                            <text x={11} y={54} style={{ fontFamily: MONO, fontSize: 11.2, fill: T.muted }}>
+                                {subtitle.map((line, index) => <tspan key={line} x={11} dy={index === 0 ? 0 : 13}>{line}</tspan>)}
+                            </text>
                         </motion.g>
                     );
                 })}
 
                 {mode === 'par' && (
-                    <text x={30} y={286} style={{ fontFamily: FONT, fontSize: 10.8, fill: T.good.text }}>
+                    <text x={30} y={286} style={{ fontFamily: FONT, fontSize: 11.2, fill: T.good.text }}>
                         green: depends only on the submitted URL
                     </text>
                 )}
