@@ -361,37 +361,58 @@ export function MindMapOverlay({ open, onClose }: { open: boolean; onClose: () =
         return () => el.removeEventListener('wheel', onWheel);
     }, [open]);
 
-    /* Drag to walk, which is what the grab cursor is promising. */
+    /* Mouse dragging supplements the browser's own touch scrolling. Sharing a
+       drag state with touch leaves it stuck when native panning cancels the
+       pointer stream, so only one primary mouse pointer can own this gesture. */
     useEffect(() => {
         const el = scrollRef.current;
         if (!el || !open) return;
-        let down = false;
+        let pointerId: number | null = null;
         let startX = 0;
         let startLeft = 0;
 
+        const reset = () => {
+            const captured = pointerId;
+            pointerId = null;
+            el.style.cursor = 'grab';
+            if (captured !== null && el.hasPointerCapture(captured)) {
+                el.releasePointerCapture(captured);
+            }
+        };
         const onDown = (e: PointerEvent) => {
-            if (e.button !== 0) return;
+            if (e.pointerType !== 'mouse' || !e.isPrimary || e.button !== 0 || pointerId !== null) return;
             const target = e.target as HTMLElement;
             /* Never steal a press meant for a link or a button. */
             if (target.closest('a, button')) return;
-            down = true;
+            pointerId = e.pointerId;
             startX = e.clientX;
             startLeft = el.scrollLeft;
             el.style.cursor = 'grabbing';
+            el.setPointerCapture(e.pointerId);
         };
         const onMove = (e: PointerEvent) => {
-            if (!down) return;
+            if (e.pointerId !== pointerId) return;
+            if (!(e.buttons & 1)) { reset(); return; }
             el.scrollLeft = startLeft - (e.clientX - startX);
         };
-        const onUp = () => { down = false; el.style.cursor = 'grab'; };
+        const onEnd = (e: PointerEvent) => {
+            if (e.pointerId === pointerId) reset();
+        };
 
         el.addEventListener('pointerdown', onDown);
+        el.addEventListener('lostpointercapture', onEnd);
         window.addEventListener('pointermove', onMove);
-        window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointerup', onEnd);
+        window.addEventListener('pointercancel', onEnd);
+        window.addEventListener('blur', reset);
         return () => {
             el.removeEventListener('pointerdown', onDown);
+            el.removeEventListener('lostpointercapture', onEnd);
             window.removeEventListener('pointermove', onMove);
-            window.removeEventListener('pointerup', onUp);
+            window.removeEventListener('pointerup', onEnd);
+            window.removeEventListener('pointercancel', onEnd);
+            window.removeEventListener('blur', reset);
+            reset();
         };
     }, [open]);
 
