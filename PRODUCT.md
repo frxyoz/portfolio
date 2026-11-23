@@ -59,8 +59,9 @@ Postgres) and frontend (React, Flutter) in the same person, evidenced on both si
 
 **Routes**
 
-- `/` — single-page composition: hero, about/timeline, projects, contact. Projects open in a
-  full-screen slide-up overlay with keyboard navigation (Escape closes, arrows move between
+- `/` — single-page composition: hero, about/timeline, projects, contact. MindDo links to its
+  standalone case study; the other four projects open in a full-screen slide-up overlay with
+  keyboard navigation (Escape closes, arrows move between
   projects); `NavBar` and the overlay coordinate through `OverlayContext`.
 - `/projects/minddo` — a standalone long-form engineering case study with its own sticky table of
   contents, seven interactive SVG diagrams, and an embedded demo video.
@@ -68,7 +69,7 @@ Postgres) and frontend (React, Flutter) in the same person, evidenced on both si
 **Technical**
 
 - Next.js 16 App Router, React 19, TypeScript, Tailwind v4 (CSS-based `@theme`, no
-  `tailwind.config.ts`), framer-motion, three.js. Node 20.
+  `tailwind.config.ts`), and framer-motion.
 - Content lives in `src/data/` (`profile.ts`, `projects.ts`, `minddo.ts`) separated from
   presentation. New project entries are data edits.
 - Contact form posts to Formspree via `NEXT_PUBLIC_FORMSPREE_KEY`.
@@ -78,7 +79,7 @@ Postgres) and frontend (React, Flutter) in the same person, evidenced on both si
 **Undecided / open**
 
 - Whether other projects get MindDo-depth standalone case study pages, or whether MindDo stays the
-  single deep artifact. Currently MindDo is the only one; the other three live in the overlay.
+  single deep artifact. Currently MindDo is the only one; the other four live in the overlay.
 
 ## Brand Commitments
 
@@ -88,18 +89,16 @@ Postgres) and frontend (React, Flutter) in the same person, evidenced on both si
   via `pathLength` bound to `scrollYProgress` as the hero recedes. The user named this explicitly
   as fixed. It is the site's single most memorable moment and, given that success is defined as
   being remembered, it is load-bearing rather than ornamental.
-- **Factual content.** The timeline (Hack4Impact, Cornell, Coding Mind), the three awards, org
+- **Factual content.** The timeline (SiteFit, Hack4Impact, Cornell, Coding Mind), the three awards, org
   names and logos, the MindDo measurements. All real and verified. Nothing here may be embellished,
   softened, rounded, or padded with invented context.
 
-**Incumbent but explicitly not binding:**
+**Visual authority:**
 
-The current visual world — Cormorant Garamond display type, DM Sans body, deep gold `#b8860b`,
-white canvas with warm off-white alternating sections, art-deco corner ornaments, the dark contact
-section — was offered as a constraint and *not* selected. Treat it as the existing implementation
-and as evidence, not as a commitment. The same applies to the MindDo case study's deliberate
-divergence from that world (single UI typeface, neutral ink palette, its own diagram colors): it
-is intentional and it works, but it is not pinned.
+The incumbent visual system is recorded in `DESIGN.md` (Concourse) and implemented in
+`src/design/tokens.ts`. Descriptions of the earlier visual world no longer represent this
+codebase. The signature and factual-content commitments above remain binding; this product
+record does not authorize a redesign or establish additional visual constraints.
 
 **Voice.** First person, plain, specific. Measured claims with the caveats attached — the case
 study reports a benchmark number it then disqualifies, and states which results prove nothing.
@@ -126,15 +125,19 @@ reintroduce it.
   2024.* Source: `github.com/frxyoz/noteform`.
 - **Coding Mind internship** (2024) — AI nutrition app, Flutter/Firebase/Flask, classifying 100K+
   food items.
-- Resume at `/resume.pdf`. Screenshots in `public/`. Org logos for Hack4Impact, Cornell, Coding
-  Mind.
+- **SiteFit internship** (2026) — Software Engineering Intern, recorded in
+  `src/data/profile.ts`, with the organization logo at `public/sitefit.webp`. Responsibilities
+  and results are not specified in that timeline entry; do not invent them.
+- Resume at `/resume.pdf`. Screenshots in `public/`. Org logos for SiteFit, Hack4Impact, Cornell,
+  Coding Mind.
 
 **Absences future work must not fabricate:**
 
 - No testimonials, references, quotes, or endorsements from anyone.
 - No traffic, user, or download numbers for any project.
 - No public repository for MindDo (`githubUrl` is deliberately empty).
-- No professional employment beyond the listed internship and the Hack4Impact role.
+- No professional employment beyond the listed SiteFit and Coding Mind internships and the
+  Hack4Impact role.
 - No claim that any project has real users. MindDo's load numbers come from a synthetic load
   generator, and the case study says so.
 
@@ -157,10 +160,13 @@ reintroduce it.
 ## Accessibility & Inclusion
 
 No product-specific standard has been established. Baseline expectations apply: keyboard operation
-of the project overlay (already implemented), and sufficient contrast on the gold accent against
-white.
+of the project overlay (already implemented), sufficient contrast, and respect for reduced-motion
+preferences.
 
-**Known gap:** `prefers-reduced-motion` is not honored anywhere in the codebase — no CSS media
-query, no `useReducedMotion`. The site runs a scroll-traced signature, scroll-driven blur and
-scale, a custom cursor, framer-motion reveals, and three.js. For a visitor with vestibular
-sensitivity this is currently unmitigated. Recorded as a fact, not scheduled as work.
+Reduced-motion handling is implemented through `prefers-reduced-motion` media queries in
+`src/app/globals.css`, framer-motion's `useReducedMotion`, and the hydration-safe
+`src/hooks/useReducedMotionSafe.ts`. These provide reduced treatments for the hero and signature,
+reveals, navigation, project transitions, loading curtain, split-flap text, corridor, and custom
+cursor. The cursor is limited to fine-pointer devices; its lagging frame is omitted under reduced
+motion, and the MindDo page uses the system cursor. This records implementation evidence, not a
+claim of a complete accessibility audit or conformance certification.
