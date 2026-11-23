@@ -38,7 +38,7 @@ const NODES: Node[] = [
         detail: 'Ships with k3s, so ingress matches the local k3d cluster.',
     },
     {
-        id: 'api', x: 386, y: 136, w: 122, h: 46, tone: 'store', lines: ['Deployment api x2', '`imagePullPolicy: Never'],
+        id: 'api', x: 386, y: 136, w: 122, h: 46, tone: 'store', lines: ['Deployment api x2', '`imagePullPolicy:', '`Never'],
         detail: 'The image is imported straight into containerd, so nothing pulls from a registry. These pods originally declared no resources at all, which made them BestEffort and therefore the first thing the node killed under memory pressure, even though the workers caused it.',
     },
     {
@@ -125,15 +125,15 @@ export default function AwsPlan() {
             caption="This is what was deployed. The 20-job load test in section 09 ran against this cluster; the 102.7 s single-job baseline is still a docker compose number." panel={panel}
         >
             <svg viewBox="0 0 920 400"
-                role="img"
+                role="group"
                 aria-label="AWS topology in a single region: the EC2 instance running k3s with the API and worker pods, alongside the managed Postgres and S3, and what sits inside versus outside the VPC." style={{ width: '100%', display: 'block' }} onClick={() => setPinned(null)}>
                 <Arrowheads />
 
                 <rect x={196} y={64} width={716} height={312} fill="none" stroke={T.ruleStrong} strokeWidth={1.3} strokeDasharray="5 4" />
-                <text x={206} y={80} style={{ fontFamily: FONT, fontSize: 10.5, fontWeight: 600, fill: T.muted }}>AWS, single region</text>
+                <text x={206} y={80} style={{ fontFamily: FONT, fontSize: 12, fontWeight: 600, fill: T.muted }}>AWS, single region</text>
 
                 <rect x={240} y={96} width={424} height={264} fill={T.surface} stroke={T.rule} strokeWidth={1.2} />
-                <text x={250} y={112} style={{ fontFamily: FONT, fontSize: 10, fontWeight: 600, fill: T.muted }}>
+                <text x={250} y={112} style={{ fontFamily: FONT, fontSize: 12, fontWeight: 600, fill: T.muted }}>
                     EC2 t3.large: 2 vCPU, 8 GiB, 30 GB gp3
                 </text>
 
@@ -147,7 +147,7 @@ export default function AwsPlan() {
                             <path d={e.d} fill="none" stroke={on ? T.accent : T.ruleStrong} strokeWidth={on ? 1.9 : 1.2}
                                 strokeDasharray={e.dash ? '4 4' : undefined} markerEnd={`url(#${on ? 'ah-on' : 'ah'})`} />
                             {e.label && (
-                                <text x={e.lx} y={e.ly} style={{ fontFamily: FONT, fontSize: 10.4, fill: on ? T.accent : T.faint }}>{e.label}</text>
+                                <text x={e.lx} y={e.ly} style={{ fontFamily: FONT, fontSize: 11.5, fill: on ? T.accent : T.faint }}>{e.label}</text>
                             )}
                         </g>
                     );
@@ -164,11 +164,11 @@ export default function AwsPlan() {
                                 <text
                                     key={i}
                                     x={n.x + n.w / 2}
-                                    y={n.y + (n.h - (n.lines.length - 1) * 12) / 2 + 4 + i * 12}
+                                    y={n.y + (n.h - (n.lines.length - 1) * 13) / 2 + 4 + i * 13}
                                     textAnchor="middle"
                                     style={{
                                         fontFamily: l.startsWith('`') ? MONO : FONT,
-                                        fontSize: l.startsWith('`') ? 8.6 : 9.6,
+                                        fontSize: 11.2,
                                         fontWeight: i === 0 ? 600 : 400,
                                         fill: tone.text,
                                     }}
