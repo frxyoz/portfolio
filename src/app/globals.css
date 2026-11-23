@@ -127,12 +127,32 @@ body.overlay-open { overflow: hidden; }
 .oz-rail-brand { width: 68px; font-size: 1.14rem; }  /* TYPE.LEDE */
 .oz-rail-place { display: flex; }
 .oz-rail-link {
-  font-size: 0.74rem;  /* TYPE.CONTROL */
+  font-size: 0.82rem;  /* TYPE.CONTROL */
   letter-spacing: 0.16em;
   font-stretch: 88%;
   padding: 0 16px;
 }
 .oz-rail-clock { padding-left: 20px; margin-left: 12px; gap: 8px; }
+.oz-rail-links { display: flex; align-items: stretch; }
+.oz-rail-links[hidden] { display: none; }
+.oz-rail-measure { position: absolute; right: 100%; visibility: hidden; pointer-events: none; display: flex; width: max-content; }
+.oz-rail-measure .oz-rail-link { font-family: inherit; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+.oz-rail-menu {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  font: inherit; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--color-signal); background: transparent;
+  border: 0; padding: 0 12px; min-height: 44px; cursor: pointer;
+}
+.oz-rail-compact .oz-rail-place { position: absolute; visibility: hidden; pointer-events: none; }
+.oz-rail-compact .oz-rail-links:not([hidden]) {
+  position: absolute; top: 100%; inset-inline: 0; display: grid;
+  background: var(--color-steel); border-bottom: 2px solid var(--color-signal);
+  padding: 8px 12px;
+}
+.oz-rail-compact .oz-rail-links .oz-rail-link {
+  font-size: 0.82rem; padding: 12px; min-height: 44px; white-space: normal;
+  overflow-wrap: anywhere; text-align: start;
+}
 
 @media (max-width: 767px) {
   .oz-rail { padding: 0 10px 0 0; }

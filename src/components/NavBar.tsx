@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useSyncExternalStore } from 'react';
+import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { useOverlay } from '@/contexts/OverlayContext';
 import Pictogram from './concourse/Pictogram';
@@ -67,6 +67,52 @@ export default function NavBar() {
   const active = useActiveSection(['hero', 'about', 'projects', 'contact']);
   const { overlayOpen, closeOverlay } = useOverlay();
   const reduced = useReducedMotion();
+  const railRef = useRef<HTMLElement>(null);
+  const menuRef = useRef<HTMLButtonElement>(null);
+  const [compact, setCompact] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Measure the full lettering independently of the menu layout. This also
+  // responds to user font enlargement, which viewport breakpoints miss.
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+    const measure = () => {
+      const width = (selector: string) => {
+        const el = rail.querySelector<HTMLElement>(selector);
+        if (!el) return 0;
+        const css = getComputedStyle(el);
+        return el.getBoundingClientRect().width + parseFloat(css.marginLeft) + parseFloat(css.marginRight);
+      };
+      const css = getComputedStyle(rail);
+      const needed = width('.oz-rail-brand') + width('.oz-rail-place')
+        + width('.oz-rail-measure') + width('.oz-rail-clock')
+        + parseFloat(css.paddingLeft) + parseFloat(css.paddingRight);
+      setCompact(needed > rail.clientWidth);
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(rail);
+    rail.querySelectorAll<HTMLElement>('.oz-rail-measure, .oz-rail-brand, .oz-rail-place, .oz-rail-clock')
+      .forEach(el => observer.observe(el));
+    measure();
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onPointer = (e: PointerEvent) => {
+      if (!railRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setMenuOpen(false); menuRef.current?.focus(); }
+    };
+    document.addEventListener('pointerdown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
 
   /* `scroll-behavior: auto` in the reduced-motion media query does not reach
      this: a `behavior: 'smooth'` passed to scrollTo wins over the stylesheet.
@@ -98,7 +144,7 @@ export default function NavBar() {
        materialises on scroll belongs to a world where the page is the subject;
        here the rail is a fixed piece of the building, and buildings do not
        fade in. */
-    <nav aria-label="Sections" className="oz-rail" style={{
+    <nav ref={railRef} aria-label="Sections" className={`oz-rail${compact ? ' oz-rail-compact' : ''}`} style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 300,
       background: STEEL,
       borderBottom: `1px solid ${STEEL_SOFT}`,
@@ -139,13 +185,22 @@ export default function NavBar() {
 
       <div style={{ flex: 1 }} />
 
-      <div style={{ display: 'flex', alignItems: 'stretch', gap: 0 }}>
+      <div className="oz-rail-measure" aria-hidden="true" inert>
+        {LINKS.map(l => <span key={l.id} className="oz-rail-link">{l.label}</span>)}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, minWidth: 0 }}>
+        {compact && <button ref={menuRef} type="button" className="oz-rail-menu"
+          aria-expanded={menuOpen} aria-controls="oz-section-links"
+          onClick={() => setMenuOpen(open => !open)}>
+          Menu <Pictogram name={menuOpen ? 'arrow-up' : 'arrow-down'} size={13} />
+        </button>}
+        <div id="oz-section-links" className="oz-rail-links" hidden={compact && !menuOpen}>
         {LINKS.map(l => {
           const isActive = active === l.id && !overlayOpen;
           return (
             <button
               key={l.id}
-              onClick={() => scrollTo(l.id)}
+              onClick={() => { scrollTo(l.id); setMenuOpen(false); if (compact) menuRef.current?.focus(); }}
               aria-current={isActive ? 'true' : undefined}
               className="oz-rail-link"
               style={{
@@ -169,6 +224,8 @@ export default function NavBar() {
             </button>
           );
         })}
+
+        </div>
 
         {/* The clock never yields: a board that clips its own time is a broken
             board, so this block holds its width and the links give ground. */}
