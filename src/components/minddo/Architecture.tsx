@@ -365,7 +365,7 @@ export default function Architecture() {
             panel={panel}
         >
             <svg viewBox={`0 0 1420 ${HEIGHT}`}
-                role="img"
+                role="group"
                 aria-label="System architecture: the browser and API tier, the Redis broker, the Celery worker pool, and the Postgres and S3 stores, with the request and job paths drawn between them." style={{ width: '100%', display: 'block' }} onClick={() => setPinned(null)}>
                 <Arrowheads />
 

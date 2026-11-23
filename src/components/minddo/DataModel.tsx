@@ -88,7 +88,7 @@ export default function DataModel() {
             caption="Hover a table for what it is responsible for." panel={panel}
         >
             <svg viewBox="0 0 990 396"
-                role="img"
+                role="group"
                 aria-label="Data model and the storage split: the Postgres tables and their relations on one side, the S3 object layout on the other, with which artifact lives where." style={{ width: '100%', display: 'block' }} onClick={() => setPinned(null)}>
                 <Arrowheads />
 
