@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { T, FONT, CONTROL, Arrowheads, Figure } from './ui';
+import { useId, useState } from 'react';
+import { T, FONT, CONTROL, Arrowheads, Figure, useFocus } from './ui';
 import { STEEL, SIGNAL, TYPE, TABULAR, EASE_OUT } from '@/design/tokens';
 
 const LANES = [
@@ -64,12 +64,13 @@ const TOP = 78;
 const GAP = 31;
 
 export default function Lifecycle() {
-    const [hover, setHover] = useState<number | null>(null);
+    const { active, bind, setPinned } = useFocus<string>();
+    const detailId = useId();
     const [phase, setPhase] = useState<Phase | null>(null);
     const height = TOP + STEPS.length * GAP + 26;
 
-    const lit = (s: Step) => (hover ? s.n === hover : phase ? s.phase === phase : true);
-    const sel = STEPS.find(s => s.n === hover) ?? null;
+    const lit = (s: Step) => (active ? String(s.n) === active : phase ? s.phase === phase : true);
+    const sel = STEPS.find(s => String(s.n) === active) ?? null;
 
     const controls = (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
@@ -78,7 +79,10 @@ export default function Lifecycle() {
                     return (
                         <button
                             key={p.id}
-                            onClick={() => setPhase(on ? null : p.id)}
+                            onClick={() => {
+                                setPinned(null);
+                                setPhase(on ? null : p.id);
+                            }}
                             aria-pressed={on}
                             style={{
                                 ...CONTROL,
@@ -100,7 +104,7 @@ export default function Lifecycle() {
     );
 
     const panel = (
-        <div style={{  minHeight: 62, fontFamily: FONT }}>
+        <div id={detailId} aria-live="polite" aria-atomic="true" style={{ minHeight: 62, fontFamily: FONT }}>
                 {sel?.detail ? (
                     <p style={{ fontSize: TYPE.COPY, color: T.body, lineHeight: 1.62 }}>
                         <span style={{ fontFamily: FONT, fontSize: TYPE.META, fontWeight: 700, fontStretch: '88%', letterSpacing: '0.06em', color: T.accent, marginRight: 9, ...TABULAR }}>
@@ -121,10 +125,10 @@ Three messages were bugs first: late acks (10), the re-validated redirect chain 
             label="Fig 2"
             title="Request lifecycle"
             minWidth={1200}
-            caption="Hover a message for the reasoning. Phase buttons dim the rest." controls={controls} panel={panel}
+            caption="Focus or hover a message for the reasoning; select it to keep the details open. Phase buttons dim the rest." controls={controls} panel={panel}
         >
             <svg viewBox={`0 0 1200 ${height}`}
-                role="img"
+                role="group"
                 aria-label="Request lifecycle across four lanes — client, API, broker and worker — tracing one submission from POST through queueing, polling and completion." style={{ width: '100%', display: 'block' }}>
                 <Arrowheads />
 
@@ -141,7 +145,7 @@ Three messages were bugs first: late acks (10), the re-validated redirect chain 
                 {STEPS.map((s, i) => {
                     const y = TOP + i * GAP;
                     const on = lit(s);
-                    const hot = hover === s.n;
+                    const hot = active === String(s.n);
                     const x1 = LX[s.from];
                     const x2 = LX[s.to];
                     const color = hot ? T.accent : s.kind === 'alt' ? T.bad.stroke : s.kind === 'return' ? T.good.stroke : T.ruleStrong;
@@ -151,9 +155,9 @@ Three messages were bugs first: late acks (10), the re-validated redirect chain 
                         <g
                             key={s.n}
                             opacity={on ? 1 : 0.25}
-                            onMouseEnter={() => setHover(s.n)}
-                            onMouseLeave={() => setHover(null)}
-                            style={{ cursor: 'default', transition: 'opacity .16s' }}
+                            {...bind(String(s.n), `Message ${s.n}: ${s.text}`)}
+                            aria-describedby={active === String(s.n) ? detailId : undefined}
+                            style={{ cursor: 'pointer', transition: 'opacity .16s' }}
                         >
                             <rect x={16} y={y - 15} width={1170} height={GAP - 4} fill={hot ? T.accentSoft : 'transparent'} />
                             <text x={26} y={y + 4} style={{ fontFamily: FONT, fontSize: 11.5, fontWeight: 700, fontStretch: '88%', letterSpacing: '0.06em', fontVariantNumeric: 'tabular-nums', fill: hot ? T.accent : T.faint }}>
@@ -167,7 +171,7 @@ Three messages were bugs first: late acks (10), the re-validated redirect chain 
                                         fill="none" stroke={color} strokeWidth={hot ? 1.8 : 1.2}
                                         markerEnd={`url(#${hot ? 'ah-on' : 'ah'})`}
                                     />
-                                    <text x={x1 + 42} y={y + 3} style={{ fontFamily: FONT, fontSize: 10.8, fill: textColor, fontWeight: hot ? 600 : 400 }}>
+                                    <text x={x1 + 42} y={y + 3} style={{ fontFamily: FONT, fontSize: 11.2, fill: textColor, fontWeight: hot ? 600 : 400 }}>
                                         {s.text}
                                     </text>
                                 </>
@@ -183,7 +187,7 @@ Three messages were bugs first: late acks (10), the re-validated redirect chain 
                                         x={(x1 + x2) / 2}
                                         y={y - 6}
                                         textAnchor="middle"
-                                        style={{ fontFamily: FONT, fontSize: 10.8, fill: textColor, fontWeight: hot ? 600 : 400 }}
+                                        style={{ fontFamily: FONT, fontSize: 11.2, fill: textColor, fontWeight: hot ? 600 : 400 }}
                                     >
                                         {s.text}
                                     </text>
