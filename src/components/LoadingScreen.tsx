@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import FlapText from './concourse/FlapText';
-import { SIGNAL, STEEL, BOARD, SIGN, TYPE } from '@/design/tokens';
+import TunnelScene from './concourse/TunnelScene';
+import { SIGN } from '@/design/tokens';
 
 /* Only the hero portrait gates the reveal — it is the one image the first
    viewport actually paints, and layout.tsx already preloads it at high priority.
@@ -30,11 +30,11 @@ const DEFERRED = [
 ];
 
 const TOTAL = BLOCKING.length;
-const MIN_MS = 700;
+const MIN_MS = 650;
 /* Hard ceiling. Without it a single stalled request holds the whole site
    behind a blank screen with no way out. */
-const MAX_MS = 2500;
-const FADE_MS = 450;
+const MAX_MS = 1200;
+const FADE_MS = 500;
 const SK = 'oz-loaded';
 
 function warm(src: string) {
@@ -50,6 +50,24 @@ function warmHero(onSettled: () => void) {
     img.sizes = BLOCKING_SIZES;
     img.srcset = BLOCKING_SRCSET;
     img.src = '/subject.webp';
+    return () => { img.onload = img.onerror = null; };
+}
+
+function revealHero(animate: boolean) {
+    const root = document.documentElement;
+    if (animate) {
+        root.dataset.arrival = 'hero';
+        const timer = window.setTimeout(() => { delete root.dataset.arrival; }, 1000);
+        window.dispatchEvent(new Event('oz:arrival'));
+        return () => {
+            window.clearTimeout(timer);
+            if (root.dataset.arrival === 'hero') delete root.dataset.arrival;
+        };
+    } else {
+        delete root.dataset.arrival;
+    }
+    window.dispatchEvent(new Event('oz:arrival'));
+    return () => {};
 }
 
 export default function LoadingScreen() {
@@ -60,19 +78,23 @@ export default function LoadingScreen() {
     const reduced = useReducedMotion();
     const [visible, setVisible] = useState(true);
     const [fading, setFading] = useState(false);
-    const [loaded, setLoaded] = useState(0);
-    // Flipped one frame after mount so the bar has a value to animate away from.
-    const [crept, setCrept] = useState(false);
+    const dismissed = useRef(false);
+    const cancelIntro = useRef<() => void>(() => {});
+    const cancelReveal = useRef<() => void>(() => {});
+    const reveal = useCallback((animate: boolean) => {
+        cancelReveal.current();
+        cancelReveal.current = revealHero(animate);
+    }, []);
 
-    useEffect(() => {
-        const id = requestAnimationFrame(() => setCrept(true));
-        return () => cancelAnimationFrame(id);
+    useEffect(() => () => {
+        cancelIntro.current();
+        cancelReveal.current();
     }, []);
 
     useEffect(() => {
-        if (reduced) { setVisible(false); DEFERRED.forEach(warm); return; }
+        if (reduced) { setVisible(false); reveal(false); DEFERRED.forEach(warm); return; }
         try {
-            if (sessionStorage.getItem(SK)) { setVisible(false); return; }
+            if (sessionStorage.getItem(SK)) { setVisible(false); reveal(false); return; }
         } catch { /* private browsing — show screen */ }
 
         let isMounted = true;
@@ -80,18 +102,24 @@ export default function LoadingScreen() {
         let minTimerDone = false;
         let imagesDone = false;
         let finished = false;
+        let fadeTimer: ReturnType<typeof setTimeout> | undefined;
+        let idleTimer: number | undefined;
+        let idleFallback: ReturnType<typeof setTimeout> | undefined;
+        let cancelHero: (() => void) | undefined;
 
         function finish() {
-            if (!isMounted || finished) return;
+            if (!isMounted || finished || dismissed.current) return;
             finished = true;
             setFading(true);
-            setTimeout(() => {
-                if (!isMounted) return;
+            fadeTimer = setTimeout(() => {
+                if (!isMounted || dismissed.current) return;
                 setVisible(false);
+                reveal(true);
                 try { sessionStorage.setItem(SK, '1'); } catch { /* ignore */ }
                 // Curtain is gone: pull the rest in on idle time, never before.
-                const idle = window.requestIdleCallback ?? ((fn: () => void) => setTimeout(fn, 200));
-                idle(() => DEFERRED.forEach(warm));
+                const warmDeferred = () => { if (isMounted) DEFERRED.forEach(warm); };
+                if (window.requestIdleCallback) idleTimer = window.requestIdleCallback(warmDeferred);
+                else idleFallback = setTimeout(warmDeferred, 200);
             }, FADE_MS);
         }
 
@@ -108,67 +136,46 @@ export default function LoadingScreen() {
            download standing between the visitor and the site. */
         if (!window.matchMedia(BLOCKING_MQ).matches) {
             imagesDone = true;
-            setLoaded(TOTAL);
             tryFinish();
         } else {
-            warmHero(() => {
+            cancelHero = warmHero(() => {
                 if (!isMounted) return;
                 loadedCount++;
-                setLoaded(loadedCount);
                 if (loadedCount === TOTAL) { imagesDone = true; tryFinish(); }
             });
         }
 
-        return () => { isMounted = false; clearTimeout(minTimer); clearTimeout(maxTimer); };
-    }, [reduced]);
+        const cleanup = () => {
+            isMounted = false;
+            clearTimeout(minTimer);
+            clearTimeout(maxTimer);
+            clearTimeout(fadeTimer);
+            clearTimeout(idleFallback);
+            if (idleTimer !== undefined) window.cancelIdleCallback(idleTimer);
+            cancelHero?.();
+        };
+        cancelIntro.current = cleanup;
+        return cleanup;
+    }, [reduced, reveal]);
 
     if (!visible) return null;
 
-    /* The bar tracks the floor, not the fetch: one blocking image would snap it
-       0 to 100 in a single frame. It runs the MIN_MS floor on an exponential
-       ease-out, then completes the moment the hero actually lands. */
-    const done = loaded >= TOTAL || fading;
-
     return (
-        /* The board wakes up before the terminal does: one row turning over on
-           an otherwise dead board, which is exactly what the site opens on. */
-        <div
-            aria-hidden="true"
-            className="oz-curtain"
-            style={{
-                position: 'fixed', inset: 0, zIndex: 9999,
-                background: BOARD,
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center',
-                gap: 26,
-                fontFamily: SIGN,
-                opacity: fading ? 0 : 1,
-                transition: `opacity ${FADE_MS}ms ease`,
-                pointerEvents: fading ? 'none' : 'all',
-            }}
-        >
-            <FlapText
-                text="Olric Zeng"
-                stagger={2}
-                style={{
-                    /* One fixed step rather than a fluid clamp: the curtain shows
-                       one short string for well under a second, and a size that
-                       grows with the viewport buys nothing a reader ever notices. */
-                    fontSize: TYPE.SUBHEAD,
-                    fontWeight: 800, fontStretch: '104%',
-                    letterSpacing: '0.02em',
-                }}
-            />
-
-            {/* The floor indicator, a signal bar seated in a steel channel. */}
-            <div style={{ width: 200, height: 6, background: STEEL, overflow: 'hidden' }}>
-                <div style={{
-                    height: '100%', background: SIGNAL,
-                    width: '100%', transformOrigin: 'left center',
-                    transform: `scaleX(${done ? 1 : crept ? 0.7 : 0.04})`,
-                    transition: `transform ${done ? 240 : MIN_MS}ms cubic-bezier(.22, 1, .36, 1)`,
-                }} />
+        <div className={`oz-curtain oz-tunnel${fading ? ' oz-tunnel-leaving' : ''}`}
+            style={{ fontFamily: SIGN }}>
+            <TunnelScene leaving={fading} departureMs={FADE_MS} />
+            <div className="oz-tunnel-caption" aria-hidden="true">
+                <span className="oz-tunnel-name">Olric Zeng</span>
+                <span className="oz-tunnel-arrival">Coming into view.</span>
             </div>
+            <button type="button" className="oz-tunnel-skip" onClick={() => {
+                dismissed.current = true;
+                cancelIntro.current();
+                setVisible(false);
+                reveal(false);
+                try { sessionStorage.setItem(SK, '1'); } catch { /* ignore */ }
+                DEFERRED.forEach(warm);
+            }}>Skip intro</button>
         </div>
     );
 }

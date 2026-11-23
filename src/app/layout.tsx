@@ -61,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     every page the visitor comes back to. */}
                 <script
                     dangerouslySetInnerHTML={{
-                        __html: "try{if(sessionStorage.getItem('oz-loaded'))document.documentElement.classList.add('oz-loaded')}catch(e){}",
+                        __html: "try{if(sessionStorage.getItem('oz-loaded'))document.documentElement.classList.add('oz-loaded');else if(!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.dataset.arrival='tunnel'}catch(e){}",
                     }}
                 />
                 {/* The portrait stands in the desktop field only, so the preload

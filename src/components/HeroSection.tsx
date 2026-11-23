@@ -2,10 +2,8 @@
 
 import { useRef, useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import Link from 'next/link';
-import { motion, useScroll, useTransform, useMotionValue } from 'framer-motion';
+import { motion, useScroll, useTransform, useMotionValue, useMotionValueEvent } from 'framer-motion';
 import { profile } from '@/data/profile';
-import { projects } from '@/data/projects';
-import { SECTIONS } from '@/data/minddo';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useReducedMotionSafe } from '@/hooks/useReducedMotionSafe';
 import { useOverlay } from '@/contexts/OverlayContext';
@@ -14,8 +12,8 @@ import Pictogram, { type PictogramName } from './concourse/Pictogram';
 import { NewTabNote } from './concourse/srOnly';
 import { RAIL_H } from './NavBar';
 import {
-    SIGNAL, SIGNAL_INK_SOFT, STEEL, STEEL_SOFT, BOARD, BOARD_LIT,
-    BOARD_INK, BOARD_INK_SOFT, SIGN_WHITE, RULE_DARK,
+    SIGNAL, SIGNAL_INK_SOFT, STEEL, BOARD,
+    SIGN_WHITE,
     SIGN, EASE_OUT, TYPE,
 } from '@/design/tokens';
 
@@ -42,12 +40,8 @@ function prefetchMindMap() {
 
 /** Board geometry. The hero's panel takes whatever the board leaves, so these
  *  two numbers set the whole first viewport's proportion. */
-const ROW_H = 56;
-const ROW_H_SM = 46;
-const HEAD_H = 30;
-/** The board's own frame below the last row, so the bottom row reads as the
- *  end of the board rather than as content cut off by the fold. */
-const BOARD_PAD = 14;
+const NAV_H = 148;
+const NAV_H_SM = 252;
 /** The white sign panel the portrait stands on, and therefore the column the
  *  signal field gives up on the right. */
 const PANEL_W = 'min(38vw, 600px)';
@@ -62,220 +56,38 @@ const DISCIPLINES: { icon: PictogramName; label: string }[] = [
     { icon: 'graph', label: 'Machine Learning' },
 ];
 
-/** The concourse board's destinations. A board in a terminal tells you where
- *  you can go and what runs on each service — it is not a preview of the
- *  contents of one of those services. Four routes, each with its own platform,
- *  each row a live link. The counts are derived from the project data rather
- *  than written down twice. */
-
-interface Destination {
-    id: string;
-    label: string;
-    service: string;
-    /** A shorter service line for the phone, where the service and the stops
-     *  share one line under the destination. Falls back to `service`. */
-    serviceShort?: string;
-    /** What the service is made of, counted from the data rather than written
-     *  down a second time — the number on a board has to be the real one. */
-    stops: string;
-    /** An in-page route, or a real navigation off this page. */
-    href: string;
-    external: boolean;
-}
-
-const DESTINATIONS: Destination[] = [
-    {
-        id: 'about',
-        label: 'Background',
-        service: 'Cornell CS · Hack4Impact · SiteFit AI',
-        serviceShort: 'Cornell · Hack4Impact · SiteFit',
-        stops: `${profile.timeline.length} stops`,
-        href: '#about',
-        external: false,
-    },
-    {
-        id: 'projects',
-        label: 'Projects',
-        service: 'Full-stack · Infrastructure · Machine learning',
-        serviceShort: 'Full-stack · Infra · ML',
-        stops: `${projects.length} gates`,
-        href: '#projects',
-        external: false,
-    },
-    {
-        id: 'minddo',
-        label: 'Case Study',
-        service: 'MindDo.AI — queue, workers, autoscaling',
-        serviceShort: 'MindDo.AI on AWS · k3s',
-        stops: `${SECTIONS.length} sections`,
-        href: '/projects/minddo',
-        external: true,
-    },
-    {
-        id: 'contact',
-        label: 'Contact',
-        service: 'Open to internships',
-        stops: `${profile.socialLinks.length} channels`,
-        href: '#contact',
-        external: false,
-    },
+/** Station signage provides the wayfinding; the labels speak portfolio. */
+const DESTINATIONS = [
+    { id: 'projects', label: 'Projects', detail: 'Apps, systems & experiments', href: '#projects', external: false },
+    { id: 'about', label: 'Background', detail: 'Cornell & beyond', href: '#about', external: false },
+    { id: 'contact', label: 'Contact', detail: 'Let’s get in touch', href: '#contact', external: false },
 ];
 
-// ─── The departures board ────────────────────────────────────────────────────
-/* Every responsive decision on this board is a media query in globals.css, not
-   a branch here: the board is the first thing a visitor reads and it has to be
-   the right shape in the HTML, before any JavaScript runs. Both the wide
-   columns and the phone's stacked service line are always in the markup; CSS
-   decides which is painted. */
-function DepartureBoard({ armed }: { armed: boolean }) {
+function StationNavigation({ armed }: { armed: boolean }) {
     const reduced = useReducedMotionSafe();
-
-    const goTo = (id: string) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        window.scrollTo({ top: el.offsetTop - RAIL_H, behavior: reduced ? 'auto' : 'smooth' });
-    };
-
     return (
-        <div style={{ background: BOARD, borderTop: `2px solid ${STEEL_SOFT}`, paddingBottom: BOARD_PAD }}>
-            {/* Column heads, painted on the board's frame rather than flapped —
-                a real board's headers are silkscreened, only the rows move. */}
-            <div
-                aria-hidden="true"
-                className="oz-board-head"
-                style={{
-                    borderBottom: `1px solid ${RULE_DARK}`,
-                    color: SIGNAL,
-                    fontSize: TYPE.MICRO, fontWeight: 700, fontStretch: '88%',
-                    textTransform: 'uppercase',
-                }}
-            >
-                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden' }}>Platform</span>
-                <span>Destination</span>
-                <span className="oz-board-wide">Service</span>
-                <span className="oz-board-wide" style={{ textAlign: 'right' }}>Stops</span>
-                <span style={{ textAlign: 'right' }} />
-            </div>
-
-            {DESTINATIONS.map((d, i) => {
-                const platform = String(i + 1).padStart(2, '0');
-                const row = (
-                    <>
-                        <span className="oz-board-platform" style={{
-                            color: SIGNAL,
-                            fontSize: TYPE.TITLE,
-                            fontWeight: 800, fontStretch: '112%', letterSpacing: '0.01em',
-                        }}>
-                            {platform}
-                        </span>
-
-                        <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
-                            <FlapText
-                                text={d.label}
-                                play={armed}
-                                startDelay={4 + i * 3}
-                                stagger={1}
-                                className="oz-board-dest"
-                                style={{
-                                    fontSize: TYPE.BODY,
-                                    fontWeight: 700, fontStretch: '88%',
-                                    letterSpacing: '0.04em',
-                                }}
-                            />
-                            {/* On a phone the service line rides under its
-                                destination rather than taking a column of its own.
-                                Hidden from the tree at every width, because the row's
-                                own aria-label already carries destination and service
-                                and this would say it a second time. */}
-                            <span aria-hidden="true" className="oz-board-narrow" style={{
-                                color: BOARD_INK_SOFT, fontSize: TYPE.MICRO, fontWeight: 500,
-                                letterSpacing: '0.04em', whiteSpace: 'nowrap',
-                                overflow: 'hidden', textOverflow: 'ellipsis',
-                            }}>
-                                {d.serviceShort ?? d.service} · {d.stops}
-                            </span>
-                        </span>
-
-                        <span className="oz-board-wide" style={{
-                            color: BOARD_INK_SOFT, fontSize: TYPE.CONTROL, fontWeight: 500,
-                            letterSpacing: '0.05em', whiteSpace: 'nowrap',
-                            overflow: 'hidden', textOverflow: 'ellipsis',
-                        }}>
-                            {d.service}
-                        </span>
-
-                        <span className="oz-board-wide" style={{
-                            color: SIGNAL, fontSize: TYPE.META, fontWeight: 700,
-                            fontStretch: '88%', letterSpacing: '0.08em',
-                            textAlign: 'right', whiteSpace: 'nowrap',
-                        }}>
-                            {d.stops}
-                        </span>
-
-                        {/* Down for a service on this concourse, out for one that
-                            leaves it. A board that pointed the same way at both
-                            would be telling you nothing. */}
-                        <span className="oz-gate oz-board-gate" style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-                            color: SIGNAL,
-                            transition: `transform 0.24s ${EASE_OUT}`,
-                        }}>
-                            <Pictogram
-                                name={d.external ? 'arrow-up-right' : 'arrow-down'}
-                                size={18}
-                            />
-                        </span>
-                    </>
-                );
-
-                const cell: React.CSSProperties = {
-                    width: '100%',
-                    background: 'transparent',
-                    border: 'none',
-                    borderBottom: i === DESTINATIONS.length - 1 ? 'none' : `1px solid ${RULE_DARK}`,
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    fontFamily: SIGN,
-                    color: BOARD_INK,
-                    transition: `background 0.18s ${EASE_OUT}`,
-                };
-
-                /* The row lights the same way whether the pointer arrived or
-                   the keyboard did. A focus ring says which row is selected;
-                   it does not say the row is a place you can go, which is what
-                   the lit ground and the travelling arrow say. */
-                const light = (el: HTMLElement) => {
-                    el.style.background = BOARD_LIT;
-                    const g = el.querySelector<HTMLElement>('.oz-gate');
-                    if (g) g.style.transform = d.external ? 'translate(3px, -3px)' : 'translateY(4px)';
-                };
-                const dim = (el: HTMLElement) => {
-                    el.style.background = 'transparent';
-                    const g = el.querySelector<HTMLElement>('.oz-gate');
-                    if (g) g.style.transform = 'none';
-                };
-
-                const hover = {
-                    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => light(e.currentTarget),
-                    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => dim(e.currentTarget),
-                    onFocus: (e: React.FocusEvent<HTMLElement>) => light(e.currentTarget),
-                    onBlur: (e: React.FocusEvent<HTMLElement>) => dim(e.currentTarget),
-                };
-
-                return d.external ? (
-                    <Link key={d.id} href={d.href} className="oz-board-row" style={cell} {...hover}
-                        aria-label={`${d.label} — ${d.service}`}>
-                        {row}
-                    </Link>
-                ) : (
-                    <button key={d.id} type="button" onClick={() => goTo(d.id)}
-                        className="oz-board-row" style={cell} {...hover}
-                        aria-label={`${d.label} — ${d.service}`}>
-                        {row}
-                    </button>
-                );
-            })}
-        </div>
+        <nav aria-label="Explore the portfolio" className="oz-station-nav">
+            {DESTINATIONS.map((destination) => (
+                <Link key={destination.id} href={destination.href} className="oz-station-link"
+                    onClick={event => {
+                        if (destination.external || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                        const target = document.getElementById(destination.id);
+                        if (!target) return;
+                        event.preventDefault();
+                        window.history.pushState(null, '', destination.href);
+                        window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - RAIL_H,
+                            behavior: reduced ? 'auto' : 'smooth' });
+                    }}>
+                    <span className="oz-station-track" aria-hidden="true"><span /></span>
+                    <span className="oz-station-label">
+                        <FlapText text={destination.label} play={armed} stagger={1}
+                            style={{ fontSize: TYPE.BODY, fontWeight: 700, fontStretch: '88%', letterSpacing: '0.02em' }} />
+                        <Pictogram name={destination.external ? 'arrow-up-right' : 'arrow-down'} size={15} />
+                    </span>
+                    <span className="oz-station-detail">{destination.detail}</span>
+                </Link>
+            ))}
+        </nav>
     );
 }
 
@@ -310,6 +122,10 @@ function FieldPortrait({
     const reduced = useReducedMotionSafe();
 
     const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
+    const [inScrollRange, setInScrollRange] = useState(true);
+    useMotionValueEvent(scrollYProgress, 'change', progress => {
+        setInScrollRange(progress < 0.3);
+    });
     const scrollBlur = useTransform(scrollYProgress, [0, 0.3], [0, 12]);
     const scaleRaw = useTransform(scrollYProgress, [0, 0.3], [1, 0.9]);
     const blurRaw = useTransform(scrollBlur, (bl: number) => `blur(${bl}px)`);
@@ -319,10 +135,10 @@ function FieldPortrait({
        could plausibly sit at the centre of; a network map has no such centre,
        and a face over the middle of a diagram is just something in the way.
        The map carries its own Exit gate, and Escape still closes it. */
-    const visible = heroInView && !hidden && !mindMapOpen;
+    const visible = heroInView && inScrollRange && !hidden && !mindMapOpen;
 
     return (
-        <div style={{
+        <div className="oz-arrival-portrait" inert={!visible} style={{
             position: 'fixed', top: 0, bottom: 0, right: 0, zIndex: 300,
             width: PANEL_W,
             pointerEvents: 'none',
@@ -346,6 +162,7 @@ function FieldPortrait({
             }}>
                 <motion.button
                     type="button"
+                    tabIndex={visible ? 0 : -1}
                     aria-expanded={mindMapOpen}
                     aria-label={mindMapOpen ? 'Close my interests and return to the page' : 'Open my interests'}
                     style={{
@@ -421,15 +238,19 @@ export default function HeroSection() {
     const warmMindMap = useCallback(() => { setMindMapArmed(true); prefetchMindMap(); }, []);
     const [heroInView, setHeroInView] = useState(true);
     const [entered, setEntered] = useState(false);
+    const [heroOverflow, setHeroOverflow] = useState(0);
     const isMobile = useIsMobile();
     const reduced = useReducedMotionSafe();
     const { overlayOpen } = useOverlay();
 
-    const boardH = (isMobile ? ROW_H_SM : ROW_H) * DESTINATIONS.length + HEAD_H + BOARD_PAD;
+    const boardH = isMobile ? NAV_H_SM : NAV_H;
 
     useEffect(() => {
-        const t = setTimeout(() => setEntered(true), 90);
-        return () => clearTimeout(t);
+        const arrive = () => setEntered(true);
+        window.addEventListener('oz:arrival', arrive);
+        const t = document.documentElement.dataset.arrival === 'tunnel'
+            ? undefined : window.setTimeout(arrive, 90);
+        return () => { window.clearTimeout(t); window.removeEventListener('oz:arrival', arrive); };
     }, []);
 
     /* Fallback warm, well after the page has settled, for anyone who reaches the
@@ -450,10 +271,23 @@ export default function HeroSection() {
         return () => obs.disconnect();
     }, []);
 
+    // A short viewport can scroll the full introduction into view before
+    // the pinned signature sequence starts.
+    useEffect(() => {
+        const hero = heroRef.current;
+        if (!hero) return;
+        const measure = () => setHeroOverflow(isMobile ? Math.max(0, hero.offsetHeight - window.innerHeight) : 0);
+        const observer = new ResizeObserver(measure);
+        observer.observe(hero);
+        window.addEventListener('resize', measure);
+        measure();
+        return () => { observer.disconnect(); window.removeEventListener('resize', measure); };
+    }, [isMobile]);
+
     // Scroll progress over the full wrapper, which is the signature's budget.
     const { scrollYProgress } = useScroll({
         target: wrapperRef,
-        offset: ['start start', 'end end'],
+        offset: [`start ${-heroOverflow}px`, 'end end'],
     });
 
     /* The field drains. Signal yellow gives way to board black across the first
@@ -470,6 +304,10 @@ export default function HeroSection() {
        it is the state change that tells you the hero is giving way. The scale
        and the blur go, because those read as the viewport moving underneath. */
     const contentOpacity = useTransform(scrollYProgress, [0, 0.28], [1, 0]);
+    const [contentPresent, setContentPresent] = useState(true);
+    useMotionValueEvent(scrollYProgress, 'change', progress => {
+        setContentPresent(progress < 0.28);
+    });
     const contentScaleRaw = useTransform(scrollYProgress, [0, 0.3], [1, 0.92]);
     const blurRaw = useTransform(useTransform(scrollYProgress, [0, 0.3], [0, 12]),
         (v: number) => `blur(${v}px)`);
@@ -515,24 +353,26 @@ export default function HeroSection() {
                     id="hero"
                     data-surface="signal"
                     style={{
-                        height: '100vh',
+                        height: isMobile ? 'auto' : '100vh',
+                        minHeight: '100svh',
                         background: field,
-                        position: 'sticky', top: 0,
+                        position: 'sticky', top: -heroOverflow,
                         overflow: 'hidden',
-                        display: 'grid',
-                        gridTemplateRows: '1fr auto',
+                        display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)',
+                        gridTemplateRows: isMobile ? 'minmax(min-content, 1fr) auto' : '1fr auto',
                         paddingTop: RAIL_H,
                         fontFamily: SIGN,
                     }}
                 >
                     {/* ── The signal panel ── */}
-                    <div style={{ position: 'relative', minHeight: 0, display: 'grid' }}>
+                    <div style={{ position: 'relative', minHeight: 0, minWidth: 0, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)' }}>
                         {/* The right-hand sign panel. Two fields divided by a steel
                             seam is the composition every terminal sign uses: the
                             coloured field carries the direction, the white one
                             carries the thing itself. */}
                         {!isMobile && (
                             <motion.div
+                                className="oz-arrival-panel"
                                 aria-hidden="true"
                                 style={{
                                     position: 'absolute', top: 0, right: 0, bottom: 0,
@@ -553,9 +393,9 @@ export default function HeroSection() {
                             </motion.div>
                         )}
 
-                        <motion.div style={{
+                        <motion.div inert={!contentPresent} style={{
                             position: 'relative', zIndex: 1,
-                            minHeight: 0,
+                            minHeight: 0, minWidth: 0,
                             display: 'flex', flexDirection: 'column',
                             justifyContent: isMobile ? 'flex-end' : 'center',
                             padding: isMobile
@@ -574,33 +414,28 @@ export default function HeroSection() {
                         }}>
                             <div style={{
                                 maxWidth: isMobile ? '100%' : 'min(57vw, 820px)',
-                                opacity: entered ? 1 : 0,
-                                transform: entered ? 'none' : 'translateY(18px)',
-                                transition: `opacity 0.7s ${EASE_OUT} 0.05s, transform 0.7s ${EASE_OUT} 0.05s`,
                             }}>
                                 {/* The panel's lettering is painted, not hung — so it flaps
                                 bare, with no cell chrome, and lands before the board. */}
-                                <h1 style={{
+                                <h1 className="oz-arrival-name" style={{
                                     fontSize: isMobile ? 'clamp(2.7rem, 13vw, 4rem)' : 'clamp(3.4rem, 8.6vw, 9.6rem)',
                                     fontWeight: 800, fontStretch: '112%',
                                     letterSpacing: '-0.035em', lineHeight: 0.84,
                                     color: STEEL, margin: 0,
                                     display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
                                 }}>
-                                    <FlapText text="Olric" variant="bare" play={entered} startDelay={0} stagger={2} />
-                                    <FlapText text="Zeng" variant="bare" play={entered} startDelay={5} stagger={2} />
+                                    <FlapText text="Olric" variant="bare" play={false} />
+                                    <FlapText text="Zeng" variant="bare" play={false} />
                                 </h1>
 
-                                <div style={{
+                                <div className="oz-arrival-divider" style={{
                                     height: 4, background: STEEL, width: '100%',
                                     margin: isMobile ? '18px 0 16px' : '26px 0 20px',
                                     transformOrigin: 'left center',
-                                    transform: entered ? 'scaleX(1)' : 'scaleX(0)',
-                                    transition: `transform 0.9s ${EASE_OUT} 0.22s`,
                                 }} />
 
                                 {/* Where he is, in the register a sign uses. */}
-                                <div style={{
+                                <div className="oz-arrival-copy" style={{
                                     display: 'flex', flexWrap: 'wrap', alignItems: 'center',
                                     gap: isMobile ? '8px 14px' : '10px 22px',
                                     marginBottom: isMobile ? 14 : 18,
@@ -613,7 +448,7 @@ export default function HeroSection() {
                                     </span>
                                 </div>
 
-                                <p style={{
+                                <p className="oz-arrival-copy" style={{
                                     fontSize: isMobile ? TYPE.COPY : TYPE.BODY,
                                     fontWeight: 500, lineHeight: 1.55, color: STEEL,
                                     maxWidth: '46ch', marginBottom: isMobile ? 18 : 24,
@@ -622,7 +457,7 @@ export default function HeroSection() {
                                 </p>
 
                                 {/* Discipline plates, reversed out of the field in steel. */}
-                                <div style={{
+                                <div className="oz-arrival-plates" style={{
                                     display: 'flex', flexWrap: 'wrap', gap: 6,
                                     marginBottom: isMobile ? 20 : 26,
                                 }}>
@@ -641,7 +476,7 @@ export default function HeroSection() {
                                 </div>
 
                                 {/* The gate row. */}
-                                <div style={{
+                                <div className="oz-arrival-actions" style={{
                                     display: 'flex', flexWrap: 'wrap', alignItems: 'center',
                                     gap: isMobile ? 10 : 14,
                                 }}>
@@ -671,6 +506,8 @@ export default function HeroSection() {
                                         <NewTabNote />
                                     </a>
 
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? 10 : 14,
+                                        width: isMobile ? '100%' : undefined, maxWidth: '100%' }}>
                                     {profile.socialLinks.map(s => (
                                         <a
                                             key={s.label}
@@ -693,12 +530,13 @@ export default function HeroSection() {
                                             {!s.href.startsWith('mailto') && <NewTabNote />}
                                         </a>
                                     ))}
+                                    </div>
                                 </div>
 
                                 {/* On a phone there is no portrait to click, so the
                                 corridor gets its own plate in the panel. */}
                                 {isMobile && (
-                                    <button
+                                    <button className="oz-arrival-actions"
                                         onPointerDown={warmMindMap}
                                         onClick={() => setMindMapOpen(true)}
                                         style={{
@@ -721,11 +559,11 @@ export default function HeroSection() {
                     </div>
 
                     {/* ── The board ── */}
-                    <motion.div style={{
+                    <motion.div className="oz-arrival-stations" inert={!contentPresent} style={{
                         position: 'relative', zIndex: 1,
                         opacity: contentOpacity,
                     }}>
-                        <DepartureBoard armed={entered} />
+                        <StationNavigation armed={entered} />
                     </motion.div>
 
                     {/* ── The signature, written across the emptied board ── */}
