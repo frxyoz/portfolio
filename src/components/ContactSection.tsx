@@ -8,7 +8,7 @@ import { NewTabNote, SR_ONLY } from './concourse/srOnly';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import {
     SIGNAL, SIGNAL_DEEP, ENAMEL, ENAMEL_INK_SOFT, STEEL, SIGN_WHITE, SIGN_INK,
-    BOARD_INK_SOFT, RED_LAMP, SIGN, EASE_OUT, TYPE,} from '@/design/tokens';
+    BOARD_INK_SOFT, SIGN, EASE_OUT, TYPE,} from '@/design/tokens';
 
 const SOCIAL_ICON: Record<string, PictogramName> = {
     GitHub: 'github',
@@ -104,7 +104,7 @@ export default function ContactSection() {
 
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1fr) minmax(0, 1.15fr)',
+                    gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) minmax(0, 1.15fr)',
                     gap: isMobile ? 48 : 80,
                     alignItems: 'start',
                 }}>
@@ -195,7 +195,7 @@ export default function ContactSection() {
 
                             {!submitted ? (
                                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : '1fr 1fr', gap: 12 }}>
                                         <div>
                                             <label htmlFor="contact-name" style={srOnly}>Your name</label>
                                             <input
@@ -254,7 +254,7 @@ export default function ContactSection() {
                                     {error && (
                                         <p style={{
                                             display: 'flex', alignItems: 'flex-start', gap: 9,
-                                            fontSize: TYPE.META, color: RED_LAMP, lineHeight: 1.5, marginTop: 4,
+                                            fontSize: TYPE.META, color: SIGNAL, lineHeight: 1.5, marginTop: 4,
                                         }}>
                                             <Pictogram name="close" size={12} style={{ marginTop: 4 }} />
                                             The message did not send. Try again, or email
@@ -313,13 +313,13 @@ export default function ContactSection() {
                 <span style={{
                     fontSize: TYPE.LABEL, fontWeight: 600, fontStretch: '88%',
                     letterSpacing: '0.16em', textTransform: 'uppercase', color: BOARD_INK_SOFT,
-                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    display: 'inline-flex', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '100%', alignItems: 'center', gap: 8,
                 }}>
                     © {new Date().getFullYear()} ·
                     <a
                         href="mailto:olriczeng@gmail.com"
                         style={{
-                            color: BOARD_INK_SOFT,
+                            color: BOARD_INK_SOFT, overflowWrap: 'anywhere', minWidth: 0,
                             boxShadow: `inset 0 -1px 0 0 ${BOARD_INK_SOFT}66`,
                             transition: `color 0.2s ${EASE_OUT}, box-shadow 0.2s ${EASE_OUT}`,
                         }}
