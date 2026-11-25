@@ -371,7 +371,6 @@ html.oz-loaded .oz-curtain { display: none; }
   transition: opacity 180ms ease-out;
 }
 .oz-tunnel-name { font-size: 1.5rem; font-weight: 800; font-stretch: 112%; }
-.oz-tunnel-arrival { color: #a3a099; font-size: .82rem; }
 .oz-tunnel-skip {
   position: absolute; bottom: 28px; right: 28px; min-height: 44px; padding: 0 12px;
   color: #ffd100; background: #0d0d0d; font: inherit; font-size: .82rem;

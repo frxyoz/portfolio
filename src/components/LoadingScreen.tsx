@@ -166,7 +166,6 @@ export default function LoadingScreen() {
             <TunnelScene leaving={fading} departureMs={FADE_MS} />
             <div className="oz-tunnel-caption" aria-hidden="true">
                 <span className="oz-tunnel-name">Olric Zeng</span>
-                <span className="oz-tunnel-arrival">Coming into view.</span>
             </div>
             <button type="button" className="oz-tunnel-skip" onClick={() => {
                 dismissed.current = true;
